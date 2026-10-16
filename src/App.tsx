@@ -2249,6 +2249,8 @@ export default function App() {
               onSendReminderLog={handleSendWhatsAppReminderLog}
               onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
               onTriggerAutoReminders={handleTriggerAutoReminders}
+              onUpdateUser={handleUpdatePerson}
+              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
             />
           )}
 
@@ -2278,6 +2280,8 @@ export default function App() {
               onSendReminderLog={handleSendWhatsAppReminderLog}
               onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
               onTriggerAutoReminders={handleTriggerAutoReminders}
+              onUpdateUser={handleUpdatePerson}
+              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
             />
           )}
 

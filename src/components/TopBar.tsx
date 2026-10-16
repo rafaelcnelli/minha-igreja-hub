@@ -106,7 +106,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-slate-700 shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-amber-500 flex items-center justify-center text-white dark:text-slate-950 font-black text-sm shadow-xs group-hover:bg-slate-800 dark:group-hover:bg-amber-400 transition-colors shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xs group-hover:bg-blue-700 transition-colors shrink-0">
                   {churchProfile?.name ? churchProfile.name.charAt(0).toUpperCase() : 'M'}
                 </div>
               )}
@@ -114,7 +114,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[130px] sm:max-w-[200px] lg:max-w-[260px]">
                   {churchProfile?.name || 'Minha Igreja Hub'}
                 </span>
-                <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider block truncate max-w-[130px] sm:max-w-[200px]">
+                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider block truncate max-w-[130px] sm:max-w-[200px]">
                   {churchProfile?.subtitle || 'Gestão & Escalas'}
                 </span>
               </div>

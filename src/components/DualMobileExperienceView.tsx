@@ -168,26 +168,26 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
   }, [avisos, currentUser, searchQuery]);
 
   return (
-    <div className="w-full min-h-screen bg-[#edf0f5] py-4 sm:py-8 px-2 sm:px-6 flex flex-col items-center justify-start text-slate-900 select-none pb-24">
+    <div className="w-full min-h-screen bg-[#edf0f5] dark:bg-[#040816] py-4 sm:py-8 px-2 sm:px-6 flex flex-col items-center justify-start text-slate-900 dark:text-white select-none pb-24 transition-colors">
       
       {/* TOP CONTROL BAR: CHURCH INFO & SCREEN VIEWPORT TOGGLE */}
-      <div className="w-full max-w-5xl mb-6 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="w-full max-w-5xl mb-6 bg-white/95 dark:bg-[#102144] backdrop-blur-md border border-slate-200/80 dark:border-[#2E4D8A] rounded-2xl p-3 sm:p-4 shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Church & Real Role Badge */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#1c1d22] text-white flex items-center justify-center font-bold text-sm shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-[#1c1d22] dark:bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-md">
             {churchProfile?.name ? churchProfile.name.charAt(0) : 'K'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm">
+              <span className="font-bold text-slate-900 dark:text-white text-sm">
                 {churchProfile?.name || 'Minha Igreja'}
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A3260] text-slate-600 dark:text-slate-200 border border-slate-200 dark:border-[#3C64B2]">
                 {churchProfile?.campus || 'Sede'}
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Conectado como <strong className="text-slate-800">{currentUser.name.split(' ')[0]}</strong> ({isAdmin ? 'Administrador Geral' : isLeader ? 'Líder de Ministério' : 'Voluntário'})
+            <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">
+              Conectado como <strong className="text-slate-800 dark:text-white">{currentUser.name.split(' ')[0]}</strong> ({isAdmin ? 'Administrador Geral' : isLeader ? 'Líder de Ministério' : 'Voluntário'})
             </p>
           </div>
         </div>
@@ -198,15 +198,15 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
       <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 sm:gap-10 transition-all">
 
         {/* ========================================================================= */}
-        {/* SCREEN 1: DASHBOARD / AVISOS / MINISTÉRIOS (LEFT SCREEN)                  */}
+        {/* SCREEN 1: DASHBOARD / AVISOS / ATALHOS (LEFT SCREEN)                      */}
         {/* ========================================================================= */}
-        <div className="w-full max-w-[390px] bg-white rounded-[40px] shadow-[0_24px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 overflow-hidden flex flex-col relative transition-all animate-in fade-in zoom-in-95 duration-200 pb-8">
+        <div className="w-full max-w-[390px] bg-white dark:bg-[#102144] rounded-[40px] shadow-[0_24px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-[#2E4D8A] overflow-hidden flex flex-col relative transition-all animate-in fade-in zoom-in-95 duration-200 pb-8">
             
             {/* Main Area (No internal scroll) */}
             <div className="flex-1">
               
               {/* TOP CURVED DARK HEADER CARD */}
-              <div className="bg-[#18191d] text-white pt-10 pb-9 px-6 rounded-b-[38px] relative overflow-hidden shadow-md">
+              <div className="bg-[#18191d] dark:bg-[#172E5E] text-white pt-10 pb-9 px-6 rounded-b-[38px] relative overflow-hidden shadow-md dark:border-b dark:border-[#2E4D8A]">
                 
                 {/* SVG Flowing Soundwave / Contour Lines Pattern */}
                 <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -264,18 +264,18 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* 1. PARTE DE BUSCA                                                         */}
               {/* ========================================================================= */}
               <div className="mt-6 px-6">
-                <div className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-1.5 flex items-center gap-2 border border-slate-200">
+                <div className="bg-white dark:bg-[#1A3260] rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-1.5 flex items-center gap-2 border border-slate-200 dark:border-[#3C64B2]">
                   <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 text-slate-400">
-                    <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                    <Search className="w-4 h-4 text-slate-400 dark:text-white shrink-0" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Buscar avisos, comunicados..."
-                      className="w-full text-xs text-slate-800 placeholder-slate-400 bg-transparent focus:outline-hidden font-medium"
+                      className="w-full text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 bg-transparent focus:outline-hidden font-medium"
                     />
                     {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <button onClick={() => setSearchQuery('')} className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -288,7 +288,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* ========================================================================= */}
               <div className="mt-6 px-6">
                 <div className="flex items-center justify-between mb-3.5">
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <span>Mural de Avisos</span>
                     {visibleAvisos.length > 0 && (
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -296,7 +296,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                   </h2>
                   <button
                     onClick={() => onNavigateTab('avisos')}
-                    className="text-xs text-slate-400 font-semibold hover:text-slate-700 transition-colors cursor-pointer"
+                    className="text-xs text-slate-400 dark:text-slate-300 font-semibold hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
                   >
                     Ver Todos
                   </button>
@@ -308,26 +308,26 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                       <div
                         key={aviso.id}
                         onClick={() => onNavigateTab('avisos')}
-                        className="p-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:border-slate-200 transition-all cursor-pointer flex items-start gap-3"
+                        className="p-4 rounded-2xl bg-white dark:bg-[#1A3260] border border-slate-100 dark:border-[#2E4D8A] shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:border-slate-200 dark:hover:border-blue-400 dark:hover:bg-[#254586] transition-all cursor-pointer flex items-start gap-3"
                       >
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5 border border-amber-200/50 dark:border-amber-700/50">
                           <Megaphone className="w-4 h-4" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-xs text-slate-900 truncate">
+                          <h4 className="font-semibold text-xs text-slate-900 dark:text-white truncate">
                             {aviso.title}
                           </h4>
-                          <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-200 line-clamp-2 mt-0.5 leading-relaxed">
                             {aviso.content}
                           </p>
-                          <span className="text-[10px] text-slate-400 mt-1 inline-block">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-300 mt-1 inline-block">
                             {formatDayMonthBR(aviso.createdAt)}
                           </span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#162B54] border border-dashed border-slate-200 dark:border-[#2E4D8A] text-center text-xs text-slate-500 dark:text-slate-300">
                       Nenhum comunicado recente no mural.
                     </div>
                   )}
@@ -340,18 +340,18 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               <div className="mt-6 px-6 grid grid-cols-2 gap-3">
                 <div
                   onClick={() => onNavigateTab('cultos')}
-                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-100"
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A3260] hover:bg-slate-100 dark:hover:bg-[#254586] transition-colors cursor-pointer border border-slate-100 dark:border-[#2E4D8A]"
                 >
-                  <span className="text-xl font-bold text-slate-900">{cultos.length}</span>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Cultos Cadastrados</p>
+                  <span className="text-xl font-bold text-slate-900 dark:text-white">{cultos.length}</span>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-300 mt-0.5">Cultos Cadastrados</p>
                 </div>
 
                 <div
                   onClick={() => onNavigateTab(isAdmin ? 'pessoas' : 'minhas_escalas')}
-                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-100"
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A3260] hover:bg-slate-100 dark:hover:bg-[#254586] transition-colors cursor-pointer border border-slate-100 dark:border-[#2E4D8A]"
                 >
-                  <span className="text-xl font-bold text-slate-900">{allUsers.length}</span>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Membros da Igreja</p>
+                  <span className="text-xl font-bold text-slate-900 dark:text-white">{allUsers.length}</span>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-300 mt-0.5">Membros da Igreja</p>
                 </div>
               </div>
 
@@ -359,20 +359,20 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               <div className="mt-4 px-6">
                 <div
                   onClick={() => onNavigateTab(isAdmin || isLeader ? 'escalas_equipe' : 'minhas_escalas')}
-                  className="p-4 rounded-2xl bg-[#1c1d22] text-white hover:bg-slate-800 transition-all cursor-pointer flex items-center justify-between shadow-sm group"
+                  className="p-4 rounded-2xl bg-[#1c1d22] dark:bg-[#1A3260] text-white hover:bg-slate-800 dark:hover:bg-[#254586] transition-all cursor-pointer flex items-center justify-between shadow-sm group border border-transparent dark:border-[#2E4D8A]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-white/10 dark:bg-blue-500/20 border border-transparent dark:border-blue-400/30 flex items-center justify-center">
                       <CalendarCheck className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>
                       <h4 className="font-bold text-xs text-white">Central de Escalas</h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-200">
                         {slots.length} vaga(s) e escalas configuradas
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
 
@@ -383,7 +383,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
         {/* ========================================================================= */}
         {/* SCREEN 2: CRONOGRAMA DA SEMANA / CULTOS & EVENTOS (RIGHT SCREEN)          */}
         {/* ========================================================================= */}
-        <div className="w-full max-w-[390px] bg-white rounded-[40px] shadow-[0_24px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 overflow-hidden flex flex-col relative transition-all animate-in fade-in zoom-in-95 duration-200 pb-8 pt-8 px-6">
+        <div className="w-full max-w-[390px] bg-white dark:bg-[#102144] rounded-[40px] shadow-[0_24px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-[#2E4D8A] overflow-hidden flex flex-col relative transition-all animate-in fade-in zoom-in-95 duration-200 pb-8 pt-8 px-6">
             
             {/* Main Area (No internal scroll) */}
             <div className="flex-1">
@@ -391,10 +391,10 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* TOP HEADER: DATE & TITLE */}
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className="text-xs text-slate-400 dark:text-slate-300 font-medium">
                     {formatDateExtendedBR(selectedCalendarDate)}
                   </span>
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-0.5">
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-0.5">
                     Cronograma
                   </h1>
                 </div>
@@ -402,7 +402,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                 {/* Small circular avatar */}
                 <div
                   onClick={onOpenEditProfile}
-                  className="w-10 h-10 rounded-full p-0.5 bg-slate-100 border border-slate-200 shadow-2xs cursor-pointer"
+                  className="w-10 h-10 rounded-full p-0.5 bg-slate-100 dark:bg-[#1A3260] border border-slate-200 dark:border-[#2E4D8A] shadow-2xs cursor-pointer"
                   title="Editar Meu Perfil"
                 >
                   {currentUser.avatarUrl ? (
@@ -412,7 +412,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
+                    <div className="w-full h-full rounded-full bg-slate-800 dark:bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs">
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
@@ -432,10 +432,10 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                       title={`${item.weekdayShort}, ${item.dayNum} ${item.hasEvent ? `(${item.eventsCount} culto/evento)` : ''}`}
                     >
                       {isSelected ? (
-                        /* Selected Day: Vertical Dark Pill (#1c1d22) */
-                        <div className="bg-[#1c1d22] text-white rounded-[22px] py-2.5 px-3 flex flex-col items-center shadow-lg transform -translate-y-1">
+                        /* Selected Day: Vertical Dark Pill (#1c1d22 or #2563EB in dark mode) */
+                        <div className="bg-[#1c1d22] dark:bg-[#2563EB] text-white rounded-[22px] py-2.5 px-3 flex flex-col items-center shadow-lg dark:shadow-[0_4px_16px_rgba(37,99,235,0.4)] transform -translate-y-1">
                           <span className="text-sm font-bold leading-none">{item.dayNum}</span>
-                          <span className="text-[10px] font-medium text-slate-300 mt-1">{item.weekdayShort}</span>
+                          <span className="text-[10px] font-medium text-slate-300 dark:text-white mt-1">{item.weekdayShort}</span>
                           {/* Dot when there is a service/event */}
                           {item.hasEvent ? (
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shadow-xs" />
@@ -445,9 +445,9 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                         </div>
                       ) : (
                         /* Unselected Day */
-                        <div className="py-2 px-2 flex flex-col items-center hover:bg-slate-50 rounded-xl transition-colors relative">
-                          <span className="text-sm font-semibold text-slate-500">{item.dayNum}</span>
-                          <span className="text-[10px] font-medium text-slate-400 mt-1">{item.weekdayShort}</span>
+                        <div className="py-2 px-2 flex flex-col items-center hover:bg-slate-50 dark:hover:bg-[#1A3260] rounded-xl transition-colors relative">
+                          <span className="text-sm font-semibold text-slate-500 dark:text-slate-300">{item.dayNum}</span>
+                          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-400 mt-1">{item.weekdayShort}</span>
                           {/* Dot indicator on days with cultos or events */}
                           {item.hasEvent ? (
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1" />
@@ -467,15 +467,15 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                 {/* Header for the selected date events */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                       {selectedCalendarDate === new Date().toISOString().split('T')[0] ? 'Eventos de Hoje' : 'Programação do Dia'}
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-300">
                       {formatDateExtendedBR(selectedCalendarDate)}
                     </p>
                   </div>
 
-                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A3260] text-slate-700 dark:text-white border border-transparent dark:border-[#3C64B2]">
                     {selectedDateCultos.length} {selectedDateCultos.length === 1 ? 'culto' : 'cultos'}
                   </span>
                 </div>
@@ -488,12 +488,12 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                       return (
                         <div key={cultoItem.id} className="relative pl-6">
                           {/* Timeline dot marker */}
-                          <div className="absolute left-0 top-4 w-3.5 h-3.5 rounded-full border-4 border-slate-900 bg-white shadow-xs z-10" />
+                          <div className="absolute left-0 top-4 w-3.5 h-3.5 rounded-full border-4 border-slate-900 dark:border-[#3B82F6] bg-white shadow-xs z-10" />
 
                           {/* Culto Card */}
                           <div
                             onClick={() => setSelectedEventModal(cultoItem)}
-                            className="bg-[#1c1d22] text-white rounded-[26px] p-5 shadow-xl relative overflow-hidden group cursor-pointer transition-transform hover:scale-[1.01]"
+                            className="bg-[#1c1d22] dark:bg-[#172E5E] border border-transparent dark:border-[#2E4D8A] text-white rounded-[26px] p-5 shadow-xl hover:dark:bg-[#203E7E] relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.01]"
                           >
                             {/* Background SVG Mesh / Waves */}
                             <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 300 200" fill="none">
@@ -669,51 +669,51 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
       {/* EVENT DETAIL MODAL (WHEN TAPPING A CULTO CARD)                            */}
       {/* ========================================================================= */}
       {selectedEventModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#102144] w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-[#2E4D8A] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#2E4D8A]">
+              <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-300 tracking-wider">
                 Detalhes do Culto
               </span>
               <button
                 onClick={() => setSelectedEventModal(null)}
-                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center"
+                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#1A3260] text-slate-500 dark:text-white hover:text-slate-800 dark:hover:bg-[#254586] flex items-center justify-center transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="mt-4">
-              <h3 className="text-xl font-bold text-slate-900">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 {selectedEventModal.title}
               </h3>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-white" />
                 <span>{formatDateExtendedBR(selectedEventModal.date)} às {selectedEventModal.startTime}</span>
               </p>
 
               {selectedEventModal.preacher && (
-                <div className="mt-3 p-3 bg-slate-50 rounded-2xl text-xs text-slate-700">
-                  <span className="font-bold text-slate-900">Pregador:</span> {selectedEventModal.preacher}
+                <div className="mt-3 p-3 bg-slate-50 dark:bg-[#1A3260] rounded-2xl text-xs text-slate-700 dark:text-slate-200 border border-transparent dark:border-[#2E4D8A]">
+                  <span className="font-bold text-slate-900 dark:text-white">Pregador:</span> {selectedEventModal.preacher}
                 </div>
               )}
 
               {/* Sequence / Order if defined */}
               {selectedEventModal.sequence && selectedEventModal.sequence.length > 0 && (
                 <div className="mt-3">
-                  <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-indigo-500" />
+                  <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-blue-500 dark:text-blue-400" />
                     <span>Ordem do Culto</span>
                   </h4>
                   <div className="flex flex-wrap gap-1">
                     {selectedEventModal.sequence.map((seq, idx) => (
                       <span
                         key={seq.id || idx}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-slate-100 text-slate-700"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-slate-100 dark:bg-[#1A3260] text-slate-700 dark:text-slate-200 border border-transparent dark:border-[#2E4D8A]"
                       >
-                        <span className="font-bold text-slate-400">{idx + 1}.</span>
+                        <span className="font-bold text-slate-400 dark:text-slate-300">{idx + 1}.</span>
                         <span>{seq.title}</span>
-                        <span className="font-mono text-indigo-600 font-bold">({seq.durationMinutes}m)</span>
+                        <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">({seq.durationMinutes}m)</span>
                       </span>
                     ))}
                   </div>
@@ -723,11 +723,11 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* ALL SCALES CREATED FOR THIS CULTO: Grouped by Ministry */}
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Todas as Escalas Criadas</span>
                   </h4>
-                  <span className="text-[11px] font-bold text-slate-500">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-300">
                     {slots.filter(s => s.cultoId === selectedEventModal.id).length} função(ões)
                   </span>
                 </div>
@@ -741,13 +741,13 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                     if (ministrySlots.length === 0) return null;
 
                     return (
-                      <div key={ministry.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200/60">
+                      <div key={ministry.id} className="p-3 bg-slate-50 dark:bg-[#162B54] rounded-2xl border border-slate-100 dark:border-[#2E4D8A]">
+                        <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200/60 dark:border-[#2E4D8A]">
                           <div className="flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ministry.color }} />
-                            <span className="font-bold text-xs text-slate-900">{ministry.name}</span>
+                            <span className="font-bold text-xs text-slate-900 dark:text-white">{ministry.name}</span>
                           </div>
-                          <span className="text-[10px] text-slate-400 font-semibold">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-semibold">
                             {ministrySlots.length} voluntários
                           </span>
                         </div>
@@ -762,12 +762,12 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                                 key={slot.id}
                                 className={`p-2 rounded-xl flex items-center justify-between text-xs transition-colors ${
                                   isCurrentUser
-                                    ? 'bg-amber-50 border border-amber-200'
-                                    : 'bg-white border border-slate-100'
+                                    ? 'bg-amber-50 dark:bg-[#1F3E80] border border-amber-200 dark:border-[#3B82F6]'
+                                    : 'bg-white dark:bg-[#102144] border border-slate-100 dark:border-[#2E4D8A]'
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[10px] text-slate-700 overflow-hidden shrink-0">
+                                  <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-[10px] text-slate-700 dark:text-white overflow-hidden shrink-0">
                                     {user?.avatarUrl ? (
                                       <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                     ) : (
@@ -776,25 +776,25 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-1">
-                                      <p className="font-semibold text-slate-900 leading-tight">
+                                      <p className="font-semibold text-slate-900 dark:text-white leading-tight">
                                         {user?.name || 'Vaga Aberta'}
                                       </p>
                                       {isCurrentUser && (
-                                        <span className="text-[8px] font-bold px-1 rounded bg-amber-200 text-amber-900">
+                                        <span className="text-[8px] font-bold px-1 rounded bg-amber-200 dark:bg-blue-600 text-amber-900 dark:text-white">
                                           Você
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-[10px] text-slate-500 leading-tight">{slot.roleTitle}</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-300 leading-tight">{slot.roleTitle}</p>
                                   </div>
                                 </div>
 
                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                                   slot.status === 'confirmed'
-                                    ? 'bg-emerald-100 text-emerald-800'
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
                                     : slot.status === 'declined'
-                                    ? 'bg-rose-100 text-rose-800'
-                                    : 'bg-amber-100 text-amber-800'
+                                    ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
+                                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
                                 }`}>
                                   {slot.status === 'confirmed' ? 'Confirmado' : slot.status === 'declined' ? 'Recusado' : 'Pendente'}
                                 </span>
@@ -807,7 +807,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                   })}
 
                   {slots.filter(s => s.cultoId === selectedEventModal.id).length === 0 && (
-                    <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+                    <div className="p-4 bg-slate-50 dark:bg-[#162B54] rounded-xl text-center text-xs text-slate-400 dark:text-slate-300 border border-slate-200 dark:border-[#2E4D8A]">
                       Nenhuma escala cadastrada para este culto ainda.
                     </div>
                   )}
@@ -820,7 +820,7 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                     setSelectedEventModal(null);
                     onNavigateTab(isAdmin ? 'cultos' : 'minhas_escalas');
                   }}
-                  className="flex-1 py-2.5 bg-[#1c1d22] text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors shadow-sm"
+                  className="flex-1 py-2.5 bg-[#1c1d22] dark:bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-slate-800 dark:hover:bg-blue-600 transition-colors shadow-sm cursor-pointer"
                 >
                   {isAdmin ? 'Gerenciar Cultos & Escalas' : 'Ver Minhas Escalas'}
                 </button>

@@ -58,8 +58,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       : activeTab === tabKey;
     return `w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
       isActive
-        ? 'bg-slate-900 text-white font-semibold shadow-xs dark:bg-amber-500 dark:text-slate-950'
-        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+        ? 'bg-blue-600 text-white font-bold shadow-xs dark:bg-blue-600 dark:text-white'
+        : 'text-slate-600 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-blue-900/30'
     }`;
   };
 
@@ -71,10 +71,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <img
             src={currentUser.avatarUrl}
             alt={currentUser.name}
-            className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-amber-500 shadow-2xs"
+            className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-blue-500 dark:border-white shadow-2xs"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-amber-500 text-white dark:text-slate-950 flex items-center justify-center font-bold shrink-0 text-sm shadow-2xs">
+          <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-2xs">
             {currentUser.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
           </div>
         )}

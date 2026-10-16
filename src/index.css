@@ -3,66 +3,120 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ========================================================================== */
-/* DARK MODE EXACT SPECIFICATION PALETTE                                      */
-/* #CCCCCC (Muted text / subtle highlights)                                    */
-/* #37373D (Borders / dividers / separators)                                  */
-/* #252526 (Cards / surfaces / modals / dropdowns)                             */
-/* #1E1E1E (Main deep background)                                             */
-/* #62B2E9 (Light blue accent / links / focus)                                 */
-/* #448CC2 (Medium blue buttons / primary actions)                             */
-/* "A escolha das letras é primordialmente branca e o restante bem equilibrado */
-/* e contrastado."                                                            */
+/* DARK MODE HIGH-CONTRAST SPECIFICATION: TONS DE AZUL & ELEMENTOS BRANCOS    */
+/* Tier 0 - Fundo Geral / Canvas (Deep Space Abyss): #040816                  */
+/* Tier 1 - Superfícies & Cartões (Rich Vibrant Navy): #102144                */
+/* Tier 2 - Componentes Elevados & Inputs (Royal Slate Blue): #1A3260         */
+/* Tier 3 - Hover / Destaques Interativos: #254586                            */
+/* Bordas de Cartões (Nítidas & Delineadas): #2E4D8A                          */
+/* Bordas de Foco & Componentes Internos: #3C64B2                             */
+/* Acentos & Botões Primários: #2563EB / #3B82F6                              */
+/* Elementos & Títulos em Branco Puro: #FFFFFF                                */
+/* Textos Secundários / Legendas em Alto Contraste: #E2E8F0 / #BFDBFE        */
 /* ========================================================================== */
 
 :root {
-  --color-dark-bg: #1E1E1E;
-  --color-dark-surface: #252526;
-  --color-dark-border: #37373D;
-  --color-dark-muted: #CCCCCC;
-  --color-dark-accent: #62B2E9;
-  --color-dark-accent-hover: #448CC2;
+  --color-dark-bg: #040816;
+  --color-dark-surface: #102144;
+  --color-dark-surface-elevated: #1A3260;
+  --color-dark-surface-hover: #254586;
+  --color-dark-border: #2E4D8A;
+  --color-dark-border-subtle: #3C64B2;
+  --color-dark-text-primary: #FFFFFF;
+  --color-dark-text-secondary: #E2E8F0;
+  --color-dark-accent: #3B82F6;
+  --color-dark-accent-hover: #2563EB;
 }
 
 html.dark {
-  background-color: #1E1E1E !important;
+  background-color: #040816 !important;
   color: #FFFFFF !important;
   color-scheme: dark;
 }
 
 html.dark body {
-  background-color: #1E1E1E !important;
+  background-color: #040816 !important;
   color: #FFFFFF !important;
 }
 
-/* Force dark surfaces and card backgrounds to #252526 */
-html.dark .bg-white {
-  background-color: #252526 !important;
+/* Fundo da tela principal no modo escuro */
+html.dark .bg-slate-950,
+html.dark .bg-gray-950,
+html.dark .bg-neutral-950 {
+  background-color: #040816 !important;
 }
 
-html.dark .bg-slate-50,
-html.dark .bg-slate-100 {
-  background-color: #1E1E1E !important;
-}
-
+/* Tier 1: Cartões principais, TopBar, Sidebar, Modais e Telas (Vibrant Navy #102144) */
+html.dark .bg-white,
 html.dark .bg-slate-900,
-html.dark .bg-slate-950 {
-  background-color: #252526 !important;
+html.dark .bg-gray-900 {
+  background-color: #102144 !important;
 }
 
-/* Force borders in dark mode to #37373D */
+/* Tier 2: Sub-superfícies, itens de lista, cartões internos, atalhos (#1A3260) */
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #1A3260 !important;
+}
+
+html.dark .bg-slate-800,
+html.dark .bg-gray-800 {
+  background-color: #1A3260 !important;
+}
+
+html.dark .bg-slate-800\/50,
+html.dark .bg-slate-800\/40,
+html.dark .bg-slate-800\/60,
+html.dark .bg-slate-800\/80 {
+  background-color: #162B54 !important;
+}
+
+/* Hover interativo com resposta visual clara (#254586) */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-800:hover,
+html.dark .hover\:bg-slate-700:hover {
+  background-color: #254586 !important;
+}
+
+/* Bordas de alto contraste delineando cada elemento (#2E4D8A / #3C64B2) */
 html.dark .border-slate-100,
 html.dark .border-slate-200,
 html.dark .border-slate-300,
 html.dark .border-slate-700,
 html.dark .border-slate-800,
-html.dark .border-slate-900 {
-  border-color: #37373D !important;
+html.dark .border-slate-900,
+html.dark .border-gray-200,
+html.dark .border-gray-700,
+html.dark .border-gray-800 {
+  border-color: #2E4D8A !important;
 }
 
-/* Primordial white text for headings, primary titles and bold texts */
+/* Sombras refinadas que destacam os cartões sobre o fundo #040816 */
+html.dark .shadow-2xl,
+html.dark .shadow-xl {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px #2E4D8A !important;
+}
+
+html.dark .shadow-lg,
+html.dark .shadow-md {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px #2E4D8A !important;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow-xs,
+html.dark .shadow-2xs {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px #2E4D8A !important;
+}
+
+/* ELEMENTOS BRANCOS: Todos os títulos, cabeçalhos e textos principais em branco puro */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
 html.dark h1,
 html.dark h2,
 html.dark h3,
@@ -72,50 +126,107 @@ html.dark h6 {
   color: #FFFFFF !important;
 }
 
-/* Balanced muted secondary text in #CCCCCC */
+/* Textos secundários em branco gelo nítido de alto contraste */
 html.dark .text-slate-600,
 html.dark .text-slate-500,
-html.dark .text-slate-400 {
-  color: #CCCCCC !important;
+html.dark .text-slate-400,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #E2E8F0 !important;
 }
 
-/* Form inputs & controls in dark mode */
+/* Form inputs & controls: fundo azul destacado, texto branco e borda cristalina */
 html.dark input,
 html.dark select,
 html.dark textarea {
-  background-color: #252526 !important;
-  border-color: #37373D !important;
+  background-color: #1A3260 !important;
+  border-color: #3C64B2 !important;
   color: #FFFFFF !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #888888 !important;
+  color: #94A3B8 !important;
 }
 
 html.dark input:focus,
 html.dark select:focus,
 html.dark textarea:focus {
-  border-color: #62B2E9 !important;
-  outline-color: #62B2E9 !important;
+  border-color: #3B82F6 !important;
+  outline-color: #3B82F6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
 }
 
-/* Primary buttons and accents */
+/* Botões primários em azul royal elétrico com texto branco */
 html.dark .bg-indigo-600,
 html.dark .bg-blue-600 {
-  background-color: #448CC2 !important;
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
 }
 
 html.dark .bg-indigo-600:hover,
 html.dark .bg-blue-600:hover {
-  background-color: #62B2E9 !important;
+  background-color: #1D4ED8 !important;
+  color: #FFFFFF !important;
 }
 
 html.dark .text-indigo-600,
 html.dark .text-indigo-400,
 html.dark .text-blue-600,
 html.dark .text-blue-400 {
-  color: #62B2E9 !important;
+  color: #60A5FA !important;
+}
+
+/* Badges e tags secundárias no modo escuro */
+html.dark .bg-slate-200,
+html.dark .bg-slate-300 {
+  background-color: #254586 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #3C64B2 !important;
+}
+
+/* Cores arbitrárias do Início e Telas Móveis mapeadas para o contraste nítido */
+html.dark .bg-\[\#edf0f5\],
+html.dark [class*="bg-[#edf0f5]"] {
+  background-color: #040816 !important;
+}
+
+html.dark .bg-\[\#111D3B\],
+html.dark [class*="bg-[#111D3B]"] {
+  background-color: #102144 !important;
+  border-color: #2E4D8A !important;
+}
+
+html.dark .bg-\[\#18191d\],
+html.dark [class*="bg-[#18191d]"] {
+  background-color: #172E5E !important;
+  border-color: #2E4D8A !important;
+}
+
+html.dark .bg-\[\#1c1d22\],
+html.dark [class*="bg-[#1c1d22]"] {
+  background-color: #1A3260 !important;
+  border-color: #2E4D8A !important;
+}
+
+html.dark .bg-\[\#18264D\],
+html.dark [class*="bg-[#18264D]"] {
+  background-color: #1A3260 !important;
+  border-color: #2E4D8A !important;
+}
+
+html.dark .border-\[\#243B6E\],
+html.dark [class*="border-[#243B6E]"] {
+  border-color: #2E4D8A !important;
+}
+
+/* Elementos brancos garantidos em ícones e cabeçalhos */
+html.dark .text-white {
+  color: #FFFFFF !important;
+}
+
+html.dark svg:not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-red"]) {
+  color: #FFFFFF;
 }
 
 @layer utilities {

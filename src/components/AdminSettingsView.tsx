@@ -50,7 +50,9 @@ import {
   Mail,
   Phone,
   Cake,
-  Palmtree
+  Palmtree,
+  UserCheck,
+  Settings
 } from 'lucide-react';
 import { getCultos, getPessoas, getEscalas, saveChurchProfileDoc } from '../services/firestoreService';
 
@@ -79,6 +81,8 @@ interface AdminSettingsViewProps {
   onOpenJoinRequests?: () => void;
   pendingJoinRequestsCount?: number;
   initialTab?: 'church' | 'ministries' | 'whatsapp' | 'automation';
+  onUpdateUser?: (updated: User) => void;
+  onOpenEditProfile?: () => void;
 }
 
 export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
@@ -104,7 +108,9 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   onOpenInviteMembers,
   onOpenJoinRequests,
   pendingJoinRequestsCount = 0,
-  initialTab = 'church'
+  initialTab = 'church',
+  onUpdateUser,
+  onOpenEditProfile
 }) => {
   // Navigation tabs within Admin Settings
   const [activeTab, setActiveTab] = useState<'church' | 'ministries' | 'whatsapp' | 'automation'>(initialTab);
@@ -129,6 +135,15 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   const [churchFeedback, setChurchFeedback] = useState<string | null>(null);
   const [isProcessingChurchLogo, setIsProcessingChurchLogo] = useState(false);
   const churchLogoInputRef = useRef<HTMLInputElement>(null);
+
+  // Admin user avatar state for direct editing in "Minha Igreja"
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState(currentUser.avatarUrl || '');
+  const [isProcessingAdminAvatar, setIsProcessingAdminAvatar] = useState(false);
+  const adminAvatarInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAdminAvatarUrl(currentUser.avatarUrl || '');
+  }, [currentUser.avatarUrl]);
 
   useEffect(() => {
     if (propChurchProfile) {
@@ -841,6 +856,126 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
               </div>
             </div>
           </form>
+
+          {/* FOTO DE PERFIL DO ADMINISTRADOR / MINHA FOTO */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 rounded-xl shrink-0">
+                  <UserCheck className="w-5 h-5 text-blue-600 dark:text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    Foto de Perfil do Administrador
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Atualize sua foto de perfil pessoal exibida no topo, nas escalas e na congregação.
+                  </p>
+                </div>
+              </div>
+
+              {onOpenEditProfile && (
+                <button
+                  type="button"
+                  onClick={onOpenEditProfile}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-blue-900/40 transition cursor-pointer"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Editar Dados Completos</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+              {/* Avatar Preview */}
+              <div className="shrink-0 flex flex-col items-center gap-2">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-white dark:bg-slate-900 border-2 border-blue-500 shadow-md flex items-center justify-center">
+                  {adminAvatarUrl ? (
+                    <img
+                      src={adminAvatarUrl}
+                      alt={currentUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                  {currentUser.name.split(' ')[0]} (Você)
+                </span>
+              </div>
+
+              {/* Upload & Controls */}
+              <div className="flex-1 space-y-3 w-full">
+                <input
+                  ref={adminAvatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  disabled={isProcessingAdminAvatar}
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsProcessingAdminAvatar(true);
+                    setChurchFeedback(null);
+                    try {
+                      const compressed = await compressImageFile(file, {
+                        maxWidth: 320,
+                        maxHeight: 320,
+                        quality: 0.85,
+                        format: 'image/jpeg'
+                      });
+                      setAdminAvatarUrl(compressed);
+                      if (onUpdateUser) {
+                        onUpdateUser({ ...currentUser, avatarUrl: compressed });
+                        setChurchFeedback('Foto de perfil do administrador atualizada com sucesso!');
+                      }
+                    } catch (err: any) {
+                      setChurchFeedback(err?.message || 'Erro ao processar imagem de perfil.');
+                    } finally {
+                      setIsProcessingAdminAvatar(false);
+                      if (adminAvatarInputRef.current) adminAvatarInputRef.current.value = '';
+                    }
+                  }}
+                />
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={isProcessingAdminAvatar}
+                    onClick={() => adminAvatarInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>{isProcessingAdminAvatar ? 'Processando Foto...' : 'Trocar Minha Foto de Perfil'}</span>
+                  </button>
+
+                  {adminAvatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdminAvatarUrl('');
+                        if (onUpdateUser) {
+                          onUpdateUser({ ...currentUser, avatarUrl: '' });
+                          setChurchFeedback('Foto de perfil removida com sucesso!');
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-semibold transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remover Foto</span>
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Carregue uma foto sua nítida. O arquivo é otimizado automaticamente para carregamento rápido em qualquer dispositivo.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* ADMIN CREDENTIALS & SECURITY CONTROL */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-4">
