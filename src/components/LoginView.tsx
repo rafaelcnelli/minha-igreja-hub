@@ -18,7 +18,11 @@ import {
   Calendar,
   Building2,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  AlertTriangle,
+  Copy,
+  Check,
+  ExternalLink
 } from 'lucide-react';
 import { ChurchProfile } from '../types';
 
@@ -30,6 +34,7 @@ interface LoginViewProps {
 export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInviteToken }) => {
   const {
     loginWithGoogle,
+    loginAsDemoUser,
     loginWithEmail,
     registerAndCreateChurch,
     registerAndJoinChurch,
@@ -41,6 +46,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
     isLoading
   } = useAuth();
   const { setTheme } = useTheme();
+
+  const [copiedDomain, setCopiedDomain] = useState(false);
+  const currentDomain = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'rafaelcnelli.github.io';
+
+  const handleCopyDomain = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(currentDomain);
+      setCopiedDomain(true);
+      setTimeout(() => setCopiedDomain(false), 2500);
+    }
+  };
 
   // Always start in light theme per requirements
   useEffect(() => {
@@ -419,10 +435,82 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
 
           {/* Feedback Messages */}
           {(localError || authError) && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{localError || authError}</span>
-            </div>
+            (localError?.includes('unauthorized-domain') ||
+             localError?.includes('Domínio não autorizado') ||
+             authError?.includes('unauthorized-domain') ||
+             authError?.includes('Domínio não autorizado')) ? (
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs space-y-3.5 animate-in fade-in duration-200 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-200/70 flex items-center justify-center shrink-0 text-amber-800">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-sm text-amber-950">
+                      Domínio do GitHub Pages precisa ser autorizado no Firebase
+                    </p>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      O Firebase Authentication bloqueia o login quando o site está em um domínio novo (como <strong>{currentDomain}</strong>) até que ele seja incluído nos <em>Domínios autorizados</em>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-amber-200 space-y-2.5 shadow-2xs">
+                  <p className="font-bold text-[11px] text-slate-800 uppercase tracking-wider">
+                    Como autorizar em 3 passos rápidos:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-600 text-xs leading-relaxed">
+                    <li>Abra o Console do Firebase pelo link abaixo.</li>
+                    <li>Na aba <strong>Configurações (Settings)</strong> &gt; seção <strong>Domínios autorizados</strong>, clique em <strong>Adicionar domínio</strong>.</li>
+                    <li>Cole o domínio do seu site e clique em <strong>Salvar</strong>:</li>
+                  </ol>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <code className="flex-1 px-3 py-2 bg-slate-100 text-amber-900 font-mono text-xs font-semibold rounded-lg border border-slate-200 select-all">
+                      {currentDomain}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={handleCopyDomain}
+                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-xs"
+                    >
+                      {copiedDomain ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedDomain ? 'Copiado!' : 'Copiar Domínio'}</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-1.5">
+                    <a
+                      href="https://console.firebase.google.com/project/gen-lang-client-0184131312/authentication/settings"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                    >
+                      <span>Abrir Configurações do Firebase Console</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => loginAsDemoUser('admin')}
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Entrar Agora em Modo Demonstração (Admin)</span>
+                  </button>
+                  <span className="text-[11px] text-amber-800/80 text-center sm:text-right">
+                    Você pode usar o sistema agora enquanto autoriza o domínio!
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{localError || authError}</span>
+              </div>
+            )
           )}
 
           {joinSuccessNotice && (
@@ -981,6 +1069,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
         <div className="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Igrejas isoladas com dados protegidos, data de aniversário obrigatória e aprovação de novos membros por ADM e Líderes.</span>
+        </div>
+
+        {/* Quick Demo Access */}
+        <div className="pt-2 border-t border-slate-200/80 flex flex-col items-center justify-center gap-1.5 text-center">
+          <span className="text-[11px] text-slate-400">Quer apenas explorar o sistema sem cadastro?</span>
+          <button
+            type="button"
+            onClick={() => loginAsDemoUser('admin')}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer font-semibold shadow-2xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Entrar em Modo Demonstração (Pr. Roberto - Admin)</span>
+          </button>
         </div>
       </div>
     </div>

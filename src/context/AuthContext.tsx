@@ -30,6 +30,36 @@ export interface GooglePendingUser {
   photoURL?: string;
 }
 
+export function formatAuthErrorMessage(err: any): string {
+  if (!err) return 'Ocorreu um erro inesperado.';
+  const code = err.code || '';
+  const message = err.message || '';
+
+  if (code === 'auth/unauthorized-domain' || message.includes('unauthorized-domain')) {
+    const domain = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'rafaelcnelli.github.io';
+    return `Domínio não autorizado pelo Firebase (${domain}). Para permitir a autenticação neste site, acesse o Firebase Console > Authentication > Settings > Domínios autorizados e adicione "${domain}".`;
+  }
+  if (code === 'auth/popup-closed-by-user') {
+    return 'A janela de autenticação foi fechada antes de concluir o login.';
+  }
+  if (code === 'auth/popup-blocked') {
+    return 'O pop-up de autenticação foi bloqueado pelo seu navegador. Por favor, permita pop-ups para este site.';
+  }
+  if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+    return 'E-mail ou senha incorretos.';
+  }
+  if (code === 'auth/email-already-in-use') {
+    return 'Este e-mail já está cadastrado em outra conta.';
+  }
+  if (code === 'auth/weak-password') {
+    return 'A senha deve conter no mínimo 6 caracteres.';
+  }
+  if (code === 'auth/invalid-email') {
+    return 'Formato de e-mail inválido.';
+  }
+  return message || 'Erro ao realizar autenticação.';
+}
+
 interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   currentUser: User | null;
@@ -39,6 +69,7 @@ interface AuthContextType {
   isLoading: boolean;
   authError: string | null;
   loginWithGoogle: () => Promise<{ isNewUser: boolean }>;
+  loginAsDemoUser: (role?: 'admin' | 'leader' | 'member') => Promise<void>;
   completeGoogleRegistration: (data: {
     birthDate: string;
     phone: string;
@@ -224,12 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Fallback search note:', checkErr);
       }
 
-      let errorMsg = 'E-mail ou senha incorretos.';
-      if (fbErr.code === 'auth/user-not-found' || fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
-        errorMsg = 'E-mail ou senha incorretos.';
-      } else if (fbErr.code === 'auth/invalid-email') {
-        errorMsg = 'Formato de e-mail inválido.';
-      }
+      const errorMsg = formatAuthErrorMessage(fbErr);
       setAuthError(errorMsg);
       setIsLoading(false);
       throw new Error(errorMsg);
@@ -330,9 +356,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       return newChurch;
     } catch (err: any) {
-      setAuthError(err.message || 'Erro ao registrar igreja.');
+      const msg = formatAuthErrorMessage(err);
+      setAuthError(msg);
       setIsLoading(false);
-      throw err;
+      throw new Error(msg);
     }
   };
 
@@ -430,9 +457,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       return { church: targetChurch, requiresApproval: true };
     } catch (err: any) {
-      setAuthError(err.message || 'Erro ao entrar na igreja.');
+      const msg = formatAuthErrorMessage(err);
+      setAuthError(msg);
       setIsLoading(false);
-      throw err;
+      throw new Error(msg);
     }
   };
 
@@ -472,10 +500,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { isNewUser: true };
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        const msg = err.message || 'Erro ao autenticar com Google.';
+        const msg = formatAuthErrorMessage(err);
         setAuthError(msg);
         setIsLoading(false);
-        throw err;
+        throw new Error(msg);
       }
       setIsLoading(false);
       return { isNewUser: false };
@@ -617,9 +645,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { requiresApproval: true, church: targetChurch };
       }
     } catch (err: any) {
-      setAuthError(err.message || 'Erro ao concluir cadastro com Google.');
+      const msg = formatAuthErrorMessage(err);
+      setAuthError(msg);
       setIsLoading(false);
-      throw err;
+      throw new Error(msg);
+    }
+  };
+
+  const loginAsDemoUser = async (role: 'admin' | 'leader' | 'member' = 'admin') => {
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      let targetUser = INITIAL_USERS[0];
+      if (role === 'leader') {
+        targetUser = INITIAL_USERS.find(u => u.id === 'user-priscila') || INITIAL_USERS[1];
+      } else if (role === 'member') {
+        targetUser = INITIAL_USERS.find(u => u.id === 'user-david') || INITIAL_USERS[2];
+      }
+
+      const demoChurch: Church = {
+        id: 'church-demo',
+        name: 'Minha Igreja Hub (Demo)',
+        code: 'HUB-777',
+        campus: 'Campus Principal',
+        subtitle: 'Gestão Congregacional & Escalas',
+        adminId: targetUser.id,
+        adminName: targetUser.name,
+        adminEmail: targetUser.email,
+        phone: targetUser.phone,
+        createdAt: new Date().toISOString()
+      };
+
+      const userWithChurch: User = {
+        ...targetUser,
+        churchId: demoChurch.id,
+        churchCode: demoChurch.code
+      };
+
+      setCurrentUser(userWithChurch);
+      setCurrentChurch(demoChurch);
+      localStorage.setItem('kairos_active_user_id', userWithChurch.id);
+    } catch (err) {
+      console.warn('Demo login note:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -651,6 +720,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         authError,
         loginWithGoogle,
+        loginAsDemoUser,
         completeGoogleRegistration,
         setGooglePendingUser,
         loginWithEmail,
