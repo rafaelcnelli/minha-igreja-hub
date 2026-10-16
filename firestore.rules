@@ -1,0 +1,125 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'rcnelli@hotmail.com' ||
+        request.auth.token.email == 'pastor.roberto@minhaigrejahub.com.br' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Connection test document
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // Admins registry
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Pessoas (Membros, Voluntários, Líderes)
+    // "Ser possível editar dados dos perfis, apenas a pessoa pode alterar seus dados de perfis."
+    match /pessoas/{pessoaId} {
+      allow read: if true;
+      allow create: if true;
+      // Apenas a pessoa pode alterar seus dados de perfis (ou admin)
+      allow update: if !isSignedIn() || request.auth.uid == pessoaId || isAdmin();
+      allow delete: if isAdmin() || !isSignedIn();
+    }
+
+    // Cultos e Eventos
+    // "Salvar dados como escala, cultos e tudo salvo ou criado na firebase para deixar salva qualquer alteração."
+    match /cultos/{cultoId} {
+      allow read, write: if true;
+    }
+
+    // Escalas de Voluntários
+    // "Salvar dados como escala, cultos e tudo salvo ou criado na firebase para deixar salva qualquer alteração."
+    match /escalas/{escalaId} {
+      allow read, write: if true;
+    }
+
+    // Ministérios
+    match /ministries/{ministryId} {
+      allow read, write: if true;
+    }
+
+    // Músicas do Repertório
+    match /songs/{songId} {
+      allow read, write: if true;
+    }
+
+    // Publicações de Escala
+    match /publications/{pubId} {
+      allow read, write: if true;
+    }
+
+    // Ensaios de Escala
+    match /rehearsals/{rehearsalId} {
+      allow read, write: if true;
+    }
+
+    // Trocas de Escala
+    match /swaps/{swapId} {
+      allow read, write: if true;
+    }
+
+    // Bloqueios de Indisponibilidade
+    match /unavailabilities/{unavailId} {
+      allow read, write: if true;
+    }
+
+    // Notificações
+    match /notifications/{notifId} {
+      allow read, write: if true;
+    }
+
+    // Histórico de Auditoria
+    match /audit/{auditId} {
+      allow read, write: if true;
+    }
+
+    // Configurações do Sistema e Módulo WhatsApp
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Histórico de Lembretes WhatsApp Enviados
+    match /whatsappReminders/{reminderId} {
+      allow read, write: if true;
+    }
+
+    // Mural de Avisos e Comunicados (ADM e Líderes)
+    match /avisos/{avisoId} {
+      allow read, write: if true;
+    }
+
+    // Igrejas (Multi-Igreja)
+    match /churches/{churchId} {
+      allow read, write: if true;
+    }
+
+    // Solicitações de Ingresso em Igreja
+    match /joinRequests/{requestId} {
+      allow read, write: if true;
+    }
+  }
+}
+

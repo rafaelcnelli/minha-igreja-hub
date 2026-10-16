@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "Pessoa": {
+      "title": "Pessoa",
+      "description": "Membros, voluntários, líderes e administradores da igreja",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "birthDate": { "type": "string", "maxLength": 20 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "isAdmin": { "type": "boolean" },
+        "status": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Culto": {
+      "title": "Culto",
+      "description": "Cultos, celebrações, reuniões e eventos da igreja",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "date": { "type": "string", "maxLength": 20 },
+        "startTime": { "type": "string", "maxLength": 10 },
+        "endTime": { "type": "string", "maxLength": 10 },
+        "rehearsalTime": { "type": "string", "maxLength": 10 },
+        "campus": { "type": "string", "maxLength": 100 },
+        "director": { "type": "string", "maxLength": 100 },
+        "preacher": { "type": "string", "maxLength": 100 },
+        "generalManager": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "date", "startTime"]
+    },
+    "Escala": {
+      "title": "Escala",
+      "description": "Vagas e atribuições de voluntários para cada função no culto",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "cultoId": { "type": "string", "maxLength": 128 },
+        "ministryId": { "type": "string", "maxLength": 128 },
+        "roleTitle": { "type": "string", "maxLength": 100 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "maxLength": 30 },
+        "declineReason": { "type": "string", "maxLength": 300 },
+        "assignedAt": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "cultoId", "ministryId", "roleTitle"]
+    },
+    "Ministry": {
+      "title": "Ministry",
+      "description": "Ministérios da igreja como Louvor, Mídia, Recepção, Infantil",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "code": { "type": "string", "maxLength": 30 },
+        "color": { "type": "string", "maxLength": 30 },
+        "description": { "type": "string", "maxLength": 300 }
+      },
+      "required": ["id", "name"]
+    },
+    "Song": {
+      "title": "Song",
+      "description": "Biblioteca de músicas e cifras para o ministério de louvor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "artist": { "type": "string", "maxLength": 150 },
+        "originalKey": { "type": "string", "maxLength": 10 },
+        "selectedKey": { "type": "string", "maxLength": 10 },
+        "versionUrl": { "type": "string", "maxLength": 500 },
+        "notes": { "type": "string", "maxLength": 300 }
+      },
+      "required": ["id", "title", "artist"]
+    },
+    "Aviso": {
+      "title": "Aviso",
+      "description": "Avisos e comunicados criados por administradores (gerais) ou líderes (para encarregados)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "targetAudience": { "type": "string", "maxLength": 20 },
+        "targetMinistryId": { "type": "string", "maxLength": 128 },
+        "targetMinistryName": { "type": "string", "maxLength": 150 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 150 },
+        "authorRole": { "type": "string", "maxLength": 20 },
+        "priority": { "type": "string", "maxLength": 20 },
+        "pinned": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "readBy": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "title", "content", "targetAudience", "authorId", "authorName", "priority"]
+    }
+  },
+  "firestore": {
+    "/pessoas/{pessoaId}": {
+      "schema": "Pessoa",
+      "description": "Documentos individuais dos membros, líderes e administradores"
+    },
+    "/cultos/{cultoId}": {
+      "schema": "Culto",
+      "description": "Cronograma de celebrações e cultos da igreja"
+    },
+    "/escalas/{escalaId}": {
+      "schema": "Escala",
+      "description": "Vagas alocadas e pendentes de voluntários para cada culto"
+    },
+    "/ministries/{ministryId}": {
+      "schema": "Ministry",
+      "description": "Cadastro de ministérios e equipes de serviço"
+    },
+    "/songs/{songId}": {
+      "schema": "Song",
+      "description": "Repertório geral de louvores da igreja"
+    },
+    "/avisos/{avisoId}": {
+      "schema": "Aviso",
+      "description": "Avisos e comunicados da liderança e administração para todos ou por ministério"
+    }
+  }
+}

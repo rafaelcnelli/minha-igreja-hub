@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================================================== */
+/* DARK MODE EXACT SPECIFICATION PALETTE                                      */
+/* #CCCCCC (Muted text / subtle highlights)                                    */
+/* #37373D (Borders / dividers / separators)                                  */
+/* #252526 (Cards / surfaces / modals / dropdowns)                             */
+/* #1E1E1E (Main deep background)                                             */
+/* #62B2E9 (Light blue accent / links / focus)                                 */
+/* #448CC2 (Medium blue buttons / primary actions)                             */
+/* "A escolha das letras é primordialmente branca e o restante bem equilibrado */
+/* e contrastado."                                                            */
+/* ========================================================================== */
+
+:root {
+  --color-dark-bg: #1E1E1E;
+  --color-dark-surface: #252526;
+  --color-dark-border: #37373D;
+  --color-dark-muted: #CCCCCC;
+  --color-dark-accent: #62B2E9;
+  --color-dark-accent-hover: #448CC2;
+}
+
+html.dark {
+  background-color: #1E1E1E !important;
+  color: #FFFFFF !important;
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #1E1E1E !important;
+  color: #FFFFFF !important;
+}
+
+/* Force dark surfaces and card backgrounds to #252526 */
+html.dark .bg-white {
+  background-color: #252526 !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-100 {
+  background-color: #1E1E1E !important;
+}
+
+html.dark .bg-slate-900,
+html.dark .bg-slate-950 {
+  background-color: #252526 !important;
+}
+
+/* Force borders in dark mode to #37373D */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-slate-700,
+html.dark .border-slate-800,
+html.dark .border-slate-900 {
+  border-color: #37373D !important;
+}
+
+/* Primordial white text for headings, primary titles and bold texts */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #FFFFFF !important;
+}
+
+/* Balanced muted secondary text in #CCCCCC */
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #CCCCCC !important;
+}
+
+/* Form inputs & controls in dark mode */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #252526 !important;
+  border-color: #37373D !important;
+  color: #FFFFFF !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #888888 !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #62B2E9 !important;
+  outline-color: #62B2E9 !important;
+}
+
+/* Primary buttons and accents */
+html.dark .bg-indigo-600,
+html.dark .bg-blue-600 {
+  background-color: #448CC2 !important;
+}
+
+html.dark .bg-indigo-600:hover,
+html.dark .bg-blue-600:hover {
+  background-color: #62B2E9 !important;
+}
+
+html.dark .text-indigo-600,
+html.dark .text-indigo-400,
+html.dark .text-blue-600,
+html.dark .text-blue-400 {
+  color: #62B2E9 !important;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 1rem);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

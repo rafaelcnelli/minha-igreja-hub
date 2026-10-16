@@ -1,0 +1,6 @@
+{
+  "name": "Minha Igreja Hub",
+  "description": "Sistema de Gestão de Cultos, Cadastro de Pessoas, Escalas de Ministérios e Convites para Igrejas e Comunidades.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
