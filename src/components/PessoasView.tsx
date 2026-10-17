@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Ministry, MinistryMembership, RoleInMinistry, User } from '../types';
 import { EditProfileModal } from './EditProfileModal';
 import { compressImageFile } from '../utils/imageUtils';
+import { buildInviteLink } from '../utils/urlUtils';
 import {
   Users,
   UserPlus,
@@ -197,7 +198,11 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
     setFormErrorMessage(null);
 
     const token = `hub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-    const inviteLink = `https://minhaigrejahub.com.br/convite?token=${token}`;
+    const inviteLink = buildInviteLink({
+      churchCode: currentUser.churchCode,
+      inviteToken: token,
+      invitedBy: currentUser.id
+    });
 
     const newPerson: User = {
       id: `user-${Date.now()}`,
@@ -611,7 +616,11 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full justify-between">
                     <button
                       onClick={() => {
-                        const link = `https://minhaigrejahub.com.br/convite?token=${person.inviteToken || 'hub-token-demo'}`;
+                        const link = buildInviteLink({
+                          churchCode: currentUser.churchCode,
+                          inviteToken: person.inviteToken || 'hub-token-demo',
+                          invitedBy: currentUser.id
+                        });
                         const minNames = person.memberships.map(m => ministries.find(min => min.id === m.ministryId)?.name || '');
                         handleSendWhatsAppInvite(person.name, person.phone, link, minNames);
                       }}

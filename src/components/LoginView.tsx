@@ -25,6 +25,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { ChurchProfile } from '../types';
+import { getAppUrlParam } from '../utils/urlUtils';
 
 interface LoginViewProps {
   churchProfile?: ChurchProfile;
@@ -64,12 +65,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
     document.documentElement.classList.remove('dark');
   }, []);
 
-  // Parse URL search params for direct invite links or church code
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlChurchCode = urlParams.get('igreja') || urlParams.get('codigo') || urlParams.get('church');
-  const urlInviteToken = urlParams.get('convite') || urlParams.get('token') || urlParams.get('invite') || initialInviteToken;
-  const urlMinistryId = urlParams.get('min');
-  const urlInvitedBy = urlParams.get('by');
+  // Parse URL params (both standard search params and hash query params)
+  const urlChurchCode = getAppUrlParam('igreja') || getAppUrlParam('codigo') || getAppUrlParam('church');
+  const urlInviteToken = getAppUrlParam('convite') || getAppUrlParam('token') || getAppUrlParam('invite') || initialInviteToken;
+  const urlMinistryId = getAppUrlParam('min') || getAppUrlParam('ministerio');
+  const urlInvitedBy = getAppUrlParam('by') || getAppUrlParam('por');
 
   // Default mode:
   // If user arrives via invitation URL/church code, go to 'join_church'.

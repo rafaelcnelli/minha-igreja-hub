@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Church, ChurchProfile, Ministry, User } from '../types';
+import { buildInviteLink } from '../utils/urlUtils';
 import {
   KeyRound,
   Copy,
@@ -37,14 +38,14 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
 
   const churchName = church.name || 'Minha Igreja';
   const churchCode = church.code || 'HUB-2026';
-  const baseUrl = window.location.origin;
-
   // Selected ministry name for message
   const targetMinistry = ministries.find(m => m.id === selectedMinistryId);
-  const ministryQuery = selectedMinistryId !== 'all' ? `&min=${selectedMinistryId}` : '';
-  const tokenQuery = `&by=${encodeURIComponent(currentUser.id)}`;
 
-  const inviteLink = `${baseUrl}/?igreja=${encodeURIComponent(churchCode)}${ministryQuery}${tokenQuery}`;
+  const inviteLink = buildInviteLink({
+    churchCode,
+    ministryId: selectedMinistryId,
+    invitedBy: currentUser.id
+  });
 
   const whatsappMessage = selectedMinistryId !== 'all' && targetMinistry
     ? `Olá! 👋\n\nVocê foi convidado(a) por *${currentUser.name}* para a equipe do *${targetMinistry.name}* na *${churchName}*!\n\nAcesse pelo link seguro para criar seu perfil e entrar:\n🔗 ${inviteLink}\n\nOu acesse a plataforma e informe o Código da Igreja:\n🔑 *${churchCode}*\n\nAo se cadastrar, seu acesso será confirmado pela liderança. Seja bem-vindo(a)!`
@@ -215,6 +216,14 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             </p>
             <p className="text-[11px] leading-relaxed">
               Mesmo compartilhando o código publicamente, nenhuma pessoa nova poderá ver as escalas, cultos ou voluntários da igreja até que você ou outro líder aprove o pedido dela no sistema.
+            </p>
+          </div>
+
+          {/* Tip for Testing */}
+          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] leading-relaxed">
+              <strong>Como testar o convite você mesmo:</strong> Abra o link em uma <em>Janela Anônima</em> do navegador para visualizar a tela de cadastro e boas-vindas do novo membro, sem interferir com o seu login atual de administrador.
             </p>
           </div>
         </div>

@@ -21,6 +21,7 @@ import {
   buildWhatsAppWebUrl,
   normalizePhoneForWhatsApp
 } from '../utils/whatsappReminderUtils';
+import { getBaseAppUrl } from '../utils/urlUtils';
 import {
   MessageSquareText,
   Copy,
@@ -114,7 +115,7 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
       includeConfirmationLink: true,
       includeRehearsal: true,
       includeNotes: true,
-      appUrl: 'https://app.minhaigrejahub.com.br',
+      appUrl: getBaseAppUrl(),
       birthdayDigestEnabled: true,
       birthdayDigestGroupTarget: 'Liderança Ministerial & Pastores',
       birthdayDigestGroupPhone: '',
@@ -258,7 +259,8 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
       if (includeConfirmationLink) {
         text += `\n------------------------------------\n`;
         text += `Confirme sua escala no aplicativo:\n`;
-        text += `${currentSettings.appUrl || 'https://app.minhaigrejahub.com.br'}/minhas-escalas\n`;
+        const effectiveUrl = (currentSettings.appUrl && !currentSettings.appUrl.includes('minhaigrejahub.com.br')) ? currentSettings.appUrl : getBaseAppUrl();
+        text += `${effectiveUrl.replace(/\/$/, '')}/minhas-escalas\n`;
       }
 
       return text;
@@ -303,7 +305,8 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
 
     if (includeConfirmationLink) {
       text += `\nConfirme sua presença no app:\n`;
-      text += `${currentSettings.appUrl || 'https://app.minhaigrejahub.com.br'}/minhas-escalas\n`;
+      const effectiveUrl = (currentSettings.appUrl && !currentSettings.appUrl.includes('minhaigrejahub.com.br')) ? currentSettings.appUrl : getBaseAppUrl();
+      text += `${effectiveUrl.replace(/\/$/, '')}/minhas-escalas\n`;
     }
 
     return text;
@@ -856,7 +859,8 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
         text += `• *${v.slot.roleTitle}:* ${v.volunteer.name}\n`;
       });
     }
-    text += `\n📲 *Consulte o repertório e cifras no app:* ${currentSettings.appUrl || 'https://app.minhaigrejahub.com.br'}\n\n`;
+    const effectiveAppUrl = (currentSettings.appUrl && !currentSettings.appUrl.includes('minhaigrejahub.com.br')) ? currentSettings.appUrl : getBaseAppUrl();
+    text += `\n📲 *Consulte o repertório e cifras no app:* ${effectiveAppUrl}\n\n`;
     text += `Contamos com a pontualidade e dedicação de todos! Graça e paz! 🙌✨`;
     return text;
   }, [activeRehearsalCulto, rehearsalVolunteers, currentSettings.appUrl]);
@@ -995,9 +999,12 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
   );
   const [editedEnabled, setEditedEnabled] = useState<boolean>(currentSettings.enabled ?? true);
   const [editedHoursBefore, setEditedHoursBefore] = useState<number>(currentSettings.hoursBefore ?? 24);
-  const [editedAppUrl, setEditedAppUrl] = useState<string>(
-    currentSettings.appUrl || 'https://app.minhaigrejahub.com.br'
-  );
+  const [editedAppUrl, setEditedAppUrl] = useState<string>(() => {
+    if (currentSettings.appUrl && !currentSettings.appUrl.includes('minhaigrejahub.com.br')) {
+      return currentSettings.appUrl;
+    }
+    return getBaseAppUrl();
+  });
   const [editedIncludeRehearsal, setEditedIncludeRehearsal] = useState<boolean>(
     currentSettings.includeRehearsal ?? true
   );
@@ -2899,7 +2906,7 @@ export const WhatsAppModuleView: React.FC<WhatsAppModuleViewProps> = ({
                       disabled={!isAdmin}
                       value={editedAppUrl}
                       onChange={e => setEditedAppUrl(e.target.value)}
-                      placeholder="https://app.minhaigrejahub.com.br"
+                      placeholder={getBaseAppUrl()}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500"
                     />
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block">

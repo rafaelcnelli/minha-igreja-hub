@@ -249,12 +249,12 @@ export const TopBar: React.FC<TopBarProps> = ({
               <button
                 type="button"
                 onClick={onStartTour}
-                title="Fazer Tour Guiado (Minhas Escalas e Repertório)"
-                aria-label="Iniciar Tour Guiado"
-                className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-semibold transition-all bg-amber-50/70 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border-amber-200/80 dark:border-amber-800/80 text-amber-800 dark:text-amber-200 shadow-2xs"
+                title="Tour / Tutorial Guiado (Clique para rever o guia a qualquer momento)"
+                aria-label="Abrir Tour / Tutorial Guiado"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
               >
-                <Compass className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="hidden sm:inline text-[11px]">Tour</span>
+                <Compass className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span className="text-[11px] font-bold">Tour</span>
               </button>
             )}
 

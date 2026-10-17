@@ -72,6 +72,7 @@ import { JoinRequestsModal } from './components/JoinRequestsModal';
 import { InviteMembersModal } from './components/InviteMembersModal';
 import { OnboardingTour } from './components/OnboardingTour';
 import { calculateAge, isBirthdayToday } from './utils/dateUtils';
+import { buildInviteLink } from './utils/urlUtils';
 import {
   subscribePessoas,
   subscribeCultos,
@@ -784,26 +785,56 @@ export default function App() {
   // Onboarding Tour state for volunteers
   const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Auto-trigger tour on first access for volunteers / members
+  const markTourAsSeen = () => {
+    try {
+      localStorage.setItem('minha_igreja_tour_seen_v1', 'true');
+      if (currentUser?.id) {
+        localStorage.setItem(`kairs_onboarding_tour_completed_${currentUser.id}`, 'true');
+        localStorage.setItem(`kairs_tour_seen_${currentUser.id}`, 'true');
+      }
+    } catch (e) {
+      console.warn('Erro ao salvar status do tour:', e);
+    }
+  };
+
+  // Auto-trigger tour ONLY on first access for the user / device
   useEffect(() => {
-    if (currentUser?.id) {
-      const tourKey = `kairs_onboarding_tour_completed_${currentUser.id}`;
-      const hasCompleted = localStorage.getItem(tourKey);
-      if (!hasCompleted) {
-        // Aguarda renderização inicial para abrir o tour de boas-vindas
+    if (!currentUser?.id) return;
+
+    try {
+      const deviceTourKey = 'minha_igreja_tour_seen_v1';
+      const userTourKey = `kairs_onboarding_tour_completed_${currentUser.id}`;
+      const userTourSeenKey = `kairs_tour_seen_${currentUser.id}`;
+
+      const hasSeenDevice = localStorage.getItem(deviceTourKey);
+      const hasCompletedUser = localStorage.getItem(userTourKey);
+      const hasSeenUser = localStorage.getItem(userTourSeenKey);
+
+      // Se já viu no dispositivo ou já completou o usuário, não abre automaticamente
+      if (!hasSeenDevice && !hasCompletedUser && !hasSeenUser) {
+        // Marca imediatamente para garantir que só abra na primeira vez e nunca mais automaticamente
+        localStorage.setItem(deviceTourKey, 'true');
+        localStorage.setItem(userTourKey, 'true');
+        localStorage.setItem(userTourSeenKey, 'true');
+
+        // Aguarda renderização inicial para abrir o tour de boas-vindas na primeira vez
         const timer = setTimeout(() => {
           setIsTourOpen(true);
-        }, 900);
+        }, 1000);
         return () => clearTimeout(timer);
       }
+    } catch (e) {
+      console.warn('Erro ao verificar status do tour:', e);
     }
   }, [currentUser?.id]);
 
   const handleCompleteTour = () => {
-    if (currentUser?.id) {
-      const tourKey = `kairs_onboarding_tour_completed_${currentUser.id}`;
-      localStorage.setItem(tourKey, 'true');
-    }
+    markTourAsSeen();
+    setIsTourOpen(false);
+  };
+
+  const handleCloseTour = () => {
+    markTourAsSeen();
     setIsTourOpen(false);
   };
 
@@ -1397,9 +1428,16 @@ export default function App() {
         ? existing.memberships.map(m => m.ministryId === ministryId ? { ...m, roleInMinistry, functions } : m)
         : [...existing.memberships, { ministryId, roleInMinistry, functions, joinedAt: new Date().toISOString().split('T')[0] }];
 
-      const updatedUser = { ...existing, memberships: updatedMemberships };
-      handleUpdatePerson(updatedUser);
-      const link = `https://minhaigrejahub.com.br/convite?token=${existing.inviteToken || 'hub-token'}`;
+      const updatedUser: User = { ...existing, memberships: updatedMemberships };
+      setAllUsers(prev => prev.map(u => u.id === existing.id ? updatedUser : u));
+
+      const churchCode = currentChurch?.code || currentUser?.churchCode || churchProfile?.code;
+      const link = buildInviteLink({
+        churchCode,
+        ministryId,
+        inviteToken: existing.inviteToken || 'hub-token',
+        invitedBy: currentUser.id
+      });
       return { link, isNew: false, user: updatedUser };
     }
 
@@ -1426,7 +1464,13 @@ export default function App() {
     };
 
     setAllUsers(prev => [newPerson, ...prev]);
-    const link = `https://minhaigrejahub.com.br/convite?token=${token}`;
+    const churchCode = currentChurch?.code || currentUser?.churchCode || churchProfile?.code;
+    const link = buildInviteLink({
+      churchCode,
+      ministryId,
+      inviteToken: token,
+      invitedBy: currentUser.id
+    });
     return { link, isNew: true, user: newPerson };
   };
 
@@ -2409,7 +2453,7 @@ export default function App() {
       {/* Guided Onboarding Tour for Volunteers */}
       <OnboardingTour
         isOpen={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
+        onClose={handleCloseTour}
         onComplete={handleCompleteTour}
         currentUser={currentUser}
         activeTab={activeTab}

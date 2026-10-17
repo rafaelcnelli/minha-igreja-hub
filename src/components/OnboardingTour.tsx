@@ -263,6 +263,13 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   const isLastStep = currentStepIndex === TOUR_STEPS.length - 1;
   const progressPercentage = Math.round(((currentStepIndex + 1) / TOUR_STEPS.length) * 100);
 
+  // Reset to first step whenever the tour is opened
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStepIndex(0);
+    }
+  }, [isOpen]);
+
   // Synchronize target tab with application active tab as the user progresses
   useEffect(() => {
     if (isOpen && step?.targetTab && activeTab !== step.targetTab) {

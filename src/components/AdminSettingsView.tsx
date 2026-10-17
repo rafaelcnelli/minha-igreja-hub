@@ -55,6 +55,7 @@ import {
   Settings
 } from 'lucide-react';
 import { getCultos, getPessoas, getEscalas, saveChurchProfileDoc } from '../services/firestoreService';
+import { getBaseAppUrl } from '../utils/urlUtils';
 
 interface AdminSettingsViewProps {
   currentUser: User;
@@ -293,7 +294,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       includeConfirmationLink: true,
       includeRehearsal: true,
       includeNotes: true,
-      appUrl: 'https://app.minhaigrejahub.com.br',
+      appUrl: getBaseAppUrl(),
       updatedAt: new Date().toISOString()
     };
   });
@@ -304,7 +305,10 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       setEditedTemplate(propWhatsAppSettings.messageTemplate || DEFAULT_WHATSAPP_REMINDER_TEMPLATE);
       setEditedEnabled(propWhatsAppSettings.enabled ?? true);
       setEditedHoursBefore(propWhatsAppSettings.hoursBefore ?? 24);
-      setEditedAppUrl(propWhatsAppSettings.appUrl || 'https://app.minhaigrejahub.com.br');
+      const effUrl = (propWhatsAppSettings.appUrl && !propWhatsAppSettings.appUrl.includes('minhaigrejahub.com.br'))
+        ? propWhatsAppSettings.appUrl
+        : getBaseAppUrl();
+      setEditedAppUrl(effUrl);
       setEditedIncludeRehearsal(propWhatsAppSettings.includeRehearsal ?? true);
       setEditedIncludeNotes(propWhatsAppSettings.includeNotes ?? true);
       setEditedBirthdayDigestEnabled(propWhatsAppSettings.birthdayDigestEnabled ?? true);
@@ -319,9 +323,12 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   );
   const [editedEnabled, setEditedEnabled] = useState<boolean>(localWhatsAppSettings.enabled ?? true);
   const [editedHoursBefore, setEditedHoursBefore] = useState<number>(localWhatsAppSettings.hoursBefore ?? 24);
-  const [editedAppUrl, setEditedAppUrl] = useState<string>(
-    localWhatsAppSettings.appUrl || 'https://app.minhaigrejahub.com.br'
-  );
+  const [editedAppUrl, setEditedAppUrl] = useState<string>(() => {
+    if (localWhatsAppSettings.appUrl && !localWhatsAppSettings.appUrl.includes('minhaigrejahub.com.br')) {
+      return localWhatsAppSettings.appUrl;
+    }
+    return getBaseAppUrl();
+  });
   const [editedIncludeRehearsal, setEditedIncludeRehearsal] = useState<boolean>(
     localWhatsAppSettings.includeRehearsal ?? true
   );
@@ -1270,7 +1277,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                       type="url"
                       value={editedAppUrl}
                       onChange={e => setEditedAppUrl(e.target.value)}
-                      placeholder="https://app.minhaigrejahub.com.br"
+                      placeholder={getBaseAppUrl()}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>

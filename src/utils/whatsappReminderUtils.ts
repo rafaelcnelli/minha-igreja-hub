@@ -9,6 +9,7 @@ import {
   DEFAULT_REHEARSAL_REMINDER_TEMPLATE
 } from '../types';
 import { formatDayMonthBR, getWeekdayBR, calculateAge, formatBirthdayBR } from './dateUtils';
+import { getBaseAppUrl } from './urlUtils';
 
 export interface ReminderRenderContext {
   volunteer: User;
@@ -48,7 +49,8 @@ export function renderReminderMessage(
 
   const includeRehearsal = settings?.includeRehearsal ?? true;
   const includeNotes = settings?.includeNotes ?? true;
-  const baseUrl = settings?.appUrl || 'https://app.minhaigrejahub.com.br';
+  const defaultBase = getBaseAppUrl();
+  const baseUrl = (settings?.appUrl && !settings.appUrl.includes('minhaigrejahub.com.br')) ? settings.appUrl : defaultBase;
   const scaleUrl = `${baseUrl.replace(/\/$/, '')}/minhas-escalas`;
 
   const rehearsalSnippet =
@@ -117,7 +119,8 @@ export function renderRehearsalReminderMessage(
   const weekday = getWeekdayBR(rehearsalDate);
   const formattedDate = `${d}/${m} (${weekday})`;
 
-  const baseUrl = settings?.appUrl || 'https://app.minhaigrejahub.com.br';
+  const defaultRehBase = getBaseAppUrl();
+  const baseUrl = (settings?.appUrl && !settings.appUrl.includes('minhaigrejahub.com.br')) ? settings.appUrl : defaultRehBase;
   const scaleUrl = `${baseUrl.replace(/\/$/, '')}/minhas-escalas`;
 
   let rendered = rawTemplate
