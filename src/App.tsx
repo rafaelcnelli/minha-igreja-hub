@@ -72,7 +72,7 @@ import { JoinRequestsModal } from './components/JoinRequestsModal';
 import { InviteMembersModal } from './components/InviteMembersModal';
 import { OnboardingTour } from './components/OnboardingTour';
 import { calculateAge, isBirthdayToday } from './utils/dateUtils';
-import { buildInviteLink } from './utils/urlUtils';
+import { buildInviteLink, getAppUrlParam } from './utils/urlUtils';
 import {
   subscribePessoas,
   subscribeCultos,
@@ -118,7 +118,11 @@ import {
   deleteJoinRequestDoc,
   seedInitialFirestoreDataIfEmpty,
   generateFirestoreId,
-  isValidFirestoreId
+  isValidFirestoreId,
+  clearAllCultosDoc,
+  clearAllPessoasDoc,
+  clearAllMinistriesDoc,
+  resetEntireSystemDoc
 } from './services/firestoreService';
 
 export default function App() {
@@ -1396,6 +1400,102 @@ export default function App() {
     toast.info(`Cadastro de ${person.name} foi removido da igreja.`, 'Membro Removido');
   };
 
+  // =========================================================================
+  // CLEAR & RESET SYSTEM HANDLERS (ADMIN EXCLUSIVE)
+  // =========================================================================
+  const handleClearAllCultos = async () => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode zerar os cultos.', 'Permissão Negada');
+      return;
+    }
+    setCultos([]);
+    setSlots([]);
+    await clearAllCultosDoc(churchProfile?.id || activeChurchId).catch(console.error);
+    addAuditLog(
+      'Zerou lista de cultos e escalas',
+      'CULTO',
+      `${currentUser.name} excluiu todos os cultos e escalas da congregação`
+    );
+    toast.success('Todos os cultos e escalas foram apagados com sucesso.', 'Cultos Zerados');
+  };
+
+  const handleClearAllPeople = async () => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode zerar os voluntários.', 'Permissão Negada');
+      return;
+    }
+    setAllUsers([currentUser]);
+    setSlots(prev => prev.map(s => s.userId ? { ...s, userId: undefined, status: 'pending' as const } : s));
+    await clearAllPessoasDoc(currentUser.id, churchProfile?.id || activeChurchId).catch(console.error);
+    addAuditLog(
+      'Zerou lista de voluntários',
+      'VOLUNTARIO',
+      `${currentUser.name} removeu todos os voluntários, mantendo apenas a conta de administrador`
+    );
+    toast.success('Todos os voluntários foram excluídos. Sua conta de Administrador foi preservada.', 'Voluntários Zerados');
+  };
+
+  const handleClearAllMinistries = async () => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode zerar os ministérios.', 'Permissão Negada');
+      return;
+    }
+    setMinistries([]);
+    setAllUsers(prev => prev.map(u => ({ ...u, memberships: [] })));
+    setSlots([]);
+    await clearAllMinistriesDoc(churchProfile?.id || activeChurchId).catch(console.error);
+    addAuditLog(
+      'Zerou lista de ministérios',
+      'SISTEMA',
+      `${currentUser.name} excluiu todos os ministérios da congregação`
+    );
+    toast.success('Todos os ministérios foram removidos com sucesso.', 'Ministérios Zerados');
+  };
+
+  const handleResetEntireSystem = async () => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode realizar o reset completo do sistema.', 'Permissão Negada');
+      return;
+    }
+    setCultos([]);
+    setSlots([]);
+    setMinistries([]);
+    setAllUsers([{ ...currentUser, memberships: [] }]);
+    setSwapRequests([]);
+    setAvisos([]);
+    await resetEntireSystemDoc(currentUser.id, churchProfile?.id || activeChurchId).catch(console.error);
+    addAuditLog(
+      'Reset completo do sistema',
+      'SISTEMA',
+      `${currentUser.name} executou o reset de fábrica da igreja (cultos, escalas, ministérios e voluntários zerados)`
+    );
+    toast.success(
+      'O sistema foi completamente zerado! Todas as escalas, cultos, ministérios e voluntários anteriores foram excluídos com sucesso. Você pode cadastrar sua igreja do zero.',
+      'Sistema Zerado com Sucesso'
+    );
+  };
+
+  // URL Invitation Check when already logged in
+  useEffect(() => {
+    const inviteChurch = getAppUrlParam('igreja') || getAppUrlParam('codigo') || getAppUrlParam('church');
+    if (!inviteChurch || !currentUser?.id) return;
+
+    const currentCode = (currentUser.churchCode || churchProfile?.code || '').toUpperCase();
+    const targetCode = inviteChurch.toUpperCase();
+
+    if (currentCode && currentCode === targetCode) {
+      toast.info(
+        `Link de convite testado com sucesso! Este é o link oficial da sua congregação (${targetCode}). Para testar a entrada de um novo membro, abra o link em uma aba anônima ou desconecte da conta.`,
+        'Link de Convite Verificado'
+      );
+    } else if (currentCode && currentCode !== targetCode) {
+      toast.warning(
+        `Você acessou um convite para a igreja "${targetCode}", mas já está conectado na congregação "${currentCode}". Para se cadastrar no novo convite, saia da sua conta atual.`,
+        'Convite para Outra Igreja'
+      );
+    }
+  }, [currentUser?.id, currentUser?.churchCode, churchProfile?.code]);
+
   const handleSimulateActivation = (userId: string, email: string, password: string) => {
     setAllUsers(prev => prev.map(u => {
       if (u.id === userId) {
@@ -2139,6 +2239,7 @@ export default function App() {
               onAddCultos={handleAddCultos}
               onUpdateCulto={handleUpdateCulto}
               onDeleteCulto={handleDeleteCulto}
+              onClearAllCultos={handleClearAllCultos}
             />
           )}
 
@@ -2203,6 +2304,7 @@ export default function App() {
               onAddPerson={handleAddPerson}
               onUpdatePerson={handleUpdatePerson}
               onDeletePerson={handleDeletePerson}
+              onClearAllPeople={handleClearAllPeople}
               onSimulateActivation={handleSimulateActivation}
               onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
               onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
@@ -2295,6 +2397,10 @@ export default function App() {
               onTriggerAutoReminders={handleTriggerAutoReminders}
               onUpdateUser={handleUpdatePerson}
               onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
+              onClearAllCultos={handleClearAllCultos}
+              onClearAllPeople={handleClearAllPeople}
+              onClearAllMinistries={handleClearAllMinistries}
+              onResetEntireSystem={handleResetEntireSystem}
             />
           )}
 
@@ -2326,6 +2432,45 @@ export default function App() {
               onTriggerAutoReminders={handleTriggerAutoReminders}
               onUpdateUser={handleUpdatePerson}
               onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
+              onClearAllCultos={handleClearAllCultos}
+              onClearAllPeople={handleClearAllPeople}
+              onClearAllMinistries={handleClearAllMinistries}
+              onResetEntireSystem={handleResetEntireSystem}
+            />
+          )}
+
+          {/* TAB: ZERAR SISTEMA / LIMPEZA (ADMIN) */}
+          {activeTab === 'admin_zerar' && (
+            <AdminSettingsView
+              initialTab="danger_zone"
+              currentUser={currentUser}
+              ministries={ministries}
+              allUsers={allUsers}
+              cultos={cultos}
+              slots={slots}
+              churchProfile={churchProfile}
+              onSaveChurchProfile={handleSaveChurchProfile}
+              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
+              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
+              pendingJoinRequestsCount={pendingJoinRequestsCount}
+              autoScheduleEnabled={autoScheduleEnabled}
+              onToggleAutoSchedule={handleToggleAutoSchedule}
+              onToggleUserMinistryRole={handleToggleUserMinistryRole}
+              onToggleLeaderRepertoirePermission={handleToggleLeaderRepertoirePermission}
+              onAddMinistry={handleAddMinistry}
+              onDeleteMinistry={handleDeleteMinistry}
+              whatsAppSettings={whatsAppSettings}
+              onSaveWhatsAppSettings={handleSaveWhatsAppSettings}
+              reminderLogs={whatsappReminderLogs}
+              onSendReminderLog={handleSendWhatsAppReminderLog}
+              onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
+              onTriggerAutoReminders={handleTriggerAutoReminders}
+              onUpdateUser={handleUpdatePerson}
+              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
+              onClearAllCultos={handleClearAllCultos}
+              onClearAllPeople={handleClearAllPeople}
+              onClearAllMinistries={handleClearAllMinistries}
+              onResetEntireSystem={handleResetEntireSystem}
             />
           )}
 

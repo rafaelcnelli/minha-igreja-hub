@@ -1365,3 +1365,115 @@ export async function seedInitialFirestoreDataIfEmpty(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Bulk delete all cultos and their associated slots in Firestore
+ */
+export async function clearAllCultosDoc(churchId?: string): Promise<void> {
+  try {
+    const cultosSnap = await getDocs(collection(db, COLLECTIONS.CULTOS));
+    const batch = writeBatch(db);
+    let count = 0;
+    cultosSnap.forEach(d => {
+      const data = d.data();
+      if (!churchId || data.churchId === churchId || !data.churchId) {
+        batch.delete(d.ref);
+        count++;
+      }
+    });
+
+    const slotsSnap = await getDocs(collection(db, COLLECTIONS.ESCALAS));
+    slotsSnap.forEach(d => {
+      const data = d.data();
+      if (!churchId || data.churchId === churchId || !data.churchId) {
+        batch.delete(d.ref);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      await batch.commit();
+      console.log(`[Firestore CLEAR CULTOS] ${count} registros de cultos/escalas excluídos.`);
+    }
+  } catch (error) {
+    console.error('[Firestore CLEAR CULTOS ERROR]', error);
+  }
+}
+
+/**
+ * Bulk delete all non-admin members in Firestore
+ */
+export async function clearAllPessoasDoc(keepAdminId: string, churchId?: string): Promise<void> {
+  try {
+    const snap = await getDocs(collection(db, COLLECTIONS.PESSOAS));
+    const batch = writeBatch(db);
+    let count = 0;
+    snap.forEach(d => {
+      if (d.id !== keepAdminId) {
+        const data = d.data();
+        if (!churchId || data.churchId === churchId || !data.churchId) {
+          batch.delete(d.ref);
+          count++;
+        }
+      }
+    });
+
+    if (count > 0) {
+      await batch.commit();
+      console.log(`[Firestore CLEAR PESSOAS] ${count} voluntários excluídos.`);
+    }
+  } catch (error) {
+    console.error('[Firestore CLEAR PESSOAS ERROR]', error);
+  }
+}
+
+/**
+ * Bulk delete all ministries in Firestore
+ */
+export async function clearAllMinistriesDoc(churchId?: string): Promise<void> {
+  try {
+    const snap = await getDocs(collection(db, COLLECTIONS.MINISTRIES));
+    const batch = writeBatch(db);
+    let count = 0;
+    snap.forEach(d => {
+      const data = d.data();
+      if (!churchId || data.churchId === churchId || !data.churchId) {
+        batch.delete(d.ref);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      await batch.commit();
+      console.log(`[Firestore CLEAR MINISTRIES] ${count} ministérios excluídos.`);
+    }
+  } catch (error) {
+    console.error('[Firestore CLEAR MINISTRIES ERROR]', error);
+  }
+}
+
+/**
+ * Reset entire church data (cultos, slots, ministries, non-admin members, swaps, rehearsals)
+ */
+export async function resetEntireSystemDoc(keepAdminId: string, churchId?: string): Promise<void> {
+  try {
+    await clearAllCultosDoc(churchId);
+    await clearAllPessoasDoc(keepAdminId, churchId);
+    await clearAllMinistriesDoc(churchId);
+
+    // Clear swap requests
+    const swapsSnap = await getDocs(collection(db, COLLECTIONS.SWAPS));
+    const batch = writeBatch(db);
+    let count = 0;
+    swapsSnap.forEach(d => {
+      batch.delete(d.ref);
+      count++;
+    });
+    if (count > 0) {
+      await batch.commit();
+    }
+    console.log('[Firestore RESET SYSTEM] Sistema zerado com sucesso.');
+  } catch (error) {
+    console.error('[Firestore RESET SYSTEM ERROR]', error);
+  }
+}

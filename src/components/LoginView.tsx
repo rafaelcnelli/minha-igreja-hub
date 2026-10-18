@@ -118,11 +118,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
   const [localError, setLocalError] = useState<string | null>(null);
   const [joinSuccessNotice, setJoinSuccessNotice] = useState<string | null>(null);
 
-  // Pre-fill church code if URL changed
+  // Pre-fill church code if URL changed and automatically set join_church mode
   useEffect(() => {
-    if (urlChurchCode && !joinChurchCode) {
-      setJoinChurchCode(urlChurchCode.toUpperCase());
-      setGoogleChurchCode(urlChurchCode.toUpperCase());
+    if (urlChurchCode) {
+      const clean = urlChurchCode.toUpperCase().trim();
+      setMode('join_church');
+      setJoinChurchCode(clean);
+      setGoogleChurchCode(clean);
+      setGoogleAction('join_church');
     }
   }, [urlChurchCode]);
 
@@ -895,6 +898,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-wider text-slate-900 uppercase placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
                     />
                   </div>
+                  {urlChurchCode && (
+                    <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 shrink-0" />
+                      <span>Código <strong>{urlChurchCode.toUpperCase()}</strong> preenchido automaticamente pelo link de convite.</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

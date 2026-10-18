@@ -18,7 +18,8 @@ import {
   Cake,
   Compass,
   Megaphone,
-  Church
+  Church,
+  Trash2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -346,6 +347,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">
                   Auditoria
+                </span>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab('admin_zerar')}
+                className={navItemClass('admin_zerar')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Trash2 className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>Zerar Sistema</span>
+                </div>
+                <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded">
+                  Limpeza
                 </span>
               </button>
             </nav>

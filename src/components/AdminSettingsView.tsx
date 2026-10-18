@@ -81,9 +81,13 @@ interface AdminSettingsViewProps {
   onOpenInviteMembers?: () => void;
   onOpenJoinRequests?: () => void;
   pendingJoinRequestsCount?: number;
-  initialTab?: 'church' | 'ministries' | 'whatsapp' | 'automation';
+  initialTab?: 'church' | 'ministries' | 'whatsapp' | 'automation' | 'danger_zone';
   onUpdateUser?: (updated: User) => void;
   onOpenEditProfile?: () => void;
+  onClearAllCultos?: () => void;
+  onClearAllPeople?: () => void;
+  onClearAllMinistries?: () => void;
+  onResetEntireSystem?: () => void;
 }
 
 export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
@@ -111,10 +115,16 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   pendingJoinRequestsCount = 0,
   initialTab = 'church',
   onUpdateUser,
-  onOpenEditProfile
+  onOpenEditProfile,
+  onClearAllCultos,
+  onClearAllPeople,
+  onClearAllMinistries,
+  onResetEntireSystem
 }) => {
   // Navigation tabs within Admin Settings
-  const [activeTab, setActiveTab] = useState<'church' | 'ministries' | 'whatsapp' | 'automation'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'church' | 'ministries' | 'whatsapp' | 'automation' | 'danger_zone'>(initialTab);
+  const [dangerAction, setDangerAction] = useState<'cultos' | 'people' | 'ministries' | 'full' | null>(null);
+  const [dangerConfirmText, setDangerConfirmText] = useState('');
 
   useEffect(() => {
     if (initialTab) {
@@ -610,6 +620,18 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Escala Automática & Músicas</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('danger_zone')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'danger_zone'
+                ? 'bg-rose-600 text-white shadow-xs font-bold'
+                : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+            }`}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Zerar Sistema / Limpeza</span>
           </button>
         </div>
       </div>
@@ -1871,6 +1893,162 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
         </div>
       )}
 
+      {/* =================================================================== */}
+      {/* TAB: DANGER ZONE & SYSTEM RESET                                     */}
+      {/* =================================================================== */}
+      {activeTab === 'danger_zone' && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-rose-50 via-rose-50/70 to-amber-50 dark:from-rose-950/40 dark:to-slate-900 border-2 border-rose-200 dark:border-rose-900/60 rounded-3xl p-6 shadow-sm space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Zona de Limpeza & Zerar Sistema</span>
+                  <span className="text-[10px] font-bold text-rose-700 bg-rose-100 dark:bg-rose-900/80 px-2.5 py-0.5 rounded-full uppercase">
+                    Admin Exclusivo
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  Esta área permite que o Administrador Geral limpe dados de teste ou redefina o sistema para começar do zero com sua congregação.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-white/90 dark:bg-slate-900/90 rounded-2xl border border-rose-200/80 dark:border-rose-900/60 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                <strong>Proteção Permanente:</strong> Ao zerar ou limpar o sistema, sua congregação (Código: <strong>{propChurchProfile?.code || 'HUB-2026'}</strong>) e seu login de Administrador Geral (<strong>{currentUser.name}</strong>) <strong>permanecem sempre preservados</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* Cards for Selective and Complete Reset */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Card 1: Zerar Cultos e Escalas */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xs flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-lg">
+                    📅
+                  </div>
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
+                    {cultos.length} cultos
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  1. Zerar Cultos & Escalas
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Apaga todos os cultos, ensaios e reuniões já criados, além de remover todas as convocações e escalas de voluntários. Pessoas e ministérios continuam preservados.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={cultos.length === 0}
+                onClick={() => setDangerAction('cultos')}
+                className="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Apagar Todos os Cultos ({cultos.length})</span>
+              </button>
+            </div>
+
+            {/* Card 2: Zerar Voluntários e Membros */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xs flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
+                    👥
+                  </div>
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
+                    {allUsers.filter(u => !u.isAdmin).length} voluntários
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  2. Zerar Voluntários & Membros
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Remove todos os voluntários e membros cadastrados da congregação. Apenas sua conta de Administrador Geral será mantida.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={allUsers.filter(u => !u.isAdmin).length === 0}
+                onClick={() => setDangerAction('people')}
+                className="w-full py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Apagar Todos os Voluntários ({allUsers.filter(u => !u.isAdmin).length})</span>
+              </button>
+            </div>
+
+            {/* Card 3: Zerar Ministérios */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xs flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-lg">
+                    🎸
+                  </div>
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
+                    {ministries.length} ministérios
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  3. Zerar Ministérios
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Exclui todos os ministérios cadastrados e limpa os papéis e vínculos de equipe.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={ministries.length === 0}
+                onClick={() => setDangerAction('ministries')}
+                className="w-full py-2.5 px-3 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Apagar Todos os Ministérios ({ministries.length})</span>
+              </button>
+            </div>
+
+            {/* Card 4: ZERAR SISTEMA COMPLETO */}
+            <div className="bg-rose-50/70 dark:bg-rose-950/20 border-2 border-rose-300 dark:border-rose-900 rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
+                    💥
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-rose-600 text-white rounded-md">
+                    Reset Total
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200">
+                  4. ZERAR SISTEMA COMPLETO
+                </h3>
+                <p className="text-xs text-rose-800/80 dark:text-rose-300/80 leading-relaxed">
+                  Limpa simultaneamente todos os cultos, escalas, ministérios e voluntários anteriores. Sua congregação ficará pronta e limpa para uma implantação nova do zero.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDangerAction('full')}
+                className="w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Zerar Sistema Completo</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============================================================== */}
       {/* MODAL: CADASTRAR NOVO MINISTÉRIO                                */}
       {/* ============================================================== */}
@@ -2114,6 +2292,83 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex-1 shadow-2xs"
               >
                 Sim, Apagar Ministério
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SECURITY CONFIRMATION MODAL: DANGER ZONE ACTIONS                */}
+      {/* ============================================================== */}
+      {dangerAction && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-rose-300 dark:border-rose-900/80 space-y-4 animate-in fade-in duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {dangerAction === 'cultos' && 'Confirmar: Zerar Cultos & Escalas?'}
+                {dangerAction === 'people' && 'Confirmar: Zerar Lista de Voluntários?'}
+                {dangerAction === 'ministries' && 'Confirmar: Zerar Todos os Ministérios?'}
+                {dangerAction === 'full' && 'ATENÇÃO: Zerar o Sistema Completo?'}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {dangerAction === 'cultos' && `Deseja realmente apagar todos os ${cultos.length} cultos/reuniões e todas as escalas associadas?`}
+                {dangerAction === 'people' && `Deseja realmente remover todos os ${allUsers.filter(u => !u.isAdmin).length} voluntários e membros cadastrados? Sua conta de administrador (${currentUser.name}) será preservada.`}
+                {dangerAction === 'ministries' && `Deseja realmente apagar todos os ${ministries.length} ministérios cadastrados e seus papéis?`}
+                {dangerAction === 'full' && `Esta ação limpará simultaneamente todos os cultos, escalas, voluntários e ministérios da congregação. Apenas o seu login de Administrador Geral (${currentUser.name}) e a congregação permanecerão ativos.`}
+              </p>
+            </div>
+
+            {dangerAction === 'full' && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 rounded-2xl border border-rose-200 dark:border-rose-900/60 space-y-2">
+                <label className="block text-[11px] font-bold text-rose-900 dark:text-rose-300">
+                  Para confirmar, digite <strong>ZERAR</strong> abaixo:
+                </label>
+                <input
+                  type="text"
+                  value={dangerConfirmText}
+                  onChange={e => setDangerConfirmText(e.target.value.toUpperCase())}
+                  placeholder="DIGITE ZERAR"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 rounded-xl text-xs font-mono font-bold tracking-widest text-center text-rose-900 dark:text-rose-200 uppercase"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setDangerAction(null);
+                  setDangerConfirmText('');
+                }}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold flex-1 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={dangerAction === 'full' && dangerConfirmText.trim() !== 'ZERAR'}
+                onClick={() => {
+                  if (dangerAction === 'cultos' && onClearAllCultos) {
+                    onClearAllCultos();
+                  } else if (dangerAction === 'people' && onClearAllPeople) {
+                    onClearAllPeople();
+                  } else if (dangerAction === 'ministries' && onClearAllMinistries) {
+                    onClearAllMinistries();
+                  } else if (dangerAction === 'full' && onResetEntireSystem) {
+                    onResetEntireSystem();
+                  }
+                  setDangerAction(null);
+                  setDangerConfirmText('');
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold flex-1 shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Sim, Confirmar e Limpar</span>
               </button>
             </div>
           </div>
