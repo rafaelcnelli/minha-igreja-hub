@@ -786,12 +786,15 @@ export default function App() {
   // Active navigation tab
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
-  // Onboarding Tour state for volunteers
+  // Onboarding Tour state - opens ONLY when clicked by the user in the TopBar
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   const markTourAsSeen = () => {
     try {
       localStorage.setItem('minha_igreja_tour_seen_v1', 'true');
+      localStorage.setItem('minha_igreja_tour_seen', 'true');
+      localStorage.setItem('minha_igreja_tour_completed', 'true');
+      localStorage.setItem('minha_igreja_tour_dismissed', 'true');
       if (currentUser?.id) {
         localStorage.setItem(`kairs_onboarding_tour_completed_${currentUser.id}`, 'true');
         localStorage.setItem(`kairs_tour_seen_${currentUser.id}`, 'true');
@@ -801,36 +804,10 @@ export default function App() {
     }
   };
 
-  // Auto-trigger tour ONLY on first access for the user / device
+  // Ensure tour is marked as seen on mount so it never pops up uninvited
   useEffect(() => {
-    if (!currentUser?.id) return;
-
-    try {
-      const deviceTourKey = 'minha_igreja_tour_seen_v1';
-      const userTourKey = `kairs_onboarding_tour_completed_${currentUser.id}`;
-      const userTourSeenKey = `kairs_tour_seen_${currentUser.id}`;
-
-      const hasSeenDevice = localStorage.getItem(deviceTourKey);
-      const hasCompletedUser = localStorage.getItem(userTourKey);
-      const hasSeenUser = localStorage.getItem(userTourSeenKey);
-
-      // Se já viu no dispositivo ou já completou o usuário, não abre automaticamente
-      if (!hasSeenDevice && !hasCompletedUser && !hasSeenUser) {
-        // Marca imediatamente para garantir que só abra na primeira vez e nunca mais automaticamente
-        localStorage.setItem(deviceTourKey, 'true');
-        localStorage.setItem(userTourKey, 'true');
-        localStorage.setItem(userTourSeenKey, 'true');
-
-        // Aguarda renderização inicial para abrir o tour de boas-vindas na primeira vez
-        const timer = setTimeout(() => {
-          setIsTourOpen(true);
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
-    } catch (e) {
-      console.warn('Erro ao verificar status do tour:', e);
-    }
-  }, [currentUser?.id]);
+    markTourAsSeen();
+  }, []);
 
   const handleCompleteTour = () => {
     markTourAsSeen();

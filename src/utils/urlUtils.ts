@@ -4,27 +4,11 @@
  * custom domains, local development, and preview environments.
  */
 
+export const CANONICAL_INVITE_BASE_URL = 'https://rafaelcnelli.github.io/minha-igreja-hub';
+
 export function getBaseAppUrl(): string {
-  if (typeof window === 'undefined') {
-    return 'https://rafaelcnelli.github.io/minha-igreja-hub';
-  }
-
-  const origin = window.location.origin;
-  // Strip any trailing slash or index.html
-  let pathname = window.location.pathname
-    .replace(/\/index\.html$/i, '')
-    .replace(/\/+$/, '');
-
-  // GitHub Pages repository subpath protection:
-  // If hosted on GitHub Pages (e.g. rafaelcnelli.github.io), ALWAYS ensure '/minha-igreja-hub' is in the URL
-  if (window.location.hostname.endsWith('github.io')) {
-    if (!pathname.includes('minha-igreja-hub')) {
-      pathname = '/minha-igreja-hub';
-    }
-  }
-
-  // E.g. https://rafaelcnelli.github.io/minha-igreja-hub or https://ais-pre-...run.app
-  return `${origin}${pathname}`;
+  // Always base invite links on the official canonical URL: https://rafaelcnelli.github.io/minha-igreja-hub
+  return CANONICAL_INVITE_BASE_URL;
 }
 
 export interface InviteLinkOptions {
