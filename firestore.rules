@@ -120,6 +120,11 @@ service cloud.firestore {
     match /joinRequests/{requestId} {
       allow read, write: if true;
     }
+
+    // Backups Periódicos e Snapshots de Configurações da Igreja (JSON)
+    match /backups/{backupId} {
+      allow read, write: if true;
+    }
   }
 }
 

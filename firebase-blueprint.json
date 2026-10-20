@@ -105,6 +105,24 @@
         "readBy": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "title", "content", "targetAudience", "authorId", "authorName", "priority"]
+    },
+    "ChurchConfigBackup": {
+      "title": "ChurchConfigBackup",
+      "description": "Backup periódico e snapshots de configurações da igreja (JSON)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "churchCode": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "object" },
+        "triggerType": { "type": "string", "maxLength": 50 },
+        "label": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 500 },
+        "version": { "type": "number" },
+        "data": { "type": "object" }
+      },
+      "required": ["id", "churchId", "createdAt", "triggerType", "data"]
     }
   },
   "firestore": {
@@ -131,6 +149,10 @@
     "/avisos/{avisoId}": {
       "schema": "Aviso",
       "description": "Avisos e comunicados da liderança e administração para todos ou por ministério"
+    },
+    "/backups/{backupId}": {
+      "schema": "ChurchConfigBackup",
+      "description": "Backups periódicos e pontos de restauração das configurações da igreja"
     }
   }
 }

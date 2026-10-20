@@ -19,7 +19,8 @@ import {
   Compass,
   Megaphone,
   Church,
-  Trash2
+  Trash2,
+  Database
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -59,8 +60,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       : activeTab === tabKey;
     return `w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
       isActive
-        ? 'bg-blue-600 text-white font-bold shadow-xs dark:bg-blue-600 dark:text-white'
-        : 'text-slate-600 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-blue-900/30'
+        ? 'bg-slate-900 text-white font-bold shadow-xs dark:bg-[#232328] dark:text-white dark:border dark:border-[#33343d]'
+        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232328]/70'
     }`;
   };
 
@@ -72,10 +73,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <img
             src={currentUser.avatarUrl}
             alt={currentUser.name}
-            className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-blue-500 dark:border-white shadow-2xs"
+            className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-slate-300 dark:border-slate-600 shadow-2xs"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-2xs">
+          <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-zinc-700 text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-2xs">
             {currentUser.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
           </div>
         )}
@@ -347,6 +348,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">
                   Auditoria
+                </span>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab('admin_backups')}
+                className={navItemClass('admin_backups')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Database className="w-4 h-4 shrink-0 text-cyan-500" />
+                  <span>Backups & Restauração</span>
+                </div>
+                <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 px-1.5 py-0.5 rounded">
+                  Firestore
                 </span>
               </button>
 

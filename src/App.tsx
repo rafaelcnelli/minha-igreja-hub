@@ -23,7 +23,8 @@ import {
   DEFAULT_CHURCH_PROFILE,
   ChurchJoinRequest,
   Aviso,
-  canUserViewAviso
+  canUserViewAviso,
+  ChurchConfigBackup
 } from './types';
 import {
   renderReminderMessage,
@@ -122,8 +123,14 @@ import {
   clearAllCultosDoc,
   clearAllPessoasDoc,
   clearAllMinistriesDoc,
-  resetEntireSystemDoc
+  resetEntireSystemDoc,
+  subscribeChurchBackups,
+  saveChurchBackupDoc,
+  deleteChurchBackupDoc,
+  pruneOldAutomaticBackups,
+  restoreChurchFromBackupDoc
 } from './services/firestoreService';
+import { buildChurchConfigSnapshot, isPeriodicBackupDue } from './utils/backupUtils';
 
 export default function App() {
   const { currentUser: authUser, firebaseUser, currentChurch, isAuthenticated, isLoading: authLoading, logout, setCurrentUser: setAuthUser } = useAuth();
@@ -231,6 +238,7 @@ export default function App() {
     };
   });
   const [whatsappReminderLogs, setWhatsappReminderLogs] = useState<WhatsAppReminderLog[]>([]);
+  const [churchBackups, setChurchBackups] = useState<ChurchConfigBackup[]>([]);
 
   // Sync currentChurch into churchProfile
   useEffect(() => {
@@ -350,6 +358,10 @@ export default function App() {
       }
     });
 
+    const unsubBackups = subscribeChurchBackups(activeChurchId, firestoreBackups => {
+      setChurchBackups(firestoreBackups);
+    });
+
     return () => {
       unsubPessoas();
       unsubCultos();
@@ -363,6 +375,7 @@ export default function App() {
       unsubWhatsAppSettings();
       unsubWhatsAppLogs();
       unsubAvisos();
+      unsubBackups();
     };
   }, [isAuthenticated, activeChurchId]);
 
@@ -1434,6 +1447,24 @@ export default function App() {
       toast.error('Apenas o Administrador Geral pode realizar o reset completo do sistema.', 'Permissão Negada');
       return;
     }
+    // 0. Auto-save safety snapshot before full reset!
+    try {
+      const preResetBackup = buildChurchConfigSnapshot({
+        churchProfile,
+        ministries,
+        whatsAppSettings,
+        autoScheduleEnabled,
+        allUsers,
+        cultosCount: cultos.length,
+        triggerType: 'pre_reset',
+        label: `Ponto de Segurança Pré-Limpeza Total - ${new Date().toLocaleDateString('pt-BR')}`,
+        author: { id: currentUser.id, name: currentUser.name, email: currentUser.email }
+      });
+      await saveChurchBackupDoc(preResetBackup);
+    } catch (e) {
+      console.warn('Nota ao salvar backup antes do reset:', e);
+    }
+
     setCultos([]);
     setSlots([]);
     setMinistries([]);
@@ -1450,6 +1481,158 @@ export default function App() {
       'O sistema foi completamente zerado! Todas as escalas, cultos, ministérios e voluntários anteriores foram excluídos com sucesso. Você pode cadastrar sua igreja do zero.',
       'Sistema Zerado com Sucesso'
     );
+  };
+
+  // =========================================================================
+  // BACKUP & RESTAURAÇÃO DE CONFIGURAÇÕES NO FIRESTORE (ADMIN)
+  // =========================================================================
+
+  // Periodic automatic backup of church settings in Firestore (every 6 hours)
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser?.isAdmin) return;
+    if (!churchProfile || !churchProfile.id) return;
+
+    const runPeriodicBackup = async () => {
+      try {
+        const storageKey = `hub_last_auto_backup_${churchProfile.id}`;
+        const lastBackupIso = localStorage.getItem(storageKey);
+
+        if (isPeriodicBackupDue(lastBackupIso, 6)) {
+          console.log('[Firestore BACKUP PERIÓDICO] Iniciando backup automático periódico de configurações...');
+          const snapshot = buildChurchConfigSnapshot({
+            churchProfile,
+            ministries,
+            whatsAppSettings,
+            autoScheduleEnabled,
+            allUsers,
+            cultosCount: cultos.length,
+            triggerType: 'automatic_periodic',
+            author: {
+              id: currentUser.id,
+              name: currentUser.name,
+              email: currentUser.email
+            }
+          });
+
+          await saveChurchBackupDoc(snapshot);
+          localStorage.setItem(storageKey, new Date().toISOString());
+
+          // Prune older backups keeping last 20
+          await pruneOldAutomaticBackups(churchProfile?.id || activeChurchId, 20);
+          console.log('[Firestore BACKUP PERIÓDICO SUCCESS] Backup automático persistido no Firestore:', snapshot.id);
+        }
+      } catch (err) {
+        console.warn('[Firestore BACKUP PERIÓDICO WARN] Falha na rotina periódica de backup:', err);
+      }
+    };
+
+    runPeriodicBackup();
+    // Check every 30 minutes
+    const interval = setInterval(runPeriodicBackup, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, currentUser?.isAdmin, churchProfile?.id, ministries.length]);
+
+  const handleCreateManualBackup = async (customLabel?: string, customDescription?: string) => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode gerar backups.', 'Permissão Negada');
+      return;
+    }
+    try {
+      const snapshot = buildChurchConfigSnapshot({
+        churchProfile,
+        ministries,
+        whatsAppSettings,
+        autoScheduleEnabled,
+        allUsers,
+        cultosCount: cultos.length,
+        triggerType: 'manual',
+        label: customLabel,
+        description: customDescription,
+        author: {
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email
+        }
+      });
+
+      await saveChurchBackupDoc(snapshot);
+      addAuditLog('Criou snapshot manual de backup', 'SISTEMA', `Backup: ${snapshot.label}`);
+      toast.success('Ponto de backup salvo com sucesso no Firestore!', 'Backup Realizado');
+      return snapshot;
+    } catch (error) {
+      console.error('Erro ao salvar backup manual:', error);
+      toast.error('Falha ao salvar backup no Firestore.', 'Erro no Backup');
+      throw error;
+    }
+  };
+
+  const handleRestoreChurchBackup = async (backup: ChurchConfigBackup) => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode restaurar backups.', 'Permissão Negada');
+      return;
+    }
+    try {
+      // 1. Create a safety snapshot first of current state
+      try {
+        const preRestoreSafety = buildChurchConfigSnapshot({
+          churchProfile,
+          ministries,
+          whatsAppSettings,
+          autoScheduleEnabled,
+          allUsers,
+          cultosCount: cultos.length,
+          triggerType: 'pre_restore',
+          label: `Segurança Pré-Restauração (${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})`,
+          author: { id: currentUser.id, name: currentUser.name, email: currentUser.email }
+        });
+        await saveChurchBackupDoc(preRestoreSafety);
+      } catch (e) {
+        console.warn('Nota ao salvar backup pré-restauração:', e);
+      }
+
+      // 2. Perform restoration in Firestore
+      await restoreChurchFromBackupDoc(backup, currentUser);
+
+      // 3. Update local states
+      if (backup.data.churchProfile) {
+        setChurchProfile(backup.data.churchProfile);
+      }
+      if (backup.data.ministries && Array.isArray(backup.data.ministries)) {
+        setMinistries(backup.data.ministries);
+      }
+      if (backup.data.whatsAppSettings) {
+        setWhatsAppSettings(backup.data.whatsAppSettings);
+      }
+
+      addAuditLog(
+        'Restaurou configurações a partir de backup',
+        'SISTEMA',
+        `Restaurado estado do backup: "${backup.label}"`
+      );
+      toast.success(
+        `O estado anterior da congregação foi restaurado com sucesso a partir do backup "${backup.label}"!`,
+        'Restauração Concluída'
+      );
+    } catch (error: any) {
+      console.error('Erro ao restaurar backup:', error);
+      toast.error('Não foi possível restaurar o backup selecionado.', 'Erro na Restauração');
+      throw error;
+    }
+  };
+
+  const handleDeleteChurchBackup = async (backupId: string) => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode excluir backups.', 'Permissão Negada');
+      return;
+    }
+    try {
+      await deleteChurchBackupDoc(backupId);
+      setChurchBackups(prev => prev.filter(b => b.id !== backupId));
+      toast.success('Registro de backup excluído do Firestore.', 'Backup Removido');
+    } catch (error) {
+      console.error('Erro ao excluir backup:', error);
+      toast.error('Não foi possível excluir o backup.', 'Erro');
+    }
   };
 
   // URL Invitation Check when already logged in
@@ -2378,6 +2561,10 @@ export default function App() {
               onClearAllPeople={handleClearAllPeople}
               onClearAllMinistries={handleClearAllMinistries}
               onResetEntireSystem={handleResetEntireSystem}
+              backups={churchBackups}
+              onCreateBackup={handleCreateManualBackup}
+              onRestoreBackup={handleRestoreChurchBackup}
+              onDeleteBackup={handleDeleteChurchBackup}
             />
           )}
 
@@ -2413,6 +2600,49 @@ export default function App() {
               onClearAllPeople={handleClearAllPeople}
               onClearAllMinistries={handleClearAllMinistries}
               onResetEntireSystem={handleResetEntireSystem}
+              backups={churchBackups}
+              onCreateBackup={handleCreateManualBackup}
+              onRestoreBackup={handleRestoreChurchBackup}
+              onDeleteBackup={handleDeleteChurchBackup}
+            />
+          )}
+
+          {/* TAB 9.5: BACKUPS & RESTAURAÇÃO (ADMIN) */}
+          {activeTab === 'admin_backups' && (
+            <AdminSettingsView
+              initialTab="backups"
+              currentUser={currentUser}
+              ministries={ministries}
+              allUsers={allUsers}
+              cultos={cultos}
+              slots={slots}
+              churchProfile={churchProfile}
+              onSaveChurchProfile={handleSaveChurchProfile}
+              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
+              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
+              pendingJoinRequestsCount={pendingJoinRequestsCount}
+              autoScheduleEnabled={autoScheduleEnabled}
+              onToggleAutoSchedule={handleToggleAutoSchedule}
+              onToggleUserMinistryRole={handleToggleUserMinistryRole}
+              onToggleLeaderRepertoirePermission={handleToggleLeaderRepertoirePermission}
+              onAddMinistry={handleAddMinistry}
+              onDeleteMinistry={handleDeleteMinistry}
+              whatsAppSettings={whatsAppSettings}
+              onSaveWhatsAppSettings={handleSaveWhatsAppSettings}
+              reminderLogs={whatsappReminderLogs}
+              onSendReminderLog={handleSendWhatsAppReminderLog}
+              onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
+              onTriggerAutoReminders={handleTriggerAutoReminders}
+              onUpdateUser={handleUpdatePerson}
+              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
+              onClearAllCultos={handleClearAllCultos}
+              onClearAllPeople={handleClearAllPeople}
+              onClearAllMinistries={handleClearAllMinistries}
+              onResetEntireSystem={handleResetEntireSystem}
+              backups={churchBackups}
+              onCreateBackup={handleCreateManualBackup}
+              onRestoreBackup={handleRestoreChurchBackup}
+              onDeleteBackup={handleDeleteChurchBackup}
             />
           )}
 
@@ -2448,6 +2678,10 @@ export default function App() {
               onClearAllPeople={handleClearAllPeople}
               onClearAllMinistries={handleClearAllMinistries}
               onResetEntireSystem={handleResetEntireSystem}
+              backups={churchBackups}
+              onCreateBackup={handleCreateManualBackup}
+              onRestoreBackup={handleRestoreChurchBackup}
+              onDeleteBackup={handleDeleteChurchBackup}
             />
           )}
 

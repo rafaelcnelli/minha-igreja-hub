@@ -33,7 +33,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenJoinRequests,
   pendingJoinRequestsCount = 0
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setTheme } = useTheme();
   const isAdmin = currentUser.isAdmin;
   const isLeader = userLeadsAnyMinistry(currentUser);
 
@@ -223,26 +223,59 @@ export const TopBar: React.FC<TopBarProps> = ({
               )}
             </button>
 
-            {/* DARK / LIGHT MODE SWITCH */}
+            {/* BOTÃO ÚNICO DE ALTERNÂNCIA DE TEMA PARA TELA PEQUENA (MOBILE) */}
             <button
               type="button"
               onClick={toggleTheme}
-              title={theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro'}
-              aria-label="Alternar tema escuro/claro"
-              className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-medium transition-all bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+              title={theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Noturno'}
+              aria-label={theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Noturno'}
+              className="sm:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-zinc-100 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition shadow-2xs active:scale-95 cursor-pointer"
             >
               {theme === 'dark' ? (
-                <>
-                  <Sun className="w-4 h-4 text-amber-400 animate-in spin-in-180 duration-300" />
-                  <span className="hidden md:inline text-[11px] font-semibold">Claro</span>
-                </>
+                <Sun className="w-4 h-4 text-amber-400" />
               ) : (
-                <>
-                  <Moon className="w-4 h-4 text-slate-700 animate-in spin-in-180 duration-300" />
-                  <span className="hidden md:inline text-[11px] font-semibold">Escuro</span>
-                </>
+                <Moon className="w-4 h-4 text-slate-700" />
               )}
             </button>
+
+            {/* SELETOR CLARO / ESCURO PARA TELAS MAIORES */}
+            <div
+              role="group"
+              aria-label="Alternar Tema Claro / Escuro"
+              className="hidden sm:inline-flex items-center p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/90 shadow-2xs"
+            >
+              <button
+                type="button"
+                onClick={() => setTheme('light')}
+                title="Ativar Tema Claro (Salva no dispositivo)"
+                aria-pressed={theme === 'light'}
+                aria-label="Ativar Tema Claro"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-white text-amber-600 shadow-xs ring-1 ring-slate-200/80'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="text-[11px]">Claro</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTheme('dark')}
+                title="Ativar Modo Noturno em Tons de Cinza (Salva no dispositivo)"
+                aria-pressed={theme === 'dark'}
+                aria-label="Ativar Modo Noturno em Tons de Cinza"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  theme === 'dark'
+                    ? 'bg-slate-900 text-zinc-100 shadow-xs ring-1 ring-slate-700'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
+                <span className="text-[11px]">Escuro</span>
+              </button>
+            </div>
 
             {/* TOUR DO VOLUNTÁRIO / GUIA RÁPIDO */}
             {onStartTour && (

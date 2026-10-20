@@ -483,4 +483,43 @@ export const DEFAULT_CHURCH_PROFILE: ChurchProfile = {
   logoUrl: ''
 };
 
+export type BackupTriggerType = 'automatic_periodic' | 'manual' | 'pre_reset' | 'pre_restore';
+
+export interface ChurchConfigBackupData {
+  churchProfile: ChurchProfile;
+  ministries: Ministry[];
+  whatsAppSettings?: WhatsAppReminderSettings;
+  autoScheduleEnabled?: boolean;
+  volunteersSummary?: {
+    totalVolunteers: number;
+    leadersCount: number;
+    activeVolunteers: number;
+  };
+  cultosCount?: number;
+  membershipsSnapshot?: {
+    userId: string;
+    userName: string;
+    memberships: MinistryMembership[];
+  }[];
+  rawConfigJson: string;
+}
+
+export interface ChurchConfigBackup {
+  id: string;
+  churchId: string;
+  churchCode: string;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    name: string;
+    email?: string;
+  };
+  triggerType: BackupTriggerType;
+  label: string;
+  description?: string;
+  version: number;
+  data: ChurchConfigBackupData;
+}
+
+
 

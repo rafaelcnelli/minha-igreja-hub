@@ -28,7 +28,8 @@ import {
   DEFAULT_CHURCH_PROFILE,
   Aviso,
   Church,
-  ChurchJoinRequest
+  ChurchJoinRequest,
+  ChurchConfigBackup
 } from '../types';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { generateFirestoreId, isValidFirestoreId } from '../utils/idUtils';
@@ -41,7 +42,7 @@ import {
   INITIAL_AVISOS
 } from '../data/initialData';
 
-// Collection names as requested: "pessoas", "cultos", "escalas", "churches", "joinRequests"
+// Collection names as requested: "pessoas", "cultos", "escalas", "churches", "joinRequests", "backups"
 export const COLLECTIONS = {
   PESSOAS: 'pessoas',
   CULTOS: 'cultos',
@@ -58,7 +59,8 @@ export const COLLECTIONS = {
   WHATSAPP_REMINDERS: 'whatsappReminders',
   AVISOS: 'avisos',
   CHURCHES: 'churches',
-  JOIN_REQUESTS: 'joinRequests'
+  JOIN_REQUESTS: 'joinRequests',
+  BACKUPS: 'backups'
 } as const;
 
 export const FIRESTORE_DATABASE_ID = firestoreDatabaseId;
@@ -1477,3 +1479,155 @@ export async function resetEntireSystemDoc(keepAdminId: string, churchId?: strin
     console.error('[Firestore RESET SYSTEM ERROR]', error);
   }
 }
+
+// ============================================================================
+// CRUD & QUERY OPERATIONS: BACKUPS PERIÓDICOS ('backups')
+// ============================================================================
+export async function getChurchBackups(churchId?: string): Promise<ChurchConfigBackup[]> {
+  try {
+    const snap = await getDocs(collection(db, COLLECTIONS.BACKUPS));
+    const list: ChurchConfigBackup[] = [];
+    snap.forEach(docSnap => {
+      const data = docSnap.data() as ChurchConfigBackup;
+      if (!churchId || data.churchId === churchId || data.data?.churchProfile?.id === churchId) {
+        list.push({ ...data, id: docSnap.id });
+      }
+    });
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    console.error(`[Firestore GET ERROR: ${COLLECTIONS.BACKUPS}]`, error);
+    return [];
+  }
+}
+
+export function subscribeChurchBackups(
+  churchId: string,
+  callback: (backups: ChurchConfigBackup[]) => void
+): () => void {
+  try {
+    return onSnapshot(
+      collection(db, COLLECTIONS.BACKUPS),
+      snapshot => {
+        const list: ChurchConfigBackup[] = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data() as ChurchConfigBackup;
+          if (!churchId || data.churchId === churchId || data.data?.churchProfile?.id === churchId || !data.churchId) {
+            list.push({ ...data, id: docSnap.id });
+          }
+        });
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        callback(list);
+      },
+      error => {
+        handleFirestoreError(error, OperationType.LIST, COLLECTIONS.BACKUPS);
+      }
+    );
+  } catch (error) {
+    console.error(`[Firestore SUBSCRIBE ERROR: ${COLLECTIONS.BACKUPS}]`, error);
+    return () => {};
+  }
+}
+
+export async function saveChurchBackupDoc(backup: ChurchConfigBackup): Promise<void> {
+  const path = `${COLLECTIONS.BACKUPS}/${backup.id}`;
+  console.log(`[Firestore SAVE: ${COLLECTIONS.BACKUPS}] Salvando backup ${backup.id} (${backup.label})...`);
+  try {
+    await setDoc(doc(db, COLLECTIONS.BACKUPS, backup.id), cleanDataForFirestore(backup), { merge: true });
+    console.log(`[Firestore SAVE SUCCESS: ${COLLECTIONS.BACKUPS}] Backup ${backup.id} salvo com sucesso.`);
+  } catch (error) {
+    console.error(`[Firestore SAVE ERROR: ${path}] Falha ao salvar backup:`, error);
+    throw error;
+  }
+}
+
+export async function deleteChurchBackupDoc(backupId: string): Promise<void> {
+  const path = `${COLLECTIONS.BACKUPS}/${backupId}`;
+  console.log(`[Firestore DELETE: ${COLLECTIONS.BACKUPS}] Excluindo backup ${backupId}...`);
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.BACKUPS, backupId));
+    console.log(`[Firestore DELETE SUCCESS: ${COLLECTIONS.BACKUPS}] Backup ${backupId} excluído.`);
+  } catch (error) {
+    console.error(`[Firestore DELETE ERROR: ${path}] Falha ao excluir backup:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Automatically purges older automatic backups to maintain a healthy retention quota (e.g. max 20)
+ */
+export async function pruneOldAutomaticBackups(churchId: string, maxCount = 20): Promise<number> {
+  try {
+    const all = await getChurchBackups(churchId);
+    const autoBackups = all.filter(b => b.triggerType === 'automatic_periodic');
+    if (autoBackups.length <= maxCount) return 0;
+
+    const toDelete = autoBackups.slice(maxCount);
+    let deletedCount = 0;
+    for (const b of toDelete) {
+      await deleteChurchBackupDoc(b.id);
+      deletedCount++;
+    }
+    console.log(`[Firestore PRUNE BACKUPS] ${deletedCount} backups automáticos antigos removidos.`);
+    return deletedCount;
+  } catch (error) {
+    console.warn('[Firestore PRUNE ERROR]', error);
+    return 0;
+  }
+}
+
+/**
+ * Restores a church configuration snapshot (church profile, ministries, WhatsApp settings, and leader memberships)
+ * into Firestore, restoring previous states of the system in case of errors.
+ */
+export async function restoreChurchFromBackupDoc(
+  backup: ChurchConfigBackup,
+  currentAdminUser?: { id: string; name: string }
+): Promise<{ success: boolean; restoredMinistriesCount: number }> {
+  try {
+    console.log(`[Firestore RESTORE BACKUP] Restaurando backup ${backup.id} (${backup.label})...`);
+
+    // 1. Restore Church Profile
+    if (backup.data.churchProfile) {
+      await saveChurchProfileDoc(backup.data.churchProfile);
+      console.log(`[Firestore RESTORE] Perfil da igreja restaurado:`, backup.data.churchProfile.name);
+    }
+
+    // 2. Restore Ministries
+    let restoredCount = 0;
+    if (backup.data.ministries && Array.isArray(backup.data.ministries)) {
+      for (const min of backup.data.ministries) {
+        await saveMinistryDoc(min);
+        restoredCount++;
+      }
+      console.log(`[Firestore RESTORE] ${restoredCount} ministérios restaurados.`);
+    }
+
+    // 3. Restore WhatsApp Reminder Settings
+    if (backup.data.whatsAppSettings) {
+      await saveWhatsAppSettingsDoc(backup.data.whatsAppSettings);
+      console.log(`[Firestore RESTORE] Configurações de WhatsApp restauradas.`);
+    }
+
+    // 4. Restore Memberships snapshot if present
+    if (backup.data.membershipsSnapshot && Array.isArray(backup.data.membershipsSnapshot)) {
+      for (const item of backup.data.membershipsSnapshot) {
+        if (!item.userId || !item.memberships) continue;
+        try {
+          const userDocRef = doc(db, COLLECTIONS.PESSOAS, item.userId);
+          await updateDoc(userDocRef, {
+            memberships: cleanDataForFirestore(item.memberships),
+            updatedAt: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn(`[Firestore RESTORE] Nota ao sincronizar vínculos do usuário ${item.userId}:`, e);
+        }
+      }
+    }
+
+    return { success: true, restoredMinistriesCount: restoredCount };
+  } catch (error) {
+    console.error(`[Firestore RESTORE ERROR] Falha ao restaurar backup:`, error);
+    throw error;
+  }
+}
+

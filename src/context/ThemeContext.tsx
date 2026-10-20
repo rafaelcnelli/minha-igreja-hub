@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -12,9 +12,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem('hub_theme');
-    if (saved === 'dark' || saved === 'light') return saved;
-    // Começar em modo claro por padrão conforme especificado
+    try {
+      const saved = localStorage.getItem('theme') || localStorage.getItem('hub_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+    } catch {
+      // localStorage may fail in restricted environments
+    }
     return 'light';
   });
 
@@ -22,10 +25,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+      root.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
+      root.setAttribute('data-theme', 'light');
+      root.style.colorScheme = 'light';
     }
-    localStorage.setItem('hub_theme', theme);
+
+    try {
+      localStorage.setItem('theme', theme);
+      localStorage.setItem('hub_theme', theme);
+    } catch (e) {
+      console.warn('Erro ao salvar tema no localStorage:', e);
+    }
   }, [theme]);
 
   const toggleTheme = () => {

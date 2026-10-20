@@ -59,11 +59,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
     }
   };
 
-  // Always start in light theme per requirements
-  useEffect(() => {
-    setTheme('light');
-    document.documentElement.classList.remove('dark');
-  }, []);
+  // Respect saved user theme preference from localStorage
 
   // Parse URL params (both standard search params and hash query params)
   const urlChurchCode = getAppUrlParam('igreja') || getAppUrlParam('codigo') || getAppUrlParam('church');

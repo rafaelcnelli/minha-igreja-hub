@@ -3,230 +3,337 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ========================================================================== */
-/* DARK MODE HIGH-CONTRAST SPECIFICATION: TONS DE AZUL & ELEMENTOS BRANCOS    */
-/* Tier 0 - Fundo Geral / Canvas (Deep Space Abyss): #040816                  */
-/* Tier 1 - Superfícies & Cartões (Rich Vibrant Navy): #102144                */
-/* Tier 2 - Componentes Elevados & Inputs (Royal Slate Blue): #1A3260         */
-/* Tier 3 - Hover / Destaques Interativos: #254586                            */
-/* Bordas de Cartões (Nítidas & Delineadas): #2E4D8A                          */
-/* Bordas de Foco & Componentes Internos: #3C64B2                             */
-/* Acentos & Botões Primários: #2563EB / #3B82F6                              */
-/* Elementos & Títulos em Branco Puro: #FFFFFF                                */
-/* Textos Secundários / Legendas em Alto Contraste: #E2E8F0 / #BFDBFE        */
+/* MODO NOTURNO EM TONS DE CINZA - ALTO CONTRASTE (HIGH CONTRAST GRAYSCALE)   */
+/* Paleta calibrada com profundo contraste entre fundo, superfícies, bordas e */
+/* tipografia para máxima legibilidade e separação nítida de cada elemento.   */
+/*                                                                            */
+/* Escala de Cinzas de Alto Contraste:                                       */
+/* - Canvas / Fundo Geral: #0b0c0e (carvão grafite profundo ultra nítido)     */
+/* - Tier 1 Superfícies: #16171a (TopBar, Sidebar, Cartões Principais, Modais)*/
+/* - Tier 2 Superfícies Elevadas: #202126 (Containers internos, Sub-cards)    */
+/* - Tier 3 Inputs & Componentes: #26272e (Controles e seletores)             */
+/* - Hover Interativo: #32343e                                                */
+/* - Bordas Nítidas (Alto Contraste): #3e404b (delineação visível e precisa)  */
+/* - Bordas Sutis / Divisórias: #2a2b33                                       */
+/* - Textos Primários: #ffffff (branco puro para máximo contraste)            */
+/* - Textos Secundários: #cbd5e1 (cinza claro prateado com alta legibilidade) */
+/* - Textos Muted / Terciários: #94a3b8                                       */
 /* ========================================================================== */
 
 :root {
-  --color-dark-bg: #040816;
-  --color-dark-surface: #102144;
-  --color-dark-surface-elevated: #1A3260;
-  --color-dark-surface-hover: #254586;
-  --color-dark-border: #2E4D8A;
-  --color-dark-border-subtle: #3C64B2;
-  --color-dark-text-primary: #FFFFFF;
-  --color-dark-text-secondary: #E2E8F0;
-  --color-dark-accent: #3B82F6;
-  --color-dark-accent-hover: #2563EB;
+  --color-dark-bg: #0b0c0e;
+  --color-dark-surface: #16171a;
+  --color-dark-surface-elevated: #202126;
+  --color-dark-surface-hover: #32343e;
+  --color-dark-border: #3e404b;
+  --color-dark-border-subtle: #2a2b33;
+  --color-dark-text-primary: #ffffff;
+  --color-dark-text-secondary: #cbd5e1;
+  --color-dark-text-muted: #94a3b8;
 }
 
-html.dark {
-  background-color: #040816 !important;
-  color: #FFFFFF !important;
+/* ========================================================================== */
+/* REMAPEAMENTO DE VARIÁVEIS DO TAILWIND V4 PARA ALTO CONTRASTE EM CINZA     */
+/* ========================================================================== */
+html.dark,
+:root[data-theme="dark"],
+[data-theme="dark"] {
   color-scheme: dark;
+  background-color: #0b0c0e !important;
+  color: #ffffff !important;
+
+  /* Remapeia slate para tons de cinza neutros de alto contraste */
+  --color-slate-950: #0b0c0e;
+  --color-slate-900: #16171a;
+  --color-slate-850: #1b1c20;
+  --color-slate-800: #202126;
+  --color-slate-750: #282a32;
+  --color-slate-700: #3e404b;
+  --color-slate-600: #585a67;
+  --color-slate-500: #94a3b8;
+  --color-slate-400: #cbd5e1;
+  --color-slate-300: #e2e8f0;
+  --color-slate-200: #f1f5f9;
+  --color-slate-100: #f8fafc;
+  --color-slate-50:  #ffffff;
+
+  /* Remapeia gray para consistência total */
+  --color-gray-950: #0b0c0e;
+  --color-gray-900: #16171a;
+  --color-gray-800: #202126;
+  --color-gray-700: #3e404b;
+  --color-gray-600: #585a67;
+  --color-gray-500: #94a3b8;
+  --color-gray-400: #cbd5e1;
+  --color-gray-300: #e2e8f0;
+  --color-gray-200: #f1f5f9;
+  --color-gray-100: #f8fafc;
+  --color-gray-50:  #ffffff;
+
+  /* Remapeia zinc para consistência total */
+  --color-zinc-950: #0b0c0e;
+  --color-zinc-900: #16171a;
+  --color-zinc-800: #202126;
+  --color-zinc-700: #3e404b;
+  --color-zinc-600: #585a67;
+  --color-zinc-500: #94a3b8;
+  --color-zinc-400: #cbd5e1;
+  --color-zinc-300: #e2e8f0;
+  --color-zinc-200: #f1f5f9;
+  --color-zinc-100: #f8fafc;
+  --color-zinc-50:  #ffffff;
+
+  /* Remapeia neutral */
+  --color-neutral-950: #0b0c0e;
+  --color-neutral-900: #16171a;
+  --color-neutral-800: #202126;
+  --color-neutral-700: #3e404b;
+  --color-neutral-600: #585a67;
+  --color-neutral-500: #94a3b8;
+  --color-neutral-400: #cbd5e1;
+  --color-neutral-300: #e2e8f0;
+  --color-neutral-200: #f1f5f9;
+  --color-neutral-100: #f8fafc;
+  --color-neutral-50:  #ffffff;
 }
 
 html.dark body {
-  background-color: #040816 !important;
-  color: #FFFFFF !important;
+  background-color: #0b0c0e !important;
+  color: #ffffff !important;
 }
 
-/* Fundo da tela principal no modo escuro */
+/* ========================================================================== */
+/* REGRAS DIRETAS DE COMPATIBILIDADE - MODO ESCURO CINZA ALTO CONTRASTE       */
+/* ========================================================================== */
+
+/* Fundo Geral / Canvas Principal (#0b0c0e) */
 html.dark .bg-slate-950,
+html.dark [class*="bg-slate-950"],
+html.dark [class*="dark:bg-slate-950"],
 html.dark .bg-gray-950,
+html.dark .bg-zinc-950,
 html.dark .bg-neutral-950 {
-  background-color: #040816 !important;
+  background-color: #0b0c0e !important;
 }
 
-/* Tier 1: Cartões principais, TopBar, Sidebar, Modais e Telas (Vibrant Navy #102144) */
+/* Tier 1: Cartões, Headers, TopBar, Sidebar, Modais e Menus (#16171a) */
 html.dark .bg-white,
+html.dark [class*="dark:bg-slate-900"],
+html.dark [class*="dark:bg-gray-900"],
+html.dark [class*="dark:bg-zinc-900"],
 html.dark .bg-slate-900,
-html.dark .bg-gray-900 {
-  background-color: #102144 !important;
+html.dark .bg-gray-900,
+html.dark .bg-zinc-900 {
+  background-color: #16171a !important;
 }
 
-/* Tier 2: Sub-superfícies, itens de lista, cartões internos, atalhos (#1A3260) */
-html.dark .bg-slate-50,
-html.dark .bg-slate-100,
-html.dark .bg-gray-50,
-html.dark .bg-gray-100 {
-  background-color: #1A3260 !important;
-}
-
+/* Tier 2: Sub-superfícies, itens de lista, cartões secundários (#202126) */
+html.dark [class*="dark:bg-slate-800"],
+html.dark [class*="dark:bg-gray-800"],
+html.dark [class*="dark:bg-zinc-800"],
 html.dark .bg-slate-800,
-html.dark .bg-gray-800 {
-  background-color: #1A3260 !important;
+html.dark .bg-gray-800,
+html.dark .bg-zinc-800,
+html.dark .bg-slate-100,
+html.dark .bg-slate-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-50 {
+  background-color: #202126 !important;
 }
 
-html.dark .bg-slate-800\/50,
-html.dark .bg-slate-800\/40,
-html.dark .bg-slate-800\/60,
-html.dark .bg-slate-800\/80 {
-  background-color: #162B54 !important;
+/* Variações translúcidas em cinza de alto contraste */
+html.dark [class*="dark:bg-slate-800/"],
+html.dark [class*="dark:bg-slate-900/"] {
+  background-color: #1a1b20 !important;
 }
 
-/* Hover interativo com resposta visual clara (#254586) */
-html.dark .hover\:bg-slate-50:hover,
-html.dark .hover\:bg-slate-100:hover,
-html.dark .hover\:bg-slate-800:hover,
-html.dark .hover\:bg-slate-700:hover {
-  background-color: #254586 !important;
+/* Hover interativo em cinza nítido (#32343e) */
+html.dark [class*="dark:hover:bg-slate-800"]:hover,
+html.dark [class*="dark:hover:bg-slate-700"]:hover,
+html.dark [class*="hover:bg-slate-100"]:hover,
+html.dark [class*="hover:bg-slate-50"]:hover,
+html.dark [class*="hover:bg-gray-100"]:hover {
+  background-color: #32343e !important;
 }
 
-/* Bordas de alto contraste delineando cada elemento (#2E4D8A / #3C64B2) */
-html.dark .border-slate-100,
+/* Bordas de Alto Contraste (#3e404b) */
+html.dark [class*="dark:border-slate-800"],
+html.dark [class*="dark:border-slate-700"],
+html.dark [class*="dark:border-gray-800"],
+html.dark [class*="dark:border-zinc-800"],
 html.dark .border-slate-200,
 html.dark .border-slate-300,
-html.dark .border-slate-700,
-html.dark .border-slate-800,
-html.dark .border-slate-900,
 html.dark .border-gray-200,
-html.dark .border-gray-700,
-html.dark .border-gray-800 {
-  border-color: #2E4D8A !important;
+html.dark .border-zinc-200 {
+  border-color: #3e404b !important;
 }
 
-/* Sombras refinadas que destacam os cartões sobre o fundo #040816 */
+html.dark .border-slate-100,
+html.dark .border-gray-100,
+html.dark .border-zinc-100 {
+  border-color: #2a2b33 !important;
+}
+
+/* Sombras com anel de alto contraste delineando cada elemento */
 html.dark .shadow-2xl,
 html.dark .shadow-xl {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px #2E4D8A !important;
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px #3e404b !important;
 }
 
 html.dark .shadow-lg,
 html.dark .shadow-md {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px #2E4D8A !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.75), 0 0 0 1px #3e404b !important;
 }
 
 html.dark .shadow-sm,
 html.dark .shadow-xs,
 html.dark .shadow-2xs {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px #2E4D8A !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px #2a2b33 !important;
 }
 
-/* ELEMENTOS BRANCOS: Todos os títulos, cabeçalhos e textos principais em branco puro */
+/* Textos principais e títulos em branco puro (100% de contraste) */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
-html.dark .text-slate-700,
 html.dark .text-gray-900,
-html.dark .text-gray-800,
+html.dark .text-zinc-900,
+html.dark [class*="dark:text-slate-100"],
+html.dark [class*="dark:text-white"],
 html.dark h1,
 html.dark h2,
 html.dark h3,
 html.dark h4,
 html.dark h5,
 html.dark h6 {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
-/* Textos secundários em branco gelo nítido de alto contraste */
+/* Textos secundários em cinza claro brilhante (#cbd5e1 - alto contraste) */
 html.dark .text-slate-600,
 html.dark .text-slate-500,
-html.dark .text-slate-400,
+html.dark .text-gray-600,
 html.dark .text-gray-500,
-html.dark .text-gray-400 {
-  color: #E2E8F0 !important;
+html.dark [class*="dark:text-slate-300"],
+html.dark [class*="dark:text-slate-400"] {
+  color: #cbd5e1 !important;
 }
 
-/* Form inputs & controls: fundo azul destacado, texto branco e borda cristalina */
+/* Textos terciários e legendas (#94a3b8) */
+html.dark [class*="dark:text-slate-500"] {
+  color: #94a3b8 !important;
+}
+
+/* Controles de Formulário (Inputs, Selects, Textareas) em Alto Contraste */
 html.dark input,
 html.dark select,
 html.dark textarea {
-  background-color: #1A3260 !important;
-  border-color: #3C64B2 !important;
-  color: #FFFFFF !important;
+  background-color: #18191d !important;
+  border-color: #3e404b !important;
+  color: #ffffff !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #94A3B8 !important;
+  color: #828594 !important;
 }
 
 html.dark input:focus,
 html.dark select:focus,
 html.dark textarea:focus {
-  border-color: #3B82F6 !important;
-  outline-color: #3B82F6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
+  border-color: #71717a !important;
+  outline-color: #71717a !important;
+  box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.4) !important;
 }
 
-/* Botões primários em azul royal elétrico com texto branco */
-html.dark .bg-indigo-600,
-html.dark .bg-blue-600 {
-  background-color: #2563EB !important;
-  color: #FFFFFF !important;
-}
-
-html.dark .bg-indigo-600:hover,
-html.dark .bg-blue-600:hover {
-  background-color: #1D4ED8 !important;
-  color: #FFFFFF !important;
-}
-
-html.dark .text-indigo-600,
-html.dark .text-indigo-400,
-html.dark .text-blue-600,
-html.dark .text-blue-400 {
-  color: #60A5FA !important;
-}
-
-/* Badges e tags secundárias no modo escuro */
+/* Badges neutras em tons de cinza com borda nítida */
 html.dark .bg-slate-200,
-html.dark .bg-slate-300 {
-  background-color: #254586 !important;
-  color: #FFFFFF !important;
-  border: 1px solid #3C64B2 !important;
+html.dark .bg-slate-300,
+html.dark .bg-zinc-200,
+html.dark .bg-zinc-300 {
+  background-color: #272830 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #4a4d5b !important;
 }
 
-/* Cores arbitrárias do Início e Telas Móveis mapeadas para o contraste nítido */
+/* Mapeamento de tons de azul antigos / navy para cinza de alto contraste */
 html.dark .bg-\[\#edf0f5\],
 html.dark [class*="bg-[#edf0f5]"] {
-  background-color: #040816 !important;
+  background-color: #0b0c0e !important;
 }
 
 html.dark .bg-\[\#111D3B\],
-html.dark [class*="bg-[#111D3B]"] {
-  background-color: #102144 !important;
-  border-color: #2E4D8A !important;
+html.dark [class*="bg-[#111D3B]"],
+html.dark .bg-\[\#102144\],
+html.dark [class*="bg-[#102144]"] {
+  background-color: #16171a !important;
+  border-color: #3e404b !important;
 }
 
 html.dark .bg-\[\#18191d\],
 html.dark [class*="bg-[#18191d]"] {
-  background-color: #172E5E !important;
-  border-color: #2E4D8A !important;
+  background-color: #18191d !important;
+  border-color: #3e404b !important;
 }
 
 html.dark .bg-\[\#1c1d22\],
-html.dark [class*="bg-[#1c1d22]"] {
-  background-color: #1A3260 !important;
-  border-color: #2E4D8A !important;
+html.dark [class*="bg-[#1c1d22]"],
+html.dark .bg-\[\#1A3260\],
+html.dark [class*="bg-[#1A3260]"] {
+  background-color: #202126 !important;
+  border-color: #3e404b !important;
 }
 
 html.dark .bg-\[\#18264D\],
-html.dark [class*="bg-[#18264D]"] {
-  background-color: #1A3260 !important;
-  border-color: #2E4D8A !important;
+html.dark [class*="bg-[#18264D]"],
+html.dark .bg-\[\#162B54\],
+html.dark [class*="bg-[#162B54]"] {
+  background-color: #1a1b20 !important;
+  border-color: #3e404b !important;
 }
 
 html.dark .border-\[\#243B6E\],
-html.dark [class*="border-[#243B6E]"] {
-  border-color: #2E4D8A !important;
+html.dark [class*="border-[#243B6E]"],
+html.dark .border-\[\#2E4D8A\],
+html.dark [class*="border-[#2E4D8A]"],
+html.dark .border-\[\#3C64B2\],
+html.dark [class*="border-[#3C64B2]"] {
+  border-color: #3e404b !important;
 }
 
-/* Elementos brancos garantidos em ícones e cabeçalhos */
+html.dark .hover\:bg-\[\#254586\]:hover,
+html.dark [class*="hover:bg-[#254586]"]:hover {
+  background-color: #32343e !important;
+}
+
+/* Suavização de fundos escuros saturados (amber, indigo, rose, etc.) */
+html.dark [class*="dark:bg-indigo-950"],
+html.dark [class*="dark:bg-blue-950"],
+html.dark [class*="dark:bg-purple-950"],
+html.dark [class*="dark:bg-cyan-950"] {
+  background-color: #181920 !important;
+}
+
+/* Scrollbars customizadas de alto contraste */
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0f1013;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3e404b;
+  border-radius: 4px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #585a67;
+}
+
+/* Textos brancos puros preservados */
 html.dark .text-white {
   color: #FFFFFF !important;
-}
-
-html.dark svg:not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-red"]) {
-  color: #FFFFFF;
 }
 
 @layer utilities {

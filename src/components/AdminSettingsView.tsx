@@ -52,8 +52,15 @@ import {
   Cake,
   Palmtree,
   UserCheck,
-  Settings
+  Settings,
+  Download,
+  RotateCcw,
+  FileText,
+  Eye,
+  FileSpreadsheet
 } from 'lucide-react';
+import { ChurchConfigBackup } from '../types';
+import { downloadBackupFile, parseUploadedBackupJson } from '../utils/backupUtils';
 import { getCultos, getPessoas, getEscalas, saveChurchProfileDoc } from '../services/firestoreService';
 import { getBaseAppUrl } from '../utils/urlUtils';
 
@@ -81,13 +88,17 @@ interface AdminSettingsViewProps {
   onOpenInviteMembers?: () => void;
   onOpenJoinRequests?: () => void;
   pendingJoinRequestsCount?: number;
-  initialTab?: 'church' | 'ministries' | 'whatsapp' | 'automation' | 'danger_zone';
+  initialTab?: 'church' | 'ministries' | 'whatsapp' | 'automation' | 'backups' | 'danger_zone';
   onUpdateUser?: (updated: User) => void;
   onOpenEditProfile?: () => void;
   onClearAllCultos?: () => void;
   onClearAllPeople?: () => void;
   onClearAllMinistries?: () => void;
   onResetEntireSystem?: () => void;
+  backups?: ChurchConfigBackup[];
+  onCreateBackup?: (label?: string, description?: string) => Promise<any>;
+  onRestoreBackup?: (backup: ChurchConfigBackup) => Promise<void>;
+  onDeleteBackup?: (backupId: string) => Promise<void>;
 }
 
 export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
@@ -119,12 +130,31 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   onClearAllCultos,
   onClearAllPeople,
   onClearAllMinistries,
-  onResetEntireSystem
+  onResetEntireSystem,
+  backups = [],
+  onCreateBackup,
+  onRestoreBackup,
+  onDeleteBackup
 }) => {
   // Navigation tabs within Admin Settings
-  const [activeTab, setActiveTab] = useState<'church' | 'ministries' | 'whatsapp' | 'automation' | 'danger_zone'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'church' | 'ministries' | 'whatsapp' | 'automation' | 'backups' | 'danger_zone'>(initialTab);
   const [dangerAction, setDangerAction] = useState<'cultos' | 'people' | 'ministries' | 'full' | null>(null);
   const [dangerConfirmText, setDangerConfirmText] = useState('');
+
+  // Backup & Restore states
+  const [selectedBackupForRestore, setSelectedBackupForRestore] = useState<ChurchConfigBackup | null>(null);
+  const [selectedBackupForJsonPreview, setSelectedBackupForJsonPreview] = useState<ChurchConfigBackup | null>(null);
+  const [isCreateManualBackupModalOpen, setIsCreateManualBackupModalOpen] = useState(false);
+  const [manualBackupLabel, setManualBackupLabel] = useState('');
+  const [manualBackupDesc, setManualBackupDesc] = useState('');
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [backupSearchTerm, setBackupSearchTerm] = useState('');
+  const [backupTypeFilter, setBackupTypeFilter] = useState<'all' | 'automatic_periodic' | 'manual' | 'safety'>('all');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedPreviewData, setUploadedPreviewData] = useState<ChurchConfigBackup['data'] | null>(null);
+  const [isUploadBackupModalOpen, setIsUploadBackupModalOpen] = useState(false);
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialTab) {
@@ -620,6 +650,23 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Escala Automática & Músicas</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('backups')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'backups'
+                ? 'bg-white dark:bg-slate-900 text-cyan-700 dark:text-cyan-300 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-cyan-500" />
+            <span>Backups & Restauração</span>
+            {backups.length > 0 && (
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
+                {backups.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -1894,6 +1941,364 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       )}
 
       {/* =================================================================== */}
+      {/* TAB: BACKUPS & SYSTEM RESTORE                                       */}
+      {/* =================================================================== */}
+      {activeTab === 'backups' && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-cyan-50 via-sky-50/70 to-indigo-50 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-slate-900 border-2 border-cyan-200 dark:border-cyan-900/60 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Database className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Backups Periódicos & Restauração</span>
+                    <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100 dark:bg-cyan-900/80 px-2.5 py-0.5 rounded-full uppercase">
+                      Firestore Ativo
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    O sistema executa rotinas periódicas automáticas de backup das configurações no Firestore a cada 6 horas. Você também pode salvar snapshots manuais imediatos e restaurar estados anteriores a qualquer momento.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateManualBackupModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Novo Snapshot Manual</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => backupFileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-xs rounded-xl shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Importar Arquivo JSON</span>
+                </button>
+
+                {/* Hidden file input for uploading JSON */}
+                <input
+                  ref={backupFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                      const text = ev.target?.result as string;
+                      const res = parseUploadedBackupJson(text);
+                      if (res.success) {
+                        setUploadedPreviewData(res.data);
+                        setUploadError(null);
+                        setIsUploadBackupModalOpen(true);
+                      } else {
+                        setUploadError(res.error);
+                        setIsUploadBackupModalOpen(true);
+                      }
+                      e.target.value = '';
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Guarantees & Health Strip */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-cyan-200/60 dark:border-cyan-900/40 text-xs">
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-cyan-100 dark:border-cyan-950">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-slate-600 dark:text-slate-300 text-[11px]">
+                  <strong>Rotina Periódica:</strong> Executa a cada 6 horas no Firestore
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-cyan-100 dark:border-cyan-950">
+                <ShieldCheck className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                <span className="text-slate-600 dark:text-slate-300 text-[11px]">
+                  <strong>Retenção Saudável:</strong> Mantém até 20 versões automáticas
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-cyan-100 dark:border-cyan-950">
+                <RotateCcw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="text-slate-600 dark:text-slate-300 text-[11px]">
+                  <strong>Reversão Segura:</strong> Ponto pré-restauração salvo antes de aplicar
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters and Search Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto max-w-full w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setBackupTypeFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+                  backupTypeFilter === 'all'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Todos ({backups.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBackupTypeFilter('automatic_periodic')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+                  backupTypeFilter === 'automatic_periodic'
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Automáticos ({backups.filter(b => b.triggerType === 'automatic_periodic').length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBackupTypeFilter('manual')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+                  backupTypeFilter === 'manual'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Manuais ({backups.filter(b => b.triggerType === 'manual').length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBackupTypeFilter('safety')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+                  backupTypeFilter === 'safety'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Pontos de Segurança ({backups.filter(b => b.triggerType === 'pre_restore' || b.triggerType === 'pre_reset').length})
+              </button>
+            </div>
+
+            <div className="w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="Buscar por descrição ou data..."
+                value={backupSearchTerm}
+                onChange={e => setBackupSearchTerm(e.target.value)}
+                className="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* Backups List */}
+          {(() => {
+            const filtered = backups.filter(b => {
+              if (backupTypeFilter === 'automatic_periodic' && b.triggerType !== 'automatic_periodic') return false;
+              if (backupTypeFilter === 'manual' && b.triggerType !== 'manual') return false;
+              if (backupTypeFilter === 'safety' && b.triggerType !== 'pre_restore' && b.triggerType !== 'pre_reset') return false;
+              if (backupSearchTerm.trim()) {
+                const term = backupSearchTerm.toLowerCase();
+                const matchLabel = b.label?.toLowerCase().includes(term);
+                const matchDesc = b.description?.toLowerCase().includes(term);
+                const matchAuthor = b.createdBy?.name?.toLowerCase().includes(term);
+                const matchDate = new Date(b.createdAt).toLocaleString('pt-BR').includes(term);
+                if (!matchLabel && !matchDesc && !matchAuthor && !matchDate) return false;
+              }
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto">
+                    <Database className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Nenhum backup encontrado
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                    {backups.length === 0
+                      ? 'Nenhum backup foi gerado ainda. A rotina automática salvará o próximo snapshot no Firestore ou você pode criar um agora manualmente.'
+                      : 'Nenhum backup corresponde aos filtros selecionados.'}
+                  </p>
+                  {backups.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsCreateManualBackupModalOpen(true)}
+                      className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Fazer Primeiro Backup Manual</span>
+                    </button>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                {filtered.map(backup => {
+                  const dateStr = new Date(backup.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  });
+                  const timeStr = new Date(backup.createdAt).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  const isAuto = backup.triggerType === 'automatic_periodic';
+                  const isManual = backup.triggerType === 'manual';
+                  const isPreRestore = backup.triggerType === 'pre_restore';
+                  const isPreReset = backup.triggerType === 'pre_reset';
+
+                  const ministriesCount = backup.data?.ministries?.length ?? 0;
+                  const volunteersCount =
+                    backup.data?.volunteersSummary?.totalVolunteers ??
+                    backup.data?.membershipsSnapshot?.length ??
+                    0;
+
+                  return (
+                    <div
+                      key={backup.id}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isAuto && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center gap-1">
+                              <RefreshCw className="w-2.5 h-2.5" />
+                              <span>Periódico Automático</span>
+                            </span>
+                          )}
+                          {isManual && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              <span>Snapshot Manual</span>
+                            </span>
+                          )}
+                          {isPreRestore && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
+                              <ShieldCheck className="w-2.5 h-2.5" />
+                              <span>Segurança Pré-Restauração</span>
+                            </span>
+                          )}
+                          {isPreReset && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span>Segurança Pré-Limpeza</span>
+                            </span>
+                          )}
+
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            <span>{dateStr} às {timeStr}</span>
+                          </span>
+
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                            · por <strong>{backup.createdBy?.name || 'Sistema Automático'}</strong>
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                            {backup.label}
+                          </h4>
+                          {backup.description && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                              {backup.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Snapshot Summary Chips */}
+                        <div className="flex items-center gap-2 pt-1 flex-wrap text-[11px]">
+                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 font-medium">
+                            Igreja: <strong>{backup.data?.churchProfile?.name || 'Minha Igreja'}</strong>
+                          </span>
+                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 font-medium">
+                            <strong>{ministriesCount}</strong> ministérios
+                          </span>
+                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 font-medium">
+                            <strong>{volunteersCount}</strong> voluntários vinculados
+                          </span>
+                          {backup.data?.whatsAppSettings && (
+                            <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded font-medium">
+                              Configurações WhatsApp ✓
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-1.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+                        {onRestoreBackup && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBackupForRestore(backup)}
+                            className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                            title="Restaurar este estado anterior da congregação"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Restaurar Estado</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => downloadBackupFile(backup)}
+                          className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
+                          title="Baixar arquivo .json de backup"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBackupForJsonPreview(backup)}
+                          className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
+                          title="Inspecionar código JSON do backup"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        {onDeleteBackup && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Deseja realmente excluir o backup "${backup.label}"?`)) {
+                                onDeleteBackup(backup.id);
+                              }
+                            }}
+                            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer"
+                            title="Excluir este registro de backup"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* =================================================================== */}
       {/* TAB: DANGER ZONE & SYSTEM RESET                                     */}
       {/* =================================================================== */}
       {activeTab === 'danger_zone' && (
@@ -2370,6 +2775,368 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Sim, Confirmar e Limpar</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ============================================================== */}
+      {/* MODAL: CONFIRMAR RESTAURAÇÃO DE BACKUP                          */}
+      {/* ============================================================== */}
+      {selectedBackupForRestore && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-indigo-200 dark:border-indigo-900/80 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Restaurar Estado Anterior da Congregação
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {selectedBackupForRestore.label}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-indigo-500" />
+                  <span>Conteúdo que será recuperado:</span>
+                </h4>
+                <ul className="space-y-1.5 pl-5 list-disc text-slate-600 dark:text-slate-300">
+                  <li>
+                    <strong>Igreja & Identidade:</strong> {selectedBackupForRestore.data?.churchProfile?.name || 'Minha Igreja'} ({selectedBackupForRestore.data?.churchProfile?.campus || 'Sede'})
+                  </li>
+                  <li>
+                    <strong>Ministérios ({selectedBackupForRestore.data?.ministries?.length || 0}):</strong>{' '}
+                    {selectedBackupForRestore.data?.ministries?.map(m => m.name).join(', ') || 'Nenhum ministério'}
+                  </li>
+                  <li>
+                    <strong>Módulo WhatsApp:</strong> {selectedBackupForRestore.data?.whatsAppSettings?.enabled ? 'Ativo' : 'Pausado'} (regras de envio e horários restaurados)
+                  </li>
+                  <li>
+                    <strong>Vínculos de Voluntários & Líderes:</strong> {selectedBackupForRestore.data?.membershipsSnapshot?.length || 0} membros sincronizados
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/50 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-indigo-900 dark:text-indigo-200 leading-relaxed">
+                  <strong>Ponto de Segurança Automático:</strong> Antes de aplicar as mudanças, o sistema criará instantaneamente um snapshot de segurança com o estado atual. Você poderá reverter a qualquer momento.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                disabled={isRestoringBackup}
+                onClick={() => setSelectedBackupForRestore(null)}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold flex-1 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isRestoringBackup}
+                onClick={async () => {
+                  if (onRestoreBackup && selectedBackupForRestore) {
+                    setIsRestoringBackup(true);
+                    try {
+                      await onRestoreBackup(selectedBackupForRestore);
+                      setSelectedBackupForRestore(null);
+                    } catch (e) {
+                      console.error('Falha ao restaurar:', e);
+                    } finally {
+                      setIsRestoringBackup(false);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex-1 shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${isRestoringBackup ? 'animate-spin' : ''}`} />
+                <span>{isRestoringBackup ? 'Restaurando...' : 'Confirmar e Restaurar'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: VISUALIZAR JSON DO BACKUP                                */}
+      {/* ============================================================== */}
+      {selectedBackupForJsonPreview && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200 flex flex-col max-h-[88vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-950/80 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Estrutura JSON do Backup
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {selectedBackupForJsonPreview.label} · {new Date(selectedBackupForJsonPreview.createdAt).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = selectedBackupForJsonPreview.data.rawConfigJson || JSON.stringify(selectedBackupForJsonPreview, null, 2);
+                    navigator.clipboard.writeText(text);
+                    alert('Código JSON copiado para a área de transferência!');
+                  }}
+                  className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg flex items-center gap-1 font-semibold transition cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copiar</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => downloadBackupFile(selectedBackupForJsonPreview)}
+                  className="px-2.5 py-1.5 text-xs bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 rounded-lg flex items-center gap-1 font-semibold transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Baixar</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBackupForJsonPreview(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-950 text-emerald-400 p-4 rounded-2xl font-mono text-[11px] leading-relaxed select-all">
+              <pre className="whitespace-pre-wrap">
+                {selectedBackupForJsonPreview.data.rawConfigJson || JSON.stringify(selectedBackupForJsonPreview, null, 2)}
+              </pre>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedBackupForJsonPreview(null)}
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: CRIAR BACKUP MANUAL AGORA                                */}
+      {/* ============================================================== */}
+      {isCreateManualBackupModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-100 dark:bg-cyan-950/80 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Novo Snapshot Manual no Firestore
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Gere um ponto de recuperação sob demanda
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateManualBackupModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Título / Rótulo do Backup (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={manualBackupLabel}
+                  onChange={e => setManualBackupLabel(e.target.value)}
+                  placeholder={`Ex: Pós-Conferência de Louvor ${new Date().getFullYear()}`}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Anotação / Descrição
+                </label>
+                <textarea
+                  rows={2}
+                  value={manualBackupDesc}
+                  onChange={e => setManualBackupDesc(e.target.value)}
+                  placeholder="Ex: Salvo antes da reestruturação de ministérios e escalas de fim de ano."
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white resize-none"
+                />
+              </div>
+
+              <div className="p-3 bg-cyan-50 dark:bg-cyan-950/40 rounded-xl text-[11px] text-cyan-900 dark:text-cyan-300">
+                O snapshot salvará no Firestore a foto completa do perfil da igreja, todos os {ministries.length} ministérios atuais, regras de automação e dados de configuração.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                disabled={isCreatingBackup}
+                onClick={() => setIsCreateManualBackupModalOpen(false)}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold flex-1 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isCreatingBackup}
+                onClick={async () => {
+                  if (onCreateBackup) {
+                    setIsCreatingBackup(true);
+                    try {
+                      await onCreateBackup(manualBackupLabel, manualBackupDesc);
+                      setManualBackupLabel('');
+                      setManualBackupDesc('');
+                      setIsCreateManualBackupModalOpen(false);
+                    } catch (e) {
+                      console.error('Erro ao gerar backup:', e);
+                    } finally {
+                      setIsCreatingBackup(false);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex-1 shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Plus className={`w-3.5 h-3.5 ${isCreatingBackup ? 'animate-spin' : ''}`} />
+                <span>{isCreatingBackup ? 'Gravando no Firestore...' : 'Gravar Backup Agora'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: IMPORTAR BACKUP DE ARQUIVO JSON                          */}
+      {/* ============================================================== */}
+      {isUploadBackupModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Importar Arquivo JSON
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Restauração a partir de arquivo de backup local
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUploadBackupModalOpen(false);
+                  setUploadedPreviewData(null);
+                  setUploadError(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {uploadError ? (
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 rounded-2xl text-xs text-rose-700 dark:text-rose-300 space-y-1">
+                <strong className="block font-bold">Arquivo JSON Inválido:</strong>
+                <p>{uploadError}</p>
+              </div>
+            ) : uploadedPreviewData ? (
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2">
+                  <h4 className="font-bold text-slate-900 dark:text-white">Dados Identificados no Arquivo:</h4>
+                  <ul className="space-y-1 pl-4 list-disc text-slate-600 dark:text-slate-300">
+                    <li>Igreja: <strong>{uploadedPreviewData.churchProfile?.name}</strong></li>
+                    <li>Ministérios: <strong>{uploadedPreviewData.ministries?.length || 0}</strong></li>
+                    <li>Módulo WhatsApp: {uploadedPreviewData.whatsAppSettings ? 'Configurado' : 'Padrão'}</li>
+                  </ul>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Ao confirmar, essas configurações serão importadas e gravadas no Firestore da congregação.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUploadBackupModalOpen(false);
+                  setUploadedPreviewData(null);
+                  setUploadError(null);
+                }}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold flex-1 transition cursor-pointer"
+              >
+                Fechar
+              </button>
+
+              {uploadedPreviewData && !uploadError && onRestoreBackup && (
+                <button
+                  type="button"
+                  disabled={isRestoringBackup}
+                  onClick={async () => {
+                    const syntheticBackup: ChurchConfigBackup = {
+                      id: `uploaded-${Date.now()}`,
+                      churchId: uploadedPreviewData.churchProfile?.id || propChurchProfile?.id || 'church-default',
+                      churchCode: uploadedPreviewData.churchProfile?.code || propChurchProfile?.code || 'HUB-2026',
+                      createdAt: new Date().toISOString(),
+                      createdBy: { id: currentUser.id, name: currentUser.name, email: currentUser.email },
+                      triggerType: 'manual',
+                      label: `Backup Importado de Arquivo - ${new Date().toLocaleDateString('pt-BR')}`,
+                      description: 'Importado manualmente via upload de arquivo JSON',
+                      version: 1,
+                      data: uploadedPreviewData
+                    };
+                    setIsRestoringBackup(true);
+                    try {
+                      await onRestoreBackup(syntheticBackup);
+                      setIsUploadBackupModalOpen(false);
+                      setUploadedPreviewData(null);
+                    } catch (e) {
+                      console.error('Erro ao restaurar do upload:', e);
+                    } finally {
+                      setIsRestoringBackup(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex-1 shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{isRestoringBackup ? 'Importando...' : 'Aplicar e Restaurar'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
