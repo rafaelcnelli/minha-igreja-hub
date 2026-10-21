@@ -103,19 +103,19 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <img
                   src={churchProfile.logoUrl}
                   alt={churchProfile.name || 'Logo da Igreja'}
-                  className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-slate-700 shrink-0"
+                  className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-xl bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xs group-hover:bg-blue-700 transition-colors shrink-0">
-                  {churchProfile?.name ? churchProfile.name.charAt(0).toUpperCase() : 'M'}
+                <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-[#1c1d22] border border-slate-200 dark:border-[#2C2E35] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
+                  <span>{churchProfile?.name ? churchProfile.name.charAt(0) : 'K'}</span>
                 </div>
               )}
               <div className="min-w-0">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[130px] sm:max-w-[200px] lg:max-w-[260px]">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[140px] sm:max-w-[220px] lg:max-w-[280px]">
                   {churchProfile?.name || 'Minha Igreja Hub'}
                 </span>
-                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider block truncate max-w-[130px] sm:max-w-[200px]">
-                  {churchProfile?.subtitle || 'Gestão & Escalas'}
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate max-w-[130px] sm:max-w-[200px]">
+                  {churchProfile?.subtitle || 'Gestão de Cultos e Escalas'}
                 </span>
               </div>
             </button>

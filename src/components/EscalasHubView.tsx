@@ -151,16 +151,16 @@ export const EscalasHubView: React.FC<EscalasHubViewProps> = ({
       {/* Liderados (voluntários) NÃO possuem acesso às escalas gerais             */}
       {/* ========================================================================= */}
       {canAccessGeneralScales ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xs transition-colors">
+        <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-3xl p-4 sm:p-5 shadow-2xs transition-colors">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-                <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Central Unificada de Escalas</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF5520]" />
+                <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">
+                  <span>Central Unificada de <span className="font-editorial italic font-normal text-[#FF5520]">Escalas</span></span>
                 </h1>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60">
-                  {isAdmin ? 'Admin Geral' : 'Líder de Ministério'}
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#2C2E35]">
+                  {isAdmin ? 'ADMIN GERAL' : 'LÍDER DE MINISTÉRIO'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -170,20 +170,20 @@ export const EscalasHubView: React.FC<EscalasHubViewProps> = ({
 
             {/* Action Buttons: Segmented Controller Tab Bar & Histórico Geral Link */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-start sm:self-auto">
-              <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+              <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-[#202126] rounded-2xl border border-slate-200/80 dark:border-[#2C2E35] shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setActiveSubTab('minhas')}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     effectiveSubTab === 'minhas'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                      ? 'bg-[#121214] text-white shadow-xs dark:bg-[#16171A] dark:border dark:border-[#2C2E35]'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <CalendarCheck className={`w-4 h-4 ${effectiveSubTab === 'minhas' ? 'text-amber-500' : 'text-slate-400'}`} />
+                  <CalendarCheck className={`w-4 h-4 ${effectiveSubTab === 'minhas' ? 'text-[#FF5520]' : 'text-slate-400'}`} />
                   <span>Minhas Escalas</span>
                   {pendingConfirmationsCount > 0 && (
-                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#FF5520] text-white text-[10px] font-black flex items-center justify-center shadow-xs">
                       {pendingConfirmationsCount}
                     </span>
                   )}
@@ -194,14 +194,14 @@ export const EscalasHubView: React.FC<EscalasHubViewProps> = ({
                   onClick={() => setActiveSubTab('geral')}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     effectiveSubTab === 'geral'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                      ? 'bg-[#121214] text-white shadow-xs dark:bg-[#16171A] dark:border dark:border-[#2C2E35]'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <Users2 className={`w-4 h-4 ${effectiveSubTab === 'geral' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                  <Users2 className={`w-4 h-4 ${effectiveSubTab === 'geral' ? 'text-[#FF5520]' : 'text-slate-400'}`} />
                   <span>Escalas Gerais</span>
                   {pendingSwapsCount > 0 && (
-                    <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#FF5520] text-white text-[10px] font-black flex items-center justify-center shadow-xs">
                       {pendingSwapsCount} troca
                     </span>
                   )}

@@ -240,17 +240,17 @@ export const HistoricoGeralView: React.FC<HistoricoGeralViewProps> = ({
       {/* ========================================================================= */}
       {/* HEADER & TITLE                                                            */}
       {/* ========================================================================= */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs transition-colors">
+      <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-3xl p-5 sm:p-6 shadow-2xs transition-colors">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-                <History className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                <span>Histórico Geral</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF5520]" />
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5 tracking-tight">
+                <History className="w-6 h-6 text-[#FF5520]" />
+                <span>Histórico <span className="font-editorial italic font-normal text-[#FF5520]">Geral</span></span>
               </h1>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60">
-                Arquivo Consolidado
+              <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2C2E35]">
+                ARQUIVO CONSOLIDADO
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
@@ -261,16 +261,16 @@ export const HistoricoGeralView: React.FC<HistoricoGeralViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigateTab('minhas_escalas')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#202126] hover:bg-slate-200 dark:hover:bg-[#282932] text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-[#2C2E35]"
             >
-              <CalendarCheck className="w-3.5 h-3.5 text-amber-500" />
+              <CalendarCheck className="w-3.5 h-3.5 text-[#FF5520]" />
               <span>Voltar para Escalas</span>
             </button>
 
             {hasManagementAccess && (
               <button
                 onClick={handleExportCSV}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[#121214] hover:bg-black text-white dark:bg-[#FF5520] dark:hover:bg-[#E64515] transition-all shadow-xs cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Exportar CSV</span>
@@ -279,44 +279,44 @@ export const HistoricoGeralView: React.FC<HistoricoGeralViewProps> = ({
           </div>
         </div>
 
-        {/* METRICS ROW */}
+        {/* METRICS ROW (EDITORIAL STYLE) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-              <span>Cultos Celebrados</span>
-              <CalendarDays className="w-4 h-4 text-indigo-500" />
+          <div className="bg-slate-50 dark:bg-[#202126] p-4 rounded-2xl border border-slate-100 dark:border-[#2C2E35]">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-mono uppercase tracking-wider">
+              <span>CULTOS</span>
+              <CalendarDays className="w-3.5 h-3.5 text-[#FF5520]" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            <p className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white mt-1">
               {stats.cultosCount}
             </p>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-              <span>Ensaios Concluídos</span>
-              <Music4 className="w-4 h-4 text-sky-500" />
+          <div className="bg-slate-50 dark:bg-[#202126] p-4 rounded-2xl border border-slate-100 dark:border-[#2C2E35]">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-mono uppercase tracking-wider">
+              <span>ENSAIOS</span>
+              <Music4 className="w-3.5 h-3.5 text-sky-500" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            <p className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white mt-1">
               {stats.ensaiosCount}
             </p>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-              <span>Reuniões Realizadas</span>
-              <Users2 className="w-4 h-4 text-amber-500" />
+          <div className="bg-slate-50 dark:bg-[#202126] p-4 rounded-2xl border border-slate-100 dark:border-[#2C2E35]">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-mono uppercase tracking-wider">
+              <span>REUNIÕES</span>
+              <Users2 className="w-3.5 h-3.5 text-amber-500" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            <p className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white mt-1">
               {stats.reunioesCount}
             </p>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-              <span>{hasManagementAccess ? 'Total de Escalas' : 'Minhas Participações'}</span>
-              <CalendarCheck className="w-4 h-4 text-emerald-500" />
+          <div className="bg-slate-50 dark:bg-[#202126] p-4 rounded-2xl border border-slate-100 dark:border-[#2C2E35]">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-mono uppercase tracking-wider">
+              <span>{hasManagementAccess ? 'ESCALAS' : 'PARTICIPAÇÕES'}</span>
+              <CalendarCheck className="w-3.5 h-3.5 text-emerald-500" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            <p className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white mt-1">
               {hasManagementAccess ? stats.totalEscalasCount : stats.myParticipationsCount}
             </p>
           </div>

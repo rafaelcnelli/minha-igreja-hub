@@ -6,8 +6,10 @@ import {
   formatDayMonthBR,
   getWeekdayBR,
   matchesPeriodFilter,
-  getPeriodFilterOptions
+  getPeriodFilterOptions,
+  isDateInPast
 } from '../utils/dateUtils';
+import { PastCultosToggle } from './PastCultosToggle';
 import {
   CalendarCheck,
   CheckCircle2,
@@ -62,6 +64,23 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'escalas' | 'indisponibilidades'>('escalas');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
+
+  // Toggle for viewing past cultos (default false: hide cultos before today)
+  const [showPastCultos, setShowPastCultosState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('hub_show_past_cultos');
+      return saved === 'true'; // Default is false
+    } catch {
+      return false;
+    }
+  });
+
+  const setShowPastCultos = (val: boolean) => {
+    setShowPastCultosState(val);
+    try {
+      localStorage.setItem('hub_show_past_cultos', String(val));
+    } catch {}
+  };
 
   // Decline Modal State
   const [declineTargetSlot, setDeclineTargetSlot] = useState<RosterSlot | null>(null);
@@ -120,7 +139,18 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
       .filter(item => item.culto !== undefined);
   }, [slots, currentUser, scalePublications, cultos, ministries]);
 
-  // Filtered and sorted slots based on active scales and periodFilter
+  // Count past slots in current period
+  const pastSlotsCountInPeriod = useMemo(() => {
+    return baseMySlots.filter(item => {
+      if (!item.culto) return false;
+      if (periodFilter !== 'all' && !matchesPeriodFilter(item.culto.date, periodFilter)) {
+        return false;
+      }
+      return isDateInPast(item.culto.date);
+    }).length;
+  }, [baseMySlots, periodFilter]);
+
+  // Filtered and sorted slots based on active scales, periodFilter, and past cultos toggle
   const mySlots = useMemo(() => {
     return baseMySlots
       .filter(item => {
@@ -128,10 +158,14 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
         if (periodFilter !== 'all') {
           if (!matchesPeriodFilter(item.culto!.date, periodFilter)) return false;
         }
+        // Filter out past cultos unless showPastCultos is true
+        if (!showPastCultos && isDateInPast(item.culto!.date)) {
+          return false;
+        }
         return true;
       })
       .sort((a, b) => a.culto!.date.localeCompare(b.culto!.date));
-  }, [baseMySlots, periodFilter]);
+  }, [baseMySlots, periodFilter, showPastCultos]);
 
   // Current user's unavailabilities
   const myUnavailabilities = unavailabilities.filter(u => u.userId === currentUser.id);
@@ -259,26 +293,35 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
               )}
             </div>
 
-            {/* Filtro de Mês Padrão: Mês anterior, Mês atual, Próximo mês, Próximos 3 meses com nome do mês embaixo */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto max-w-full">
-                {getPeriodFilterOptions().map(pf => (
-                  <button
-                    key={pf.key}
-                    type="button"
-                    onClick={() => setPeriodFilter(pf.key)}
-                    className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                      periodFilter === pf.key
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-                    }`}
-                  >
-                    <span className="text-xs font-bold leading-tight">{pf.label}</span>
-                    <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                      {pf.subLabel}
-                    </span>
-                  </button>
-                ))}
+            {/* Filtro de Mês Padrão com Toggle de Cultos/Escalas Passadas */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <div className="flex flex-wrap items-center gap-2 max-w-full">
+                <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
+                  {getPeriodFilterOptions().map(pf => (
+                    <button
+                      key={pf.key}
+                      type="button"
+                      onClick={() => setPeriodFilter(pf.key)}
+                      className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
+                        periodFilter === pf.key
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <span className="text-xs font-bold leading-tight">{pf.label}</span>
+                      <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {pf.subLabel}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <PastCultosToggle
+                  showPast={showPastCultos}
+                  onToggle={setShowPastCultos}
+                  pastCount={pastSlotsCountInPeriod}
+                  label="Exibir escalas passadas"
+                />
               </div>
 
               {periodFilter !== 'this_month' && (
@@ -305,15 +348,31 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                 Sua agenda futura está livre. Quando o líder da sua equipe salvar uma nova escala para você, ela aparecerá aqui.
               </p>
+              {!showPastCultos && pastSlotsCountInPeriod > 0 && (
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl inline-flex flex-col items-center gap-2 text-amber-800 dark:text-amber-200 my-2">
+                  <p className="font-semibold text-xs">
+                    Você possui {pastSlotsCountInPeriod} escala(s) neste período em datas anteriores a hoje.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowPastCultos(true)}
+                    className="px-3.5 py-1.5 bg-[#FF5520] hover:bg-[#E64515] text-white rounded-lg font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                  >
+                    Ativar visualização de escalas passadas
+                  </button>
+                </div>
+              )}
               {onNavigateTab && (
-                <button
-                  type="button"
-                  onClick={() => onNavigateTab('historico_geral')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
-                >
-                  <History className="w-4 h-4" />
-                  <span>Consultar Histórico Geral de Escalas e Cultos</span>
-                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab('historico_geral')}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                  >
+                    <History className="w-4 h-4" />
+                    <span>Consultar Histórico Geral de Escalas e Cultos</span>
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -332,15 +391,15 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
                   <div
                     key={slot.id}
                     id={slotIdx === 0 ? "tour-rehearsal-card" : undefined}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-5"
+                    className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-5"
                   >
                     <div className="flex items-start gap-4">
                       {/* Date Badge */}
-                      <div className="text-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shrink-0 min-w-[76px]">
-                        <span className="block text-xl font-bold font-mono text-slate-900 dark:text-white">
+                      <div className="text-center bg-[#121214] dark:bg-[#202126] border border-slate-800 dark:border-[#2C2E35] rounded-xl p-3 shrink-0 min-w-[76px] text-white shadow-xs">
+                        <span className="block text-xl font-extrabold font-mono text-white leading-none">
                           {formatDayMonthBR(culto!.date)}
                         </span>
-                        <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-0.5">
+                        <span className="block text-[10px] font-bold text-[#FF5520] uppercase tracking-wide mt-1">
                           {getWeekdayBR(culto!.date).slice(0, 3)}
                         </span>
                       </div>

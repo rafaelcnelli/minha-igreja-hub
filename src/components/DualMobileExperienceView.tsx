@@ -217,17 +217,20 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                   <path d="M-40 165 C 130 285, 270 90, 440 235" stroke="white" strokeWidth="0.6" fill="none" opacity="0.3"/>
                 </svg>
 
-                {/* Header Top Row: Greeting in Portuguese & Avatar */}
+                {/* Header Top Row: Editorial Greeting & Avatar */}
                 <div className="flex items-center justify-between relative z-10">
                   <div>
-                    <span className="text-xs text-slate-400 font-medium tracking-wide">
-                      Olá, {currentUser.name.split(' ')[0]}!
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 block font-bold">
+                      VISÃO GERAL · {churchProfile?.campus?.toUpperCase() || 'SEDE'}
                     </span>
-                    <h1 className="text-xl font-bold tracking-tight text-white mt-1 leading-snug">
-                      {isAdmin && 'Lidere sua igreja com excelência!'}
-                      {isLeader && !isAdmin && 'Lidere sua equipe com dedicação!'}
-                      {isLiderado && 'Confira suas escalas e cultos!'}
+                    <h1 className="text-2xl font-extrabold tracking-tight text-white mt-1 leading-tight">
+                      <span className="font-editorial italic font-normal text-[#FF5520]">Olá,</span> {currentUser.name.split(' ')[0]} —
                     </h1>
+                    <p className="text-xs text-slate-400 font-medium mt-1 leading-snug">
+                      {isAdmin && 'Lidere sua igreja com excelência e organização.'}
+                      {isLeader && !isAdmin && 'Lidere sua equipe ministerial com dedicação.'}
+                      {isLiderado && 'Confira suas escalas e compromissos ministeriais.'}
+                    </p>
                   </div>
 
                   {/* Avatar */}
@@ -249,14 +252,14 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                         </div>
                       )}
                     </div>
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-[#18191d]" />
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#FF5520] ring-2 ring-[#18191d]" />
                   </div>
                 </div>
 
-                {/* Subtitle / Church badge */}
-                <div className="mt-2 text-xs text-slate-400 relative z-10 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <span>{churchProfile?.name || 'Congregação Geral'}</span>
+                {/* Subtitle / Church badge with mono metadata */}
+                <div className="mt-3 text-[11px] font-mono uppercase tracking-wider text-slate-400 relative z-10 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520]" />
+                  <span>{churchProfile?.name?.toUpperCase() || 'CONGREGAÇÃO GERAL'}</span>
                 </div>
               </div>
 
@@ -284,21 +287,20 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               </div>
 
               {/* ========================================================================= */}
-              {/* 2. MURAL DE AVISOS DA CONGREGAÇÃO                                         */}
-              {/* ========================================================================= */}
+              {/* 2. MURAL DE AVISOS DA CONGREGAÇÃO */}
               <div className="mt-6 px-6">
                 <div className="flex items-center justify-between mb-3.5">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Mural de Avisos</span>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <span><span className="font-editorial italic font-normal text-[#FF5520]">Mural</span> de Avisos</span>
                     {visibleAvisos.length > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520]" />
                     )}
                   </h2>
                   <button
                     onClick={() => onNavigateTab('avisos')}
-                    className="text-xs text-slate-400 dark:text-slate-300 font-semibold hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                    className="text-[10px] font-mono uppercase tracking-wider text-[#FF5520] hover:text-[#E64515] font-bold transition-colors cursor-pointer"
                   >
-                    Ver Todos
+                    VER TODOS →
                   </button>
                 </div>
 
@@ -310,18 +312,23 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                         onClick={() => onNavigateTab('avisos')}
                         className="p-4 rounded-2xl bg-white dark:bg-[#232328] border border-slate-100 dark:border-[#33343d] shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:border-slate-200 dark:hover:border-zinc-500 dark:hover:bg-[#2e2e35] transition-all cursor-pointer flex items-start gap-3"
                       >
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5 border border-amber-200/50 dark:border-amber-700/50">
-                          <Megaphone className="w-4 h-4" />
+                        <div className="w-8 h-8 rounded-xl bg-[#121214] dark:bg-[#1e1e24] text-white flex items-center justify-center shrink-0 mt-0.5 border border-slate-800 dark:border-zinc-700">
+                          <Megaphone className="w-4 h-4 text-[#FF5520]" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-xs text-slate-900 dark:text-white truncate">
-                            {aviso.title}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-200 line-clamp-2 mt-0.5 leading-relaxed">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                              {aviso.title}
+                            </h4>
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-400 shrink-0">
+                              {formatDayMonthBR(aviso.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-300 line-clamp-2 mt-0.5 leading-relaxed">
                             {aviso.content}
                           </p>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-300 mt-1 inline-block">
-                            {formatDayMonthBR(aviso.createdAt)}
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#FF5520] font-bold mt-1 inline-block">
+                            OFICIAL · COMUNICADO
                           </span>
                         </div>
                       </div>
@@ -337,21 +344,40 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* ========================================================================= */}
               {/* 3. ATALHOS & MÉTRICAS RÁPIDAS DA IGREJA                                  */}
               {/* ========================================================================= */}
-              <div className="mt-6 px-6 grid grid-cols-2 gap-3">
-                <div
-                  onClick={() => onNavigateTab('cultos')}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
-                >
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">{cultos.length}</span>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-300 mt-0.5">Cultos Cadastrados</p>
+              <div className="mt-6 px-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                    <span className="font-editorial italic font-normal text-[#FF5520]">Atalhos</span> & Métricas
+                  </h3>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-zinc-400 font-bold">
+                    PAINEL GERAL
+                  </span>
                 </div>
 
-                <div
-                  onClick={() => onNavigateTab(isAdmin ? 'pessoas' : 'minhas_escalas')}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
-                >
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">{allUsers.length}</span>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-300 mt-0.5">Membros da Igreja</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    onClick={() => onNavigateTab('cultos')}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
+                  >
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
+                      CULTOS · PROGRAMADOS
+                    </span>
+                    <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
+                      {cultos.length} <span className="text-xs font-sans font-bold text-[#FF5520]">ativos</span>
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() => onNavigateTab(isAdmin ? 'pessoas' : 'minhas_escalas')}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
+                  >
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
+                      MEMBROS · EQUIPES
+                    </span>
+                    <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
+                      {allUsers.length} <span className="text-xs font-sans font-bold text-[#FF5520]">pessoas</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -363,12 +389,14 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-white/10 dark:bg-zinc-700/50 border border-transparent dark:border-zinc-600/50 flex items-center justify-center">
-                      <CalendarCheck className="w-4 h-4 text-emerald-400" />
+                      <CalendarCheck className="w-4 h-4 text-[#FF5520]" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-white">Central de Escalas</h4>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-200">
-                        {slots.length} vaga(s) e escalas configuradas
+                      <h4 className="font-bold text-xs text-white tracking-tight">
+                        <span className="font-editorial italic font-normal text-[#FF5520]">Central</span> de Escalas
+                      </h4>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-300 mt-0.5">
+                        {slots.length} VAGA(S) · ESCALAS CONFIGURADAS
                       </p>
                     </div>
                   </div>
@@ -391,11 +419,11 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* TOP HEADER: DATE & TITLE */}
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400 dark:text-slate-300 font-medium">
-                    {formatDateExtendedBR(selectedCalendarDate)}
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 font-bold block">
+                    SEMANA · {formatDateExtendedBR(selectedCalendarDate).toUpperCase()}
                   </span>
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-0.5">
-                    Cronograma
+                  <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-0.5">
+                    <span className="font-editorial italic font-normal text-[#FF5520]">Cronograma</span> Semanal
                   </h1>
                 </div>
 
@@ -433,12 +461,12 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                     >
                       {isSelected ? (
                         /* Selected Day: Vertical Dark Pill */
-                        <div className="bg-[#1c1d22] dark:bg-zinc-700 text-white rounded-[22px] py-2.5 px-3 flex flex-col items-center shadow-lg dark:shadow-md transform -translate-y-1">
-                          <span className="text-sm font-bold leading-none">{item.dayNum}</span>
-                          <span className="text-[10px] font-medium text-slate-300 dark:text-white mt-1">{item.weekdayShort}</span>
+                        <div className="bg-[#121214] dark:bg-zinc-700 text-white rounded-[22px] py-2.5 px-3 flex flex-col items-center shadow-lg dark:shadow-md transform -translate-y-1">
+                          <span className="text-sm font-bold font-mono leading-none">{item.dayNum}</span>
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-300 dark:text-white mt-1">{item.weekdayShort}</span>
                           {/* Dot when there is a service/event */}
                           {item.hasEvent ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shadow-xs" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520] mt-1.5 shadow-xs" />
                           ) : (
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-600 mt-1.5 opacity-40" />
                           )}
@@ -446,11 +474,11 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                       ) : (
                         /* Unselected Day */
                         <div className="py-2 px-2 flex flex-col items-center hover:bg-slate-50 dark:hover:bg-[#232328] rounded-xl transition-colors relative">
-                          <span className="text-sm font-semibold text-slate-500 dark:text-slate-300">{item.dayNum}</span>
-                          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-400 mt-1">{item.weekdayShort}</span>
+                          <span className="text-sm font-semibold font-mono text-slate-600 dark:text-slate-300">{item.dayNum}</span>
+                          <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-slate-400 mt-1">{item.weekdayShort}</span>
                           {/* Dot indicator on days with cultos or events */}
                           {item.hasEvent ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520] mt-1" />
                           ) : (
                             <span className="w-1.5 h-1.5 mt-1 invisible" />
                           )}
@@ -467,33 +495,37 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                 {/* Header for the selected date events */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                      {selectedCalendarDate === new Date().toISOString().split('T')[0] ? 'Eventos de Hoje' : 'Programação do Dia'}
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+                      {selectedCalendarDate === new Date().toISOString().split('T')[0] ? (
+                        <span><span className="font-editorial italic font-normal text-[#FF5520]">Eventos</span> de Hoje</span>
+                      ) : (
+                        <span><span className="font-editorial italic font-normal text-[#FF5520]">Programação</span> do Dia</span>
+                      )}
                     </h3>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-300">
-                      {formatDateExtendedBR(selectedCalendarDate)}
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400">
+                      {formatDateExtendedBR(selectedCalendarDate).toUpperCase()}
                     </p>
                   </div>
 
-                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#232328] text-slate-700 dark:text-white border border-transparent dark:border-[#33343d]">
-                    {selectedDateCultos.length} {selectedDateCultos.length === 1 ? 'culto' : 'cultos'}
+                  <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-black/5 dark:bg-[#232328] text-slate-700 dark:text-white font-bold border border-transparent dark:border-[#33343d]">
+                    {selectedDateCultos.length} {selectedDateCultos.length === 1 ? 'EVENTO' : 'EVENTOS'}
                   </span>
                 </div>
 
                 {/* List of Cultos/Events on this selected day */}
                 {selectedDateCultos.length > 0 ? (
                   <div className="space-y-4">
-                    {selectedDateCultos.map((cultoItem, idx) => {
+                    {selectedDateCultos.map((cultoItem) => {
                       const volunteers = getCultoVolunteers(cultoItem.id);
                       return (
                         <div key={cultoItem.id} className="relative pl-6">
                           {/* Timeline dot marker */}
-                          <div className="absolute left-0 top-4 w-3.5 h-3.5 rounded-full border-4 border-slate-900 dark:border-zinc-500 bg-white shadow-xs z-10" />
+                          <div className="absolute left-0 top-4 w-3.5 h-3.5 rounded-full border-4 border-[#121214] dark:border-zinc-500 bg-white shadow-xs z-10" />
 
                           {/* Culto Card */}
                           <div
                             onClick={() => setSelectedEventModal(cultoItem)}
-                            className="bg-[#1c1d22] dark:bg-[#202024] border border-transparent dark:border-[#33343d] text-white rounded-[26px] p-5 shadow-xl hover:dark:bg-[#28282e] relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.01]"
+                            className="bg-[#121214] dark:bg-[#202024] border border-transparent dark:border-[#33343d] text-white rounded-[26px] p-5 shadow-xl hover:dark:bg-[#28282e] relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.01]"
                           >
                             {/* Background SVG Mesh / Waves */}
                             <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 300 200" fill="none">
@@ -503,22 +535,27 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                             </svg>
 
                             <div className="relative z-10">
-                              {/* Top Row: Title & Time */}
+                              {/* Top Row: Title & Time Pill */}
                               <div className="flex items-center justify-between gap-2">
-                                <h4 className="font-bold text-base text-white tracking-tight">
-                                  {cultoItem.title}
-                                </h4>
-                                <span className="text-xs text-slate-200 font-bold bg-white/15 px-2.5 py-0.5 rounded-full">
+                                <div>
+                                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 block font-bold">
+                                    {cultoItem.type === 'ensaio' ? 'ENSAIO' : cultoItem.type === 'reuniao' ? 'REUNIÃO' : 'CULTO'} · CELEBRAÇÃO
+                                  </span>
+                                  <h4 className="font-extrabold text-base text-white tracking-tight mt-0.5">
+                                    {cultoItem.title}
+                                  </h4>
+                                </div>
+                                <span className="text-xs font-mono font-bold text-white bg-[#FF5520] px-2.5 py-0.5 rounded-md shadow-xs">
                                   {cultoItem.startTime}
                                 </span>
                               </div>
 
-                              {/* Subtitle / Details */}
-                              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                                {cultoItem.preacher ? `Pregador: ${cultoItem.preacher} · ` : ''}
+                              {/* Subtitle / Details with Mono Metadata */}
+                              <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mt-2 leading-relaxed">
+                                {cultoItem.preacher ? `PREGADOR: ${cultoItem.preacher.toUpperCase()} · ` : ''}
                                 {volunteers.length > 0
-                                  ? `${volunteers.length} voluntários escalados`
-                                  : 'Culto congregacional com escalas abertas'}
+                                  ? `${volunteers.length} VOLUNTÁRIOS ESCALADOS`
+                                  : 'ESCALAS ABERTAS'}
                               </p>
 
                               {/* Bottom Row: Avatar Stack & Action Button */}
@@ -572,54 +609,54 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
 
                     {/* Associated Service Timeline Items for this day */}
                     <div className="mt-6 relative pl-6 space-y-5">
-                      <div className="absolute left-[7px] top-1 bottom-4 w-[1.5px] bg-slate-200" />
+                      <div className="absolute left-[7px] top-1 bottom-4 w-[1.5px] bg-slate-200 dark:bg-[#33343d]" />
 
                       <div className="relative">
-                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-white z-10" />
+                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-zinc-600 bg-white dark:bg-[#18181b] z-10" />
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-xs text-slate-900 tracking-tight">
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white tracking-tight">
                               Ensaio Geral da Banda & Louvor
                             </h4>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                               Passagem de som e alinhamento dos hinos
                             </p>
                           </div>
-                          <span className="text-[11px] font-semibold text-slate-400">
+                          <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                             17:30
                           </span>
                         </div>
                       </div>
 
                       <div className="relative">
-                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-white z-10" />
+                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-zinc-600 bg-white dark:bg-[#18181b] z-10" />
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-xs text-slate-900 tracking-tight">
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white tracking-tight">
                               Check de Mídia & Transmissão
                             </h4>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                               Testes de câmeras, microfones e projeção
                             </p>
                           </div>
-                          <span className="text-[11px] font-semibold text-slate-400">
+                          <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                             18:15
                           </span>
                         </div>
                       </div>
 
                       <div className="relative">
-                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-white z-10" />
+                        <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-zinc-600 bg-white dark:bg-[#18181b] z-10" />
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-xs text-slate-900 tracking-tight">
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white tracking-tight">
                               Oração Pré-Culto com Liderança
                             </h4>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                               Sala de intercessão com todos os voluntários
                             </p>
                           </div>
-                          <span className="text-[11px] font-semibold text-slate-400">
+                          <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                             18:40
                           </span>
                         </div>
@@ -628,14 +665,14 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                   </div>
                 ) : (
                   /* Empty state when NO cultos/events on selected day */
-                  <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 text-center flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-2xs text-slate-400 flex items-center justify-center mb-3">
+                  <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#1e1e24] border border-slate-100 dark:border-[#33343d] text-center flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#28282e] shadow-2xs text-slate-400 dark:text-slate-300 flex items-center justify-center mb-3">
                       <CalendarX className="w-6 h-6" />
                     </div>
-                    <h4 className="font-bold text-sm text-slate-900">
-                      Nenhum culto ou evento agendado
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                      <span className="font-editorial italic font-normal text-[#FF5520]">Nenhum</span> culto ou evento agendado
                     </h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 max-w-xs leading-relaxed">
                       Não há celebrações programadas para {formatDateExtendedBR(selectedCalendarDate)}.
                     </p>
 
@@ -643,13 +680,13 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                     {(isAdmin || isLeader) ? (
                       <button
                         onClick={() => onNavigateTab('cultos')}
-                        className="mt-4 px-4 py-2 bg-[#1c1d22] text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 shadow-sm"
+                        className="mt-4 px-4 py-2 bg-[#1c1d22] dark:bg-zinc-700 text-white rounded-xl text-xs font-bold hover:bg-slate-800 dark:hover:bg-zinc-600 transition-colors inline-flex items-center gap-1.5 shadow-sm font-mono uppercase tracking-wider text-[11px]"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-3.5 h-3.5 text-[#FF5520]" />
                         <span>Agendar Culto neste Dia</span>
                       </button>
                     ) : (
-                      <p className="text-[11px] text-slate-400 mt-3">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-3 font-mono">
                         Aproveite para descansar ou confraternizar com sua família.
                       </p>
                     )}
@@ -672,8 +709,8 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-[#18181b] w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-[#33343d] animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#33343d]">
-              <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-300 tracking-wider">
-                Detalhes do Culto
+              <span className="text-[10px] font-mono uppercase font-bold text-slate-400 dark:text-zinc-400 tracking-widest block">
+                <span className="font-editorial italic font-normal text-[#FF5520]">Detalhes</span> do Culto
               </span>
               <button
                 onClick={() => setSelectedEventModal(null)}
@@ -701,8 +738,8 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               {/* Sequence / Order if defined */}
               {selectedEventModal.sequence && selectedEventModal.sequence.length > 0 && (
                 <div className="mt-3">
-                  <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-zinc-400 dark:text-zinc-300" />
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-[#FF5520]" />
                     <span>Ordem do Culto</span>
                   </h4>
                   <div className="flex flex-wrap gap-1">
@@ -724,10 +761,10 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Todas as Escalas Criadas</span>
+                    <CalendarCheck className="w-3.5 h-3.5 text-[#FF5520]" />
+                    <span><span className="font-editorial italic font-normal text-[#FF5520]">Todas</span> as Escalas Criadas</span>
                   </h4>
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-300">
+                  <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-500 dark:text-slate-300">
                     {slots.filter(s => s.cultoId === selectedEventModal.id).length} função(ões)
                   </span>
                 </div>

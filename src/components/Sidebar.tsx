@@ -58,10 +58,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const isActive = tabKey === 'escalas'
       ? (activeTab === 'minhas_escalas' || activeTab === 'escalas_equipe')
       : activeTab === tabKey;
-    return `w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+    return `w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl transition-all text-left ${
       isActive
-        ? 'bg-slate-900 text-white font-bold shadow-xs dark:bg-[#232328] dark:text-white dark:border dark:border-[#33343d]'
-        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232328]/70'
+        ? 'bg-[#121214] text-white font-bold shadow-xs border border-transparent dark:bg-[#1c1d22] dark:text-white dark:border-[#2C2E35]'
+        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
     }`;
   };
 

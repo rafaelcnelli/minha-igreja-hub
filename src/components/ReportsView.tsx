@@ -319,14 +319,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#2C2E35]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Relatórios & Análise Congregacional
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Relatórios & <span className="font-editorial italic font-normal text-[#FF5520]">Métricas</span>
             </h1>
-            <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-              Métricas & Gráficos
+            <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#2C2E35]">
+              ANÁLISE CONGREGACIONAL
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -429,60 +429,70 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         </div>
       )}
 
-      {/* KPI Cards Row */}
+      {/* KPI Cards Row (Editorial Hero Card Layout) */}
       <div className={`grid grid-cols-2 ${canViewSongReports ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-3.5`}>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <span className="font-semibold">Cultos no Período</span>
-            <Calendar className="w-4 h-4 text-indigo-500" />
+        {/* Dark Hero Card inspired by reference image */}
+        <div className="bg-[#121214] dark:bg-[#16171A] text-white border border-slate-800 dark:border-[#2C2E35] rounded-2xl p-4 sm:p-5 shadow-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400 mb-1.5">
+              <span>CULTOS · PERÍODO</span>
+              <Calendar className="w-3.5 h-3.5 text-[#FF5520]" />
+            </div>
+            <div className="text-3xl font-extrabold font-mono text-white tracking-tight">
+              {overallStats.totalCultos} <span className="text-[#FF5520] font-sans text-xl font-bold">eventos</span>
+            </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {overallStats.totalCultos}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {periodLabel}
+          <div className="text-[10px] font-mono text-slate-400 mt-2 flex items-center gap-1">
+            <span className="text-[#FF5520]">▲</span>
+            <span>{periodLabel.toUpperCase()}</span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <span className="font-semibold">Taxa de Assiduidade</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              <span>ASSIDUIDADE</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {overallStats.attendanceRate}%
+            </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-            {overallStats.attendanceRate}%
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {overallStats.confirmedSlots} presenças confirmadas
+          <div className="text-[11px] text-slate-400 mt-2 font-mono">
+            {overallStats.confirmedSlots} CONFIRMADOS
           </div>
         </div>
 
         {/* Music Executions (Only for Louvor Leaders or Admin) */}
         {canViewSongReports && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-              <span className="font-semibold">Músicas Ministradas</span>
-              <Music4 className="w-4 h-4 text-amber-500" />
+          <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                <span>MÚSICAS</span>
+                <Music4 className="w-4 h-4 text-[#FF5520]" />
+              </div>
+              <div className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+                {songsMetrics.totalExecutions}
+              </div>
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-              {songsMetrics.totalExecutions}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              {songsMetrics.uniqueSongsCount} títulos distintos
+            <div className="text-[11px] text-slate-400 mt-2 font-mono">
+              {songsMetrics.uniqueSongsCount} TÍTULOS TOCADOS
             </div>
           </div>
         )}
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <span className="font-semibold">Vagas Preenchidas</span>
-            <Users2 className="w-4 h-4 text-sky-500" />
+        <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              <span>COBERTURA</span>
+              <Users2 className="w-4 h-4 text-sky-500" />
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {overallStats.occupancyRate}%
+            </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {overallStats.filledSlots} / {overallStats.totalSlots}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {overallStats.occupancyRate}% de cobertura de vagas
+          <div className="text-[11px] text-slate-400 mt-2 font-mono">
+            {overallStats.filledSlots} / {overallStats.totalSlots} VAGAS
           </div>
         </div>
       </div>

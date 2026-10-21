@@ -209,23 +209,23 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
     switch (priority) {
       case 'urgent':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-200 border border-rose-300 dark:border-rose-700 animate-pulse">
-            <AlertTriangle className="w-3 h-3 text-rose-600" />
-            <span>Urgente</span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[#FF5520] text-white shadow-xs">
+            <AlertTriangle className="w-3 h-3 text-white" />
+            <span>URGENTE</span>
           </span>
         );
       case 'important':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
-            <Sparkles className="w-3 h-3 text-amber-600" />
-            <span>Importante</span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[#121214] dark:bg-[#202126] text-white border border-transparent dark:border-[#2C2E35] shadow-xs">
+            <Sparkles className="w-3 h-3 text-[#FF5520]" />
+            <span>IMPORTANTE</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2C2E35]">
             <Info className="w-3 h-3 text-slate-400" />
-            <span>Informativo</span>
+            <span>INFORMATIVO</span>
           </span>
         );
     }
@@ -236,22 +236,22 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xs">
+      <div className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-3xl p-6 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-indigo-600 text-white shadow-xs shrink-0">
-              <Megaphone className="w-7 h-7" />
+            <div className="p-3.5 rounded-2xl bg-[#121214] dark:bg-[#202126] text-white border border-transparent dark:border-[#2C2E35] shadow-xs shrink-0">
+              <Megaphone className="w-7 h-7 text-[#FF5520]" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                  Mural de Avisos & Comunicados
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Mural de <span className="font-editorial italic font-normal text-[#FF5520]">Avisos</span> & Comunicados
                 </h1>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  Comunicação Oficial
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2C2E35]">
+                  COMUNICAÇÃO OFICIAL
                 </span>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-2xs">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FF5520] text-white shadow-xs">
                     {unreadCount} não lido(s)
                   </span>
                 )}

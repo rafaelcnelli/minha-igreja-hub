@@ -285,17 +285,17 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#2C2E35]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Cadastro Geral de Pessoas & Convites
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Cadastro de <span className="font-editorial italic font-normal text-[#FF5520]">Pessoas</span> & Convites
             </h1>
-            <span className="text-[10px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
-              Minha Igreja Hub
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-slate-200 dark:border-[#2C2E35] px-2 py-0.5 rounded-md">
+              DIRETÓRIO
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cadastre membros, defina papéis específicos por ministério (Líder em um, Liderado em outro) e gere links de acesso com senha.
           </p>
         </div>
@@ -306,9 +306,9 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
             <button
               type="button"
               onClick={onOpenJoinRequests}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs rounded-xl transition shadow-xs cursor-pointer animate-pulse"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#FF5520]/10 hover:bg-[#FF5520]/20 text-[#FF5520] border border-[#FF5520]/40 font-bold text-xs rounded-xl transition shadow-xs cursor-pointer animate-pulse"
             >
-              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              <ShieldCheck className="w-4 h-4 text-[#FF5520]" />
               <span>Solicitações ({pendingJoinRequestsCount})</span>
             </button>
           )}
@@ -317,9 +317,9 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
             <button
               type="button"
               onClick={onOpenInviteMembers}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-[#202126] hover:bg-slate-50 dark:hover:bg-[#282932] text-slate-800 dark:text-white border border-slate-200 dark:border-[#2C2E35] font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
             >
-              <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
+              <KeyRound className="w-3.5 h-3.5 text-[#FF5520]" />
               <span>Convidar com Código</span>
             </button>
           )}
@@ -328,10 +328,10 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
             <button
               type="button"
               onClick={() => setIsConfirmClearAllOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40 font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
               title="Excluir todos os voluntários cadastrados para zerar o sistema"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               <span>Zerar Voluntários</span>
             </button>
           )}
@@ -339,7 +339,7 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
           {isAdmin && (
             <button
               onClick={() => setIsNewModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#121214] hover:bg-black dark:bg-[#FF5520] dark:hover:bg-[#E64515] text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>+ Cadastrar Nova Pessoa</span>

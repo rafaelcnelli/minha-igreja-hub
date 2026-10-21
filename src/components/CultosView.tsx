@@ -10,10 +10,12 @@ import {
   getWeekdayBR,
   matchesPeriodFilter,
   getPeriodFilterOptions,
+  isDateInPast,
   MONTH_NAMES_BR,
   WEEKDAY_NAMES_BR,
   WEEKDAY_SHORT_BR
 } from '../utils/dateUtils';
+import { PastCultosToggle } from './PastCultosToggle';
 import {
   CalendarDays,
   List,
@@ -132,6 +134,23 @@ export const CultosView: React.FC<CultosViewProps> = ({
     } catch {}
   };
 
+  // Toggle for viewing past cultos (default false: hide cultos before today)
+  const [showPastCultos, setShowPastCultosState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('hub_show_past_cultos');
+      return saved === 'true'; // Default is false
+    } catch {
+      return false;
+    }
+  });
+
+  const setShowPastCultos = (val: boolean) => {
+    setShowPastCultosState(val);
+    try {
+      localStorage.setItem('hub_show_past_cultos', String(val));
+    } catch {}
+  };
+
   // Calendar State
   const today = new Date();
   const [calendarYear, setCalendarYear] = useState<number>(today.getFullYear());
@@ -224,13 +243,23 @@ export const CultosView: React.FC<CultosViewProps> = ({
   const [pendingDeleteCulto, setPendingDeleteCulto] = useState<Culto | null>(null);
   const [deleteApplyToSeries, setDeleteApplyToSeries] = useState(false);
 
-  // Filter cultos by period, campus, and event type
+  // Count past cultos in current period and filters
+  const pastCultosCountInPeriod = cultos.filter(c => {
+    const matchesPeriod = matchesPeriodFilter(c.date, periodFilter);
+    const matchesCamp = selectedCampus === 'all' || c.campus.includes(selectedCampus);
+    const itemType = c.type || 'culto';
+    const matchesType = selectedEventType === 'all' || itemType === selectedEventType;
+    return matchesPeriod && matchesCamp && matchesType && isDateInPast(c.date);
+  }).length;
+
+  // Filter cultos by period, campus, event type, and past cultos toggle
   const filteredCultos = cultos.filter(c => {
     const matchesPeriod = matchesPeriodFilter(c.date, periodFilter);
     const matchesCamp = selectedCampus === 'all' || c.campus.includes(selectedCampus);
     const itemType = c.type || 'culto';
     const matchesType = selectedEventType === 'all' || itemType === selectedEventType;
-    return matchesPeriod && matchesCamp && matchesType;
+    const matchesPast = showPastCultos || !isDateInPast(c.date);
+    return matchesPeriod && matchesCamp && matchesType && matchesPast;
   }).sort((a, b) => (a.date > b.date ? 1 : -1));
 
   // Reset form based on event type
@@ -424,25 +453,25 @@ export const CultosView: React.FC<CultosViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#2C2E35]">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Cultos e Eventos
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Cultos & <span className="font-editorial italic font-normal text-[#FF5520]">Eventos</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cronograma geral de celebrações, reuniões, ensaios e horários de passagens de som.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* List vs Calendar View Toggle */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <div className="flex items-center bg-slate-100 dark:bg-[#202126] p-1 rounded-xl border border-slate-200 dark:border-[#2C2E35]">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`p-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'list'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#121214] text-white shadow-2xs font-bold dark:bg-[#16171A] dark:border dark:border-[#2C2E35]'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -450,10 +479,10 @@ export const CultosView: React.FC<CultosViewProps> = ({
             </button>
             <button
               onClick={() => setViewMode('calendar')}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`p-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'calendar'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#121214] text-white shadow-2xs font-bold dark:bg-[#16171A] dark:border dark:border-[#2C2E35]'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <CalendarIcon className="w-3.5 h-3.5" />
@@ -467,7 +496,7 @@ export const CultosView: React.FC<CultosViewProps> = ({
               {isAdmin && (
                 <button
                   onClick={() => handleOpenCreateModal('culto')}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors shadow-2xs min-h-[40px] dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#121214] hover:bg-black text-white font-bold text-xs rounded-xl transition-all shadow-xs min-h-[40px] dark:bg-[#FF5520] dark:hover:bg-[#E64515] dark:text-white cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ Novo Culto</span>
@@ -557,23 +586,31 @@ export const CultosView: React.FC<CultosViewProps> = ({
         </div>
 
         {/* Period Filter with Month reference: Mês anterior, Mês atual, Próximo mês, Próximos 3 meses */}
-        <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto max-w-full">
-          {getPeriodFilterOptions().map(pf => (
-            <button
-              key={pf.key}
-              onClick={() => setPeriodFilter(pf.key)}
-              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                periodFilter === pf.key
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
-              }`}
-            >
-              <span className="text-xs font-bold leading-tight">{pf.label}</span>
-              <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                {pf.subLabel}
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto max-w-full">
+          <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 max-w-full">
+            {getPeriodFilterOptions().map(pf => (
+              <button
+                key={pf.key}
+                onClick={() => setPeriodFilter(pf.key)}
+                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
+                  periodFilter === pf.key
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-700'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <span className="text-xs font-bold leading-tight">{pf.label}</span>
+                <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {pf.subLabel}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <PastCultosToggle
+            showPast={showPastCultos}
+            onToggle={setShowPastCultos}
+            pastCount={pastCultosCountInPeriod}
+          />
         </div>
       </div>
 
@@ -585,17 +622,33 @@ export const CultosView: React.FC<CultosViewProps> = ({
           {filteredCultos.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-3">
               <p>Nenhum evento encontrado para os filtros selecionados.</p>
+              {!showPastCultos && pastCultosCountInPeriod > 0 && (
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl inline-flex flex-col items-center gap-2 text-amber-800 dark:text-amber-200 my-2">
+                  <p className="font-semibold text-xs">
+                    Existem {pastCultosCountInPeriod} evento(s) neste período que já passaram da data de hoje.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowPastCultos(true)}
+                    className="px-3.5 py-1.5 bg-[#FF5520] hover:bg-[#E64515] text-white rounded-lg font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                  >
+                    Ativar visualização de cultos passados
+                  </button>
+                </div>
+              )}
               {(periodFilter !== 'all' || selectedEventType !== 'all') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPeriodFilter('all');
-                    setSelectedEventType('all');
-                  }}
-                  className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold rounded-xl text-xs transition-colors"
-                >
-                  Limpar Filtros e Ver Todos ({cultos.length})
-                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPeriodFilter('all');
+                      setSelectedEventType('all');
+                    }}
+                    className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -607,23 +660,23 @@ export const CultosView: React.FC<CultosViewProps> = ({
                 return (
                   <div
                     key={culto.id}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5 hover:border-slate-300 dark:hover:border-slate-700 transition-colors flex flex-col justify-between"
+                    className="bg-white dark:bg-[#16171A] border border-slate-200/90 dark:border-[#2C2E35] rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       {/* Top Date & Event Type Badge */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className={`text-center rounded-xl px-3 py-1.5 shrink-0 text-white ${
+                          <div className={`text-center rounded-xl px-3 py-2 shrink-0 text-white shadow-xs ${
                             eventType === 'culto'
-                              ? 'bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700'
+                              ? 'bg-[#121214] dark:bg-[#202126] border border-slate-800 dark:border-[#2C2E35]'
                               : eventType === 'ensaio'
-                              ? 'bg-sky-800 dark:bg-sky-900'
-                              : 'bg-indigo-900 dark:bg-indigo-950'
+                              ? 'bg-sky-900 border border-sky-800'
+                              : 'bg-[#202126] border border-[#2C2E35]'
                           }`}>
-                            <span className="block text-base font-bold font-mono">
+                            <span className="block text-base font-extrabold font-mono tracking-tight leading-none">
                               {formatDayMonthBR(culto.date)}
                             </span>
-                            <span className="block text-[10px] uppercase text-amber-300">
+                            <span className="block text-[10px] uppercase font-bold text-[#FF5520] mt-1">
                               {getWeekdayBR(culto.date).slice(0, 3)}
                             </span>
                           </div>
@@ -632,27 +685,27 @@ export const CultosView: React.FC<CultosViewProps> = ({
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <h3
                                 onClick={() => setActiveCultoDetails(culto)}
-                                className="text-sm font-bold text-slate-900 dark:text-white cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                                className="text-sm font-bold text-slate-900 dark:text-white cursor-pointer hover:text-[#FF5520] dark:hover:text-[#FF5520] transition-colors"
                                 title="Clique para ver as escalas prontas deste culto"
                               >
                                 {culto.title}
                               </h3>
                               {isRecurrent && (
-                                <span title="Evento com recorrência" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded">
-                                  <Repeat className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                                  Recorrente
+                                <span title="Evento com recorrência programada" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white bg-[#FF5520] px-2 py-0.5 rounded-md shadow-xs">
+                                  <Repeat className="w-3 h-3 text-white" />
+                                  RECORRENTE
                                 </span>
                               )}
                             </div>
 
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                Horário: {culto.startTime}{culto.endTime ? ` - ${culto.endTime}` : ''}
+                            <p className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {culto.startTime}{culto.endTime ? ` - ${culto.endTime}` : ''}
                               </span>
                               {culto.rehearsalTime && (
                                 <>
                                   <span>·</span>
-                                  <span className="text-amber-700 dark:text-amber-400 font-semibold">Ensaio: {culto.rehearsalTime}</span>
+                                  <span className="text-[#FF5520] font-bold">ENSAIO: {culto.rehearsalTime}</span>
                                 </>
                               )}
                             </p>

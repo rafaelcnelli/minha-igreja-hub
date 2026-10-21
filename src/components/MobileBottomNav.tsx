@@ -103,7 +103,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <LayoutDashboard className={`w-5 h-5 ${activeTab === 'dashboard' && !isMenuOpen && !isCreateSheetOpen ? 'text-slate-900 dark:text-amber-400 stroke-[2.2]' : ''}`} />
             <span className="text-[10px] mt-1 tracking-tight">Início</span>
             {activeTab === 'dashboard' && !isMenuOpen && !isCreateSheetOpen && (
-              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-amber-400" />
+              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-[#FF5520]" />
             )}
           </button>
 
@@ -116,10 +116,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
-            <CalendarDays className={`w-5 h-5 ${activeTab === 'cultos' && !isMenuOpen && !isCreateSheetOpen ? 'text-slate-900 dark:text-amber-400 stroke-[2.2]' : ''}`} />
+            <CalendarDays className={`w-5 h-5 ${activeTab === 'cultos' && !isMenuOpen && !isCreateSheetOpen ? 'text-slate-900 dark:text-white stroke-[2.2]' : ''}`} />
             <span className="text-[10px] mt-1 tracking-tight">Cultos</span>
             {activeTab === 'cultos' && !isMenuOpen && !isCreateSheetOpen && (
-              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-amber-400" />
+              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-[#FF5520]" />
             )}
           </button>
 
@@ -127,7 +127,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <div className="flex flex-col items-center justify-center -mt-4">
             <button
               onClick={handlePlusClick}
-              className="w-12 h-12 rounded-full bg-[#18191d] dark:bg-amber-500 text-white dark:text-slate-950 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all ring-4 ring-white dark:ring-slate-900 cursor-pointer"
+              className="w-12 h-12 rounded-full bg-[#121214] dark:bg-[#FF5520] text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all ring-4 ring-white dark:ring-[#16171A] cursor-pointer"
               title={isAdmin || isLeader ? 'Criar Novo (Líder/Admin)' : 'Criar (Restrito a Líderes e Admins)'}
             >
               <Plus className="w-6 h-6 stroke-[2.8]" />
@@ -147,9 +147,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             }`}
           >
             <div className="relative">
-              <CalendarCheck className={`w-5 h-5 ${(activeTab === 'escalas_equipe' || activeTab === 'minhas_escalas') && !isMenuOpen && !isCreateSheetOpen ? 'text-slate-900 dark:text-amber-400 stroke-[2.2]' : ''}`} />
+              <CalendarCheck className={`w-5 h-5 ${(activeTab === 'escalas_equipe' || activeTab === 'minhas_escalas') && !isMenuOpen && !isCreateSheetOpen ? 'text-slate-900 dark:text-white stroke-[2.2]' : ''}`} />
               {(pendingConfirmationsCount > 0 || pendingSwapsCount > 0) && (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FF5520] text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
                   {canAccessEquipes ? pendingSwapsCount || pendingConfirmationsCount : pendingConfirmationsCount}
                 </span>
               )}
@@ -158,7 +158,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               {canAccessEquipes ? 'Escalas' : 'Minhas Escalas'}
             </span>
             {(activeTab === 'escalas_equipe' || activeTab === 'minhas_escalas') && !isMenuOpen && !isCreateSheetOpen && (
-              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-amber-400" />
+              <span className="absolute top-1 w-1.5 h-1.5 rounded-full bg-[#FF5520]" />
             )}
           </button>
 

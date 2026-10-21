@@ -20,8 +20,10 @@ import {
   formatDayMonthBR,
   getWeekdayBR,
   matchesPeriodFilter,
-  getPeriodFilterOptions
+  getPeriodFilterOptions,
+  isDateInPast
 } from '../utils/dateUtils';
+import { PastCultosToggle } from './PastCultosToggle';
 import {
   evaluateCandidatesForSlot,
   checkCultoDoubleBooking,
@@ -133,6 +135,23 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
 
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
 
+  // Toggle for viewing past cultos (default false: hide cultos before today)
+  const [showPastCultos, setShowPastCultosState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('hub_show_past_cultos');
+      return saved === 'true'; // Default is false
+    } catch {
+      return false;
+    }
+  });
+
+  const setShowPastCultos = (val: boolean) => {
+    setShowPastCultosState(val);
+    try {
+      localStorage.setItem('hub_show_past_cultos', String(val));
+    } catch {}
+  };
+
   // Smart Auto-Suggest Modal
   const [suggestModalSlot, setSuggestModalSlot] = useState<RosterSlot | null>(null);
 
@@ -207,12 +226,21 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
     isLeaderOfCurrentMinistry ||
     (currentMinistry?.id === 'min-louvor' && isMinister);
 
-  // Cultos filtered by period
+  // Count past cultos in current period and ministry
+  const pastCultosCountInPeriod = cultos.filter(c => {
+    if (!currentMinistry) return false;
+    const participates = c.participatingMinistryIds.includes(currentMinistry.id);
+    const matchesPeriod = matchesPeriodFilter(c.date, periodFilter);
+    return participates && matchesPeriod && isDateInPast(c.date);
+  }).length;
+
+  // Cultos filtered by period and past cultos toggle
   const relevantCultos = cultos.filter(c => {
     if (!currentMinistry) return false;
     const participates = c.participatingMinistryIds.includes(currentMinistry.id);
     const matchesPeriod = matchesPeriodFilter(c.date, periodFilter);
-    return participates && matchesPeriod;
+    const matchesPast = showPastCultos || !isDateInPast(c.date);
+    return participates && matchesPeriod && matchesPast;
   }).sort((a, b) => (a.date > b.date ? 1 : -1));
 
   // Accordion state: "Adicionar os cultos em estilo sanfona na página de equipes, para ver somente o culto que selecionar."
@@ -231,7 +259,7 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
       setExpandedCultoId(null);
       setExpandedResumedCultoId(null);
     }
-  }, [selectedMinistryId, periodFilter, relevantCultos.length]);
+  }, [selectedMinistryId, periodFilter, showPastCultos, relevantCultos.length]);
 
   // Pending swaps for this ministry
   const pendingSwaps = swapRequests.filter(
@@ -353,25 +381,32 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
           </p>
         </div>
 
-        {/* Period Filter with Month reference: Mês anterior, mês atual, próximo mês, e próximos 3 meses */}
-        {/* "Na seção das escalas das equipes quero que os filtros sejam de acordo com os meses. Mês anterior, mês atual, próximo mês, e próximos 3 meses. E embaixo pequeno o nome do mês de referência." */}
-        <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto max-w-full">
-          {getPeriodFilterOptions().map(pf => (
-            <button
-              key={pf.key}
-              onClick={() => setPeriodFilter(pf.key)}
-              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                periodFilter === pf.key
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-              }`}
-            >
-              <span className="text-xs font-bold leading-tight">{pf.label}</span>
-              <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                {pf.subLabel}
-              </span>
-            </button>
-          ))}
+        {/* Period Filter and Past Cultos Toggle */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto max-w-full">
+          <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
+            {getPeriodFilterOptions().map(pf => (
+              <button
+                key={pf.key}
+                onClick={() => setPeriodFilter(pf.key)}
+                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
+                  periodFilter === pf.key
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                }`}
+              >
+                <span className="text-xs font-bold leading-tight">{pf.label}</span>
+                <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {pf.subLabel}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <PastCultosToggle
+            showPast={showPastCultos}
+            onToggle={setShowPastCultos}
+            pastCount={pastCultosCountInPeriod}
+          />
         </div>
       </div>
 
@@ -733,7 +768,7 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
         /* CASE B: FULL MANAGEMENT FOR LEADER / MINISTER (ACCORDION)      */
         /* ============================================================== */
         relevantCultos.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center space-y-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center space-y-3">
             <CalendarDays className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
             <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               Nenhum culto com a participação de {currentMinistry?.name} no período
@@ -741,6 +776,20 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Altere o filtro de período ou verifique se o ministério foi selecionado na criação do culto.
             </p>
+            {!showPastCultos && pastCultosCountInPeriod > 0 && (
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl inline-flex flex-col items-center gap-2 text-amber-800 dark:text-amber-200 my-2">
+                <p className="font-semibold text-xs">
+                  Existem {pastCultosCountInPeriod} culto(s) deste ministério no período que já passaram da data de hoje.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowPastCultos(true)}
+                  className="px-3.5 py-1.5 bg-[#FF5520] hover:bg-[#E64515] text-white rounded-lg font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                >
+                  Ativar visualização de cultos passados
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

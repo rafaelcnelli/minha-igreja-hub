@@ -3,120 +3,149 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ========================================================================== */
-/* MODO NOTURNO EM TONS DE CINZA - ALTO CONTRASTE (HIGH CONTRAST GRAYSCALE)   */
-/* Paleta calibrada com profundo contraste entre fundo, superfícies, bordas e */
-/* tipografia para máxima legibilidade e separação nítida de cada elemento.   */
-/*                                                                            */
-/* Escala de Cinzas de Alto Contraste:                                       */
-/* - Canvas / Fundo Geral: #0b0c0e (carvão grafite profundo ultra nítido)     */
-/* - Tier 1 Superfícies: #16171a (TopBar, Sidebar, Cartões Principais, Modais)*/
-/* - Tier 2 Superfícies Elevadas: #202126 (Containers internos, Sub-cards)    */
-/* - Tier 3 Inputs & Componentes: #26272e (Controles e seletores)             */
-/* - Hover Interativo: #32343e                                                */
-/* - Bordas Nítidas (Alto Contraste): #3e404b (delineação visível e precisa)  */
-/* - Bordas Sutis / Divisórias: #2a2b33                                       */
-/* - Textos Primários: #ffffff (branco puro para máximo contraste)            */
-/* - Textos Secundários: #cbd5e1 (cinza claro prateado com alta legibilidade) */
-/* - Textos Muted / Terciários: #94a3b8                                       */
+/* DESIGN SYSTEM: SARF AI EDITORIAL MINIMALISM                                 */
+/* Estilo editorial de alto nível inspirado no design moderno de alta classe: */
+/* - Tipografia: Sans moderno geométrico + Itálico Editorial Serif (Fraunces) */
+/* - Fundo Claro: Alabastro / Bone / Marfim Quente (#F4F0EA)                  */
+/* - Fundo Escuro: Carvão Grafite Profundo Neutro (#0E0E10)                   */
+/* - Superfícies Escuras de Destaque: Preto Puro (#0E0E10 / #121214)          */
+/* - Acento Vibrante: Laranja Elétrico / Vermillion (#FF5520)                 */
+/* - Linhas & Divisores: Hairlines Sutis (#E3DDD4 claro / #282930 escuro)     */
+/* - Selos de Status: Pills Laranja com Tipografia Caixa Alta (#FF5520)       */
 /* ========================================================================== */
 
+@theme {
+  --font-editorial: 'Fraunces', 'Playfair Display', Georgia, serif;
+  --font-serif: 'Playfair Display', 'Fraunces', Georgia, serif;
+}
+
+.font-editorial {
+  font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+
 :root {
-  --color-dark-bg: #0b0c0e;
-  --color-dark-surface: #16171a;
+  --color-canvas-light: #F4F0EA;
+  --color-surface-light: #FAF7F2;
+  --color-surface-card: #FFFFFF;
+  --color-border-light: #E3DDD4;
+  --color-border-subtle: #EBE5DC;
+  --color-accent-orange: #FF5520;
+  --color-accent-orange-hover: #E64515;
+  --color-accent-orange-soft: rgba(255, 85, 32, 0.1);
+
+  --color-dark-bg: #0E0E10;
+  --color-dark-surface: #16171A;
   --color-dark-surface-elevated: #202126;
-  --color-dark-surface-hover: #32343e;
-  --color-dark-border: #3e404b;
-  --color-dark-border-subtle: #2a2b33;
-  --color-dark-text-primary: #ffffff;
-  --color-dark-text-secondary: #cbd5e1;
-  --color-dark-text-muted: #94a3b8;
+  --color-dark-surface-hover: #2C2D35;
+  --color-dark-border: #2C2E35;
+  --color-dark-border-subtle: #202126;
+  --color-dark-text-primary: #FFFFFF;
+  --color-dark-text-secondary: #CBD5E1;
+  --color-dark-text-muted: #94A3B8;
+}
+
+::selection {
+  background-color: #FF5520;
+  color: #FFFFFF;
 }
 
 /* ========================================================================== */
-/* REMAPEAMENTO DE VARIÁVEIS DO TAILWIND V4 PARA ALTO CONTRASTE EM CINZA     */
+/* MODO CLARO - PALETA ALABASTRO / BONE QUENTE COM ACENTOS LARANJA            */
+/* ========================================================================== */
+html:not(.dark) {
+  background-color: #F4F0EA !important;
+  color: #121214 !important;
+}
+
+html:not(.dark) body {
+  background-color: #F4F0EA !important;
+  color: #121214 !important;
+}
+
+html:not(.dark) .bg-slate-50 {
+  background-color: #F4F0EA !important;
+}
+
+html:not(.dark) .bg-white {
+  background-color: #FFFFFF !important;
+}
+
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-slate-300 {
+  border-color: #E3DDD4 !important;
+}
+
+html:not(.dark) .border-slate-100 {
+  border-color: #EBE5DC !important;
+}
+
+/* ========================================================================== */
+/* MODO ESCURO - ALTO CONTRASTE EM TONS DE CINZA COM ACENTOS LARANJA          */
 /* ========================================================================== */
 html.dark,
 :root[data-theme="dark"],
 [data-theme="dark"] {
   color-scheme: dark;
-  background-color: #0b0c0e !important;
-  color: #ffffff !important;
+  background-color: #0E0E10 !important;
+  color: #FFFFFF !important;
 
   /* Remapeia slate para tons de cinza neutros de alto contraste */
-  --color-slate-950: #0b0c0e;
-  --color-slate-900: #16171a;
-  --color-slate-850: #1b1c20;
+  --color-slate-950: #0E0E10;
+  --color-slate-900: #16171A;
+  --color-slate-850: #1B1C20;
   --color-slate-800: #202126;
-  --color-slate-750: #282a32;
-  --color-slate-700: #3e404b;
-  --color-slate-600: #585a67;
-  --color-slate-500: #94a3b8;
-  --color-slate-400: #cbd5e1;
-  --color-slate-300: #e2e8f0;
-  --color-slate-200: #f1f5f9;
-  --color-slate-100: #f8fafc;
-  --color-slate-50:  #ffffff;
+  --color-slate-750: #282A32;
+  --color-slate-700: #2C2E35;
+  --color-slate-600: #585A67;
+  --color-slate-500: #94A3B8;
+  --color-slate-400: #CBD5E1;
+  --color-slate-300: #E2E8F0;
+  --color-slate-200: #F1F5F9;
+  --color-slate-100: #F8FAFC;
+  --color-slate-50:  #FFFFFF;
 
-  /* Remapeia gray para consistência total */
-  --color-gray-950: #0b0c0e;
-  --color-gray-900: #16171a;
+  --color-gray-950: #0E0E10;
+  --color-gray-900: #16171A;
   --color-gray-800: #202126;
-  --color-gray-700: #3e404b;
-  --color-gray-600: #585a67;
-  --color-gray-500: #94a3b8;
-  --color-gray-400: #cbd5e1;
-  --color-gray-300: #e2e8f0;
-  --color-gray-200: #f1f5f9;
-  --color-gray-100: #f8fafc;
-  --color-gray-50:  #ffffff;
+  --color-gray-700: #2C2E35;
+  --color-gray-600: #585A67;
+  --color-gray-500: #94A3B8;
+  --color-gray-400: #CBD5E1;
+  --color-gray-300: #E2E8F0;
+  --color-gray-200: #F1F5F9;
+  --color-gray-100: #F8FAFC;
+  --color-gray-50:  #FFFFFF;
 
-  /* Remapeia zinc para consistência total */
-  --color-zinc-950: #0b0c0e;
-  --color-zinc-900: #16171a;
+  --color-zinc-950: #0E0E10;
+  --color-zinc-900: #16171A;
   --color-zinc-800: #202126;
-  --color-zinc-700: #3e404b;
-  --color-zinc-600: #585a67;
-  --color-zinc-500: #94a3b8;
-  --color-zinc-400: #cbd5e1;
-  --color-zinc-300: #e2e8f0;
-  --color-zinc-200: #f1f5f9;
-  --color-zinc-100: #f8fafc;
-  --color-zinc-50:  #ffffff;
-
-  /* Remapeia neutral */
-  --color-neutral-950: #0b0c0e;
-  --color-neutral-900: #16171a;
-  --color-neutral-800: #202126;
-  --color-neutral-700: #3e404b;
-  --color-neutral-600: #585a67;
-  --color-neutral-500: #94a3b8;
-  --color-neutral-400: #cbd5e1;
-  --color-neutral-300: #e2e8f0;
-  --color-neutral-200: #f1f5f9;
-  --color-neutral-100: #f8fafc;
-  --color-neutral-50:  #ffffff;
+  --color-zinc-700: #2C2E35;
+  --color-zinc-600: #585A67;
+  --color-zinc-500: #94A3B8;
+  --color-zinc-400: #CBD5E1;
+  --color-zinc-300: #E2E8F0;
+  --color-zinc-200: #F1F5F9;
+  --color-zinc-100: #F8FAFC;
+  --color-zinc-50:  #FFFFFF;
 }
 
 html.dark body {
-  background-color: #0b0c0e !important;
-  color: #ffffff !important;
+  background-color: #0E0E10 !important;
+  color: #FFFFFF !important;
 }
 
-/* ========================================================================== */
-/* REGRAS DIRETAS DE COMPATIBILIDADE - MODO ESCURO CINZA ALTO CONTRASTE       */
-/* ========================================================================== */
-
-/* Fundo Geral / Canvas Principal (#0b0c0e) */
+/* Fundo Geral / Canvas Principal */
 html.dark .bg-slate-950,
 html.dark [class*="bg-slate-950"],
 html.dark [class*="dark:bg-slate-950"],
 html.dark .bg-gray-950,
 html.dark .bg-zinc-950,
 html.dark .bg-neutral-950 {
-  background-color: #0b0c0e !important;
+  background-color: #0E0E10 !important;
 }
 
-/* Tier 1: Cartões, Headers, TopBar, Sidebar, Modais e Menus (#16171a) */
+/* Tier 1: Cartões, Headers, TopBar, Sidebar, Modais e Menus */
 html.dark .bg-white,
 html.dark [class*="dark:bg-slate-900"],
 html.dark [class*="dark:bg-gray-900"],
@@ -124,10 +153,10 @@ html.dark [class*="dark:bg-zinc-900"],
 html.dark .bg-slate-900,
 html.dark .bg-gray-900,
 html.dark .bg-zinc-900 {
-  background-color: #16171a !important;
+  background-color: #16171A !important;
 }
 
-/* Tier 2: Sub-superfícies, itens de lista, cartões secundários (#202126) */
+/* Tier 2: Sub-superfícies, itens de lista, cartões secundários */
 html.dark [class*="dark:bg-slate-800"],
 html.dark [class*="dark:bg-gray-800"],
 html.dark [class*="dark:bg-zinc-800"],
@@ -141,57 +170,52 @@ html.dark .bg-gray-50 {
   background-color: #202126 !important;
 }
 
-/* Variações translúcidas em cinza de alto contraste */
+/* Variações translúcidas */
 html.dark [class*="dark:bg-slate-800/"],
 html.dark [class*="dark:bg-slate-900/"] {
-  background-color: #1a1b20 !important;
+  background-color: #1A1B20 !important;
 }
 
-/* Hover interativo em cinza nítido (#32343e) */
+/* Hover interativo */
 html.dark [class*="dark:hover:bg-slate-800"]:hover,
 html.dark [class*="dark:hover:bg-slate-700"]:hover,
 html.dark [class*="hover:bg-slate-100"]:hover,
-html.dark [class*="hover:bg-slate-50"]:hover,
-html.dark [class*="hover:bg-gray-100"]:hover {
-  background-color: #32343e !important;
+html.dark [class*="hover:bg-slate-50"]:hover {
+  background-color: #2C2D35 !important;
 }
 
-/* Bordas de Alto Contraste (#3e404b) */
+/* Bordas de Alto Contraste */
 html.dark [class*="dark:border-slate-800"],
 html.dark [class*="dark:border-slate-700"],
 html.dark [class*="dark:border-gray-800"],
 html.dark [class*="dark:border-zinc-800"],
 html.dark .border-slate-200,
-html.dark .border-slate-300,
-html.dark .border-gray-200,
-html.dark .border-zinc-200 {
-  border-color: #3e404b !important;
+html.dark .border-slate-300 {
+  border-color: #2C2E35 !important;
 }
 
-html.dark .border-slate-100,
-html.dark .border-gray-100,
-html.dark .border-zinc-100 {
-  border-color: #2a2b33 !important;
+html.dark .border-slate-100 {
+  border-color: #202126 !important;
 }
 
-/* Sombras com anel de alto contraste delineando cada elemento */
+/* Sombras com anel de alto contraste */
 html.dark .shadow-2xl,
 html.dark .shadow-xl {
-  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px #3e404b !important;
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px #2C2E35 !important;
 }
 
 html.dark .shadow-lg,
 html.dark .shadow-md {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.75), 0 0 0 1px #3e404b !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.75), 0 0 0 1px #2C2E35 !important;
 }
 
 html.dark .shadow-sm,
 html.dark .shadow-xs,
 html.dark .shadow-2xs {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px #2a2b33 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px #202126 !important;
 }
 
-/* Textos principais e títulos em branco puro (100% de contraste) */
+/* Textos principais e títulos */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-gray-900,
@@ -204,31 +228,29 @@ html.dark h3,
 html.dark h4,
 html.dark h5,
 html.dark h6 {
-  color: #ffffff !important;
+  color: #FFFFFF !important;
 }
 
-/* Textos secundários em cinza claro brilhante (#cbd5e1 - alto contraste) */
+/* Textos secundários em cinza claro brilhante */
 html.dark .text-slate-600,
 html.dark .text-slate-500,
-html.dark .text-gray-600,
-html.dark .text-gray-500,
 html.dark [class*="dark:text-slate-300"],
 html.dark [class*="dark:text-slate-400"] {
-  color: #cbd5e1 !important;
+  color: #CBD5E1 !important;
 }
 
-/* Textos terciários e legendas (#94a3b8) */
+/* Textos terciários e legendas */
 html.dark [class*="dark:text-slate-500"] {
-  color: #94a3b8 !important;
+  color: #94A3B8 !important;
 }
 
-/* Controles de Formulário (Inputs, Selects, Textareas) em Alto Contraste */
+/* Controles de Formulário */
 html.dark input,
 html.dark select,
 html.dark textarea {
-  background-color: #18191d !important;
-  border-color: #3e404b !important;
-  color: #ffffff !important;
+  background-color: #18191D !important;
+  border-color: #2C2E35 !important;
+  color: #FFFFFF !important;
 }
 
 html.dark input::placeholder,
@@ -239,99 +261,30 @@ html.dark textarea::placeholder {
 html.dark input:focus,
 html.dark select:focus,
 html.dark textarea:focus {
-  border-color: #71717a !important;
-  outline-color: #71717a !important;
-  box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.4) !important;
+  border-color: #FF5520 !important;
+  outline-color: #FF5520 !important;
+  box-shadow: 0 0 0 2px rgba(255, 85, 32, 0.35) !important;
 }
 
-/* Badges neutras em tons de cinza com borda nítida */
-html.dark .bg-slate-200,
-html.dark .bg-slate-300,
-html.dark .bg-zinc-200,
-html.dark .bg-zinc-300 {
-  background-color: #272830 !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #4a4d5b !important;
-}
-
-/* Mapeamento de tons de azul antigos / navy para cinza de alto contraste */
-html.dark .bg-\[\#edf0f5\],
-html.dark [class*="bg-[#edf0f5]"] {
-  background-color: #0b0c0e !important;
-}
-
-html.dark .bg-\[\#111D3B\],
-html.dark [class*="bg-[#111D3B]"],
-html.dark .bg-\[\#102144\],
-html.dark [class*="bg-[#102144]"] {
-  background-color: #16171a !important;
-  border-color: #3e404b !important;
-}
-
-html.dark .bg-\[\#18191d\],
-html.dark [class*="bg-[#18191d]"] {
-  background-color: #18191d !important;
-  border-color: #3e404b !important;
-}
-
-html.dark .bg-\[\#1c1d22\],
-html.dark [class*="bg-[#1c1d22]"],
-html.dark .bg-\[\#1A3260\],
-html.dark [class*="bg-[#1A3260]"] {
-  background-color: #202126 !important;
-  border-color: #3e404b !important;
-}
-
-html.dark .bg-\[\#18264D\],
-html.dark [class*="bg-[#18264D]"],
-html.dark .bg-\[\#162B54\],
-html.dark [class*="bg-[#162B54]"] {
-  background-color: #1a1b20 !important;
-  border-color: #3e404b !important;
-}
-
-html.dark .border-\[\#243B6E\],
-html.dark [class*="border-[#243B6E]"],
-html.dark .border-\[\#2E4D8A\],
-html.dark [class*="border-[#2E4D8A]"],
-html.dark .border-\[\#3C64B2\],
-html.dark [class*="border-[#3C64B2]"] {
-  border-color: #3e404b !important;
-}
-
-html.dark .hover\:bg-\[\#254586\]:hover,
-html.dark [class*="hover:bg-[#254586]"]:hover {
-  background-color: #32343e !important;
-}
-
-/* Suavização de fundos escuros saturados (amber, indigo, rose, etc.) */
-html.dark [class*="dark:bg-indigo-950"],
-html.dark [class*="dark:bg-blue-950"],
-html.dark [class*="dark:bg-purple-950"],
-html.dark [class*="dark:bg-cyan-950"] {
-  background-color: #181920 !important;
-}
-
-/* Scrollbars customizadas de alto contraste */
+/* Scrollbars customizadas */
 html.dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 html.dark ::-webkit-scrollbar-track {
-  background: #0f1013;
+  background: #0E0E10;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #3e404b;
+  background: #2C2E35;
   border-radius: 4px;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #585a67;
+  background: #4A4D59;
 }
 
-/* Textos brancos puros preservados */
 html.dark .text-white {
   color: #FFFFFF !important;
 }

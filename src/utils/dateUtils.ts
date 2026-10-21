@@ -385,3 +385,23 @@ export function calculateAge(birthDate?: string, refDate: Date = new Date()): nu
   return age >= 0 ? age : null;
 }
 
+/**
+ * Gets today's date formatted as YYYY-MM-DD in local time
+ */
+export function getTodayDateStr(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Checks if a date string (YYYY-MM-DD or ISO timestamp) is strictly before today's date (local time)
+ */
+export function isDateInPast(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+  return cleanDate < getTodayDateStr();
+}
+
