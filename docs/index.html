@@ -9,6 +9,13 @@
     <meta property="og:description" content="Sistema de Gestão de Cultos, Cadastro de Pessoas, Escalas de Ministérios e Convites para Igrejas e Comunidades." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="./assets/manifest-v7zg00ik.json">
+    <meta name="theme-color" content="#09090b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Igreja Hub">
+    <link rel="icon" type="image/svg+xml" href="./icon-192.svg">
+    <link rel="apple-touch-icon" href="./icon-192.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600;1,9..144,700&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -34,8 +41,21 @@
         } catch (e) {}
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-CwMQyxH6.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CGZgayMZ.css">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .then(function(reg) {
+              console.log('[PWA] Service Worker registrado com sucesso no escopo:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[PWA] Erro ao registrar Service Worker:', err);
+            });
+        });
+      }
+    </script>
+    <script type="module" crossorigin src="./assets/index-B6Hn6JS-.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B-79QyrV.css">
   </head>
   <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
     <div id="root"></div>

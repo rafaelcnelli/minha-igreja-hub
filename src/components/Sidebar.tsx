@@ -22,6 +22,7 @@ import {
   Trash2,
   Database
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SidebarProps {
   currentUser: User;
@@ -393,6 +394,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isAdmin && 'Perfil Administrador Geral: controle total de cultos, ministérios e pessoas.'}
           </p>
         </div>
+
+        <PWAInstallButton />
 
         {onStartTour && (
           <button
