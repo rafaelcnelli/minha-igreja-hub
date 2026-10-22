@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Culto, Ministry, PeriodFilter, RosterSlot, ScalePublication, SwapRequest, Unavailability, User } from '../types';
+import { Culto, Ministry, PeriodFilter, RosterSlot, ScalePublication, SwapRequest, Unavailability, User, userLeadsAnyMinistry, userIsMinister } from '../types';
 import {
   formatDateExtendedBR,
   formatDateFullBR,
@@ -64,6 +64,8 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'escalas' | 'indisponibilidades'>('escalas');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
+
+  const canAccessHistorico = currentUser.isAdmin || userLeadsAnyMinistry(currentUser) || userIsMinister(currentUser);
 
   // Toggle for viewing past cultos (default false: hide cultos before today)
   const [showPastCultos, setShowPastCultosState] = useState<boolean>(() => {
@@ -280,8 +282,8 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
                 </div>
               </div>
 
-              {/* Dedicated Histórico Geral button */}
-              {onNavigateTab && (
+              {/* Dedicated Histórico Geral button (Apenas Líderes, Ministros e Admins) */}
+              {onNavigateTab && canAccessHistorico && (
                 <button
                   type="button"
                   onClick={() => onNavigateTab('historico_geral')}
@@ -362,7 +364,7 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
                   </button>
                 </div>
               )}
-              {onNavigateTab && (
+              {onNavigateTab && canAccessHistorico && (
                 <div>
                   <button
                     type="button"

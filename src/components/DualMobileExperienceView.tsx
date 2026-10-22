@@ -23,6 +23,7 @@ import {
   Search,
   SlidersHorizontal,
   Calendar,
+  ChevronLeft,
   ChevronRight,
   Check,
   CheckCircle2,
@@ -88,10 +89,31 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
   // Search state for avisos / notices
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Helper: Format Date object to local YYYY-MM-DD
+  const formatDateLocalISO = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // Helper: Get Monday of the week for any given date
+  const getMondayOfWeek = (baseDate: Date): Date => {
+    const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    const day = d.getDay(); // 0 is Sunday, 1 is Monday...
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  // Week navigation offset (0 = semana atual, -1 = semana anterior, +1 = próxima semana)
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+
   // Selected Date on Calendar Strip
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
 
   // Selected Event detail modal
@@ -133,15 +155,29 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
     return Array.from(usersMap.values());
   };
 
-  // 7-day strip centered around current week / today
+  // Monday of the active week
+  const currentWeekMonday = useMemo(() => {
+    const today = new Date();
+    const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() + (weekOffset * 7));
+    return getMondayOfWeek(target);
+  }, [weekOffset]);
+
+  // Sunday of the active week
+  const currentWeekSunday = useMemo(() => {
+    const d = new Date(currentWeekMonday);
+    d.setDate(currentWeekMonday.getDate() + 6);
+    return d;
+  }, [currentWeekMonday]);
+
+  // 7-day strip: Monday to Sunday of the active week (Segunda a Domingo)
   const calendarDays = useMemo(() => {
     const list = [];
-    const baseDate = new Date();
-    // Start 2 days before today up to 4 days ahead (7 days of the week)
-    for (let i = -2; i <= 4; i++) {
-      const d = new Date(baseDate);
-      d.setDate(baseDate.getDate() + i);
-      const isoStr = d.toISOString().split('T')[0];
+    const todayStr = formatDateLocalISO(new Date());
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(currentWeekMonday);
+      d.setDate(currentWeekMonday.getDate() + i);
+      const isoStr = formatDateLocalISO(d);
       const dayNum = d.getDate();
       const weekdayShort = WEEKDAY_SHORT_BR[d.getDay()];
       const dayCultos = cultos.filter(c => c.date === isoStr);
@@ -149,13 +185,42 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
         dateStr: isoStr,
         dayNum,
         weekdayShort,
-        isToday: i === 0,
+        isToday: isoStr === todayStr,
         hasEvent: dayCultos.length > 0,
         eventsCount: dayCultos.length
       });
     }
     return list;
-  }, [cultos]);
+  }, [currentWeekMonday, cultos]);
+
+  // Navigate between weeks (< and >)
+  const handleNavigateWeek = (delta: number) => {
+    const newOffset = weekOffset + delta;
+    setWeekOffset(newOffset);
+
+    const today = new Date();
+    const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() + (newOffset * 7));
+    const nextMonday = getMondayOfWeek(target);
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+
+    const todayStr = formatDateLocalISO(new Date());
+    const monStr = formatDateLocalISO(nextMonday);
+    const sunStr = formatDateLocalISO(nextSunday);
+
+    if (todayStr >= monStr && todayStr <= sunStr) {
+      setSelectedCalendarDate(todayStr);
+    } else {
+      const cultosInWeek = cultos
+        .filter(c => c.date >= monStr && c.date <= sunStr)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      if (cultosInWeek.length > 0) {
+        setSelectedCalendarDate(cultosInWeek[0].date);
+      } else {
+        setSelectedCalendarDate(monStr);
+      }
+    }
+  };
 
   // Filter avisos visible to user with search query support
   const visibleAvisos = useMemo(() => {
@@ -169,31 +234,6 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
 
   return (
     <div className="w-full min-h-screen bg-[#edf0f5] dark:bg-[#121214] py-4 sm:py-8 px-2 sm:px-6 flex flex-col items-center justify-start text-slate-900 dark:text-white select-none pb-24 transition-colors">
-      
-      {/* TOP CONTROL BAR: CHURCH INFO & SCREEN VIEWPORT TOGGLE */}
-      <div className="w-full max-w-5xl mb-6 bg-white/95 dark:bg-[#18181b] backdrop-blur-md border border-slate-200/80 dark:border-[#33343d] rounded-2xl p-3 sm:p-4 shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Church & Real Role Badge */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#1c1d22] dark:bg-zinc-700 text-white flex items-center justify-center font-bold text-sm shadow-md">
-            {churchProfile?.name ? churchProfile.name.charAt(0) : 'K'}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 dark:text-white text-sm">
-                {churchProfile?.name || 'Minha Igreja'}
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#232328] text-slate-600 dark:text-slate-200 border border-slate-200 dark:border-[#33343d]">
-                {churchProfile?.campus || 'Sede'}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">
-              Conectado como <strong className="text-slate-800 dark:text-white">{currentUser.name.split(' ')[0]}</strong> ({isAdmin ? 'Administrador Geral' : isLeader ? 'Líder de Ministério' : 'Voluntário'})
-            </p>
-          </div>
-        </div>
-
-      </div>
-
       {/* DUAL SCREENS CONTAINER (BOTH MOBILE SCREENS ALWAYS VISIBLE SIDE-BY-SIDE WITHOUT CELLPHONE FRAMES) */}
       <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 sm:gap-10 transition-all">
 
@@ -342,67 +382,71 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
               </div>
 
               {/* ========================================================================= */}
-              {/* 3. ATALHOS & MÉTRICAS RÁPIDAS DA IGREJA                                  */}
+              {/* 3. ATALHOS & MÉTRICAS RÁPIDAS DA IGREJA (Apenas Líderes e Admins)        */}
               {/* ========================================================================= */}
-              <div className="mt-6 px-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                    <span className="font-editorial italic font-normal text-[#FF5520]">Atalhos</span> & Métricas
-                  </h3>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-zinc-400 font-bold">
-                    PAINEL GERAL
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div
-                    onClick={() => onNavigateTab('cultos')}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
-                  >
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
-                      CULTOS · PROGRAMADOS
-                    </span>
-                    <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
-                      {cultos.length} <span className="text-xs font-sans font-bold text-[#FF5520]">ativos</span>
-                    </span>
-                  </div>
-
-                  <div
-                    onClick={() => onNavigateTab(isAdmin ? 'pessoas' : 'minhas_escalas')}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
-                  >
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
-                      MEMBROS · EQUIPES
-                    </span>
-                    <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
-                      {allUsers.length} <span className="text-xs font-sans font-bold text-[#FF5520]">pessoas</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botão de Atalho para Escalas */}
-              <div className="mt-4 px-6">
-                <div
-                  onClick={() => onNavigateTab(isAdmin || isLeader ? 'escalas_equipe' : 'minhas_escalas')}
-                  className="p-4 rounded-2xl bg-[#1c1d22] dark:bg-[#232328] text-white hover:bg-slate-800 dark:hover:bg-[#2e2e35] transition-all cursor-pointer flex items-center justify-between shadow-sm group border border-transparent dark:border-[#33343d]"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white/10 dark:bg-zinc-700/50 border border-transparent dark:border-zinc-600/50 flex items-center justify-center">
-                      <CalendarCheck className="w-4 h-4 text-[#FF5520]" />
+              {!isLiderado && (
+                <>
+                  <div className="mt-6 px-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                        <span className="font-editorial italic font-normal text-[#FF5520]">Atalhos</span> & Métricas
+                      </h3>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-zinc-400 font-bold">
+                        PAINEL GERAL
+                      </span>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-white tracking-tight">
-                        <span className="font-editorial italic font-normal text-[#FF5520]">Central</span> de Escalas
-                      </h4>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-300 mt-0.5">
-                        {slots.length} VAGA(S) · ESCALAS CONFIGURADAS
-                      </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div
+                        onClick={() => onNavigateTab('cultos')}
+                        className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
+                      >
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
+                          CULTOS · PROGRAMADOS
+                        </span>
+                        <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
+                          {cultos.length} <span className="text-xs font-sans font-bold text-[#FF5520]">ativos</span>
+                        </span>
+                      </div>
+
+                      <div
+                        onClick={() => onNavigateTab(isAdmin ? 'pessoas' : 'minhas_escalas')}
+                        className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#232328] hover:bg-slate-100 dark:hover:bg-[#2e2e35] transition-colors cursor-pointer border border-slate-100 dark:border-[#33343d]"
+                      >
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-400 block font-bold">
+                          MEMBROS · EQUIPES
+                        </span>
+                        <span className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white mt-1 block">
+                          {allUsers.length} <span className="text-xs font-sans font-bold text-[#FF5520]">pessoas</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
+
+                  {/* Botão de Atalho para Escalas */}
+                  <div className="mt-4 px-6">
+                    <div
+                      onClick={() => onNavigateTab(isAdmin || isLeader ? 'escalas_equipe' : 'minhas_escalas')}
+                      className="p-4 rounded-2xl bg-[#1c1d22] dark:bg-[#232328] text-white hover:bg-slate-800 dark:hover:bg-[#2e2e35] transition-all cursor-pointer flex items-center justify-between shadow-sm group border border-transparent dark:border-[#33343d]"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/10 dark:bg-zinc-700/50 border border-transparent dark:border-zinc-600/50 flex items-center justify-center">
+                          <CalendarCheck className="w-4 h-4 text-[#FF5520]" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-white tracking-tight">
+                            <span className="font-editorial italic font-normal text-[#FF5520]">Central</span> de Escalas
+                          </h4>
+                          <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-300 mt-0.5">
+                            {slots.length} VAGA(S) · ESCALAS CONFIGURADAS
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
+                </>
+              )}
 
             </div>
 
@@ -447,21 +491,69 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                 </div>
               </div>
 
-              {/* HORIZONTAL CALENDAR STRIP WITH WEEK DATES & EVENT INDICATOR DOTS */}
+              {/* NAVEGAÇÃO ENTRE AS SEMANAS (ESTILO < >) · SEGUNDA A DOMINGO */}
+              <div className="mt-4 flex items-center justify-between bg-slate-100/90 dark:bg-[#202024] px-3.5 py-2.5 rounded-2xl border border-slate-200/80 dark:border-[#33343d]">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-slate-800 dark:text-white">
+                    {formatDayMonthBR(formatDateLocalISO(currentWeekMonday))} — {formatDayMonthBR(formatDateLocalISO(currentWeekSunday))}
+                  </span>
+                  {weekOffset === 0 ? (
+                    <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      Atual
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWeekOffset(0);
+                        setSelectedCalendarDate(formatDateLocalISO(new Date()));
+                      }}
+                      className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-[#FF5520]/15 text-[#FF5520] hover:bg-[#FF5520]/25 transition-colors cursor-pointer"
+                      title="Voltar para a semana atual"
+                    >
+                      Hoje
+                    </button>
+                  )}
+                </div>
+
+                {/* Botões de avançar/voltar entre semanas no estilo < > */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateWeek(-1)}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-white dark:bg-[#2a2a30] text-slate-700 dark:text-slate-200 shadow-2xs border border-slate-200 dark:border-[#3f404d] hover:bg-slate-50 dark:hover:bg-[#34343c] active:scale-95 transition-all cursor-pointer font-bold"
+                    title="Semana anterior (<)"
+                    aria-label="Semana anterior"
+                  >
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateWeek(1)}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-white dark:bg-[#2a2a30] text-slate-700 dark:text-slate-200 shadow-2xs border border-slate-200 dark:border-[#3f404d] hover:bg-slate-50 dark:hover:bg-[#34343c] active:scale-95 transition-all cursor-pointer font-bold"
+                    title="Próxima semana (>)"
+                    aria-label="Próxima semana"
+                  >
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </button>
+                </div>
+              </div>
+
+              {/* HORIZONTAL CALENDAR STRIP: SEGUNDA A DOMINGO COM PONTOS DE CULTO/EVENTO */}
               {/* "No cronograma com as datas da semana na tela de início, aparece um ponto nos dias que tem culto ou evento e ao selecionar o dia aparece quais são." */}
-              <div className="mt-6 flex items-center justify-between gap-1 py-1">
+              <div className="mt-4 flex items-center justify-between gap-1 py-1">
                 {calendarDays.map(item => {
                   const isSelected = item.dateStr === selectedCalendarDate;
                   return (
                     <button
                       key={item.dateStr}
                       onClick={() => setSelectedCalendarDate(item.dateStr)}
-                      className="flex flex-col items-center transition-all focus:outline-hidden cursor-pointer"
+                      className="flex-1 flex flex-col items-center transition-all focus:outline-hidden cursor-pointer"
                       title={`${item.weekdayShort}, ${item.dayNum} ${item.hasEvent ? `(${item.eventsCount} culto/evento)` : ''}`}
                     >
                       {isSelected ? (
                         /* Selected Day: Vertical Dark Pill */
-                        <div className="bg-[#121214] dark:bg-zinc-700 text-white rounded-[22px] py-2.5 px-3 flex flex-col items-center shadow-lg dark:shadow-md transform -translate-y-1">
+                        <div className="w-full bg-[#121214] dark:bg-zinc-700 text-white rounded-[20px] py-2.5 px-1 flex flex-col items-center shadow-lg dark:shadow-md transform -translate-y-1">
                           <span className="text-sm font-bold font-mono leading-none">{item.dayNum}</span>
                           <span className="text-[10px] font-mono uppercase tracking-wider text-slate-300 dark:text-white mt-1">{item.weekdayShort}</span>
                           {/* Dot when there is a service/event */}
@@ -473,9 +565,9 @@ export const DualMobileExperienceView: React.FC<DualMobileExperienceViewProps> =
                         </div>
                       ) : (
                         /* Unselected Day */
-                        <div className="py-2 px-2 flex flex-col items-center hover:bg-slate-50 dark:hover:bg-[#232328] rounded-xl transition-colors relative">
-                          <span className="text-sm font-semibold font-mono text-slate-600 dark:text-slate-300">{item.dayNum}</span>
-                          <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-slate-400 mt-1">{item.weekdayShort}</span>
+                        <div className={`w-full py-2 px-1 flex flex-col items-center hover:bg-slate-50 dark:hover:bg-[#232328] rounded-xl transition-colors relative ${item.isToday ? 'border border-[#FF5520]/40 bg-[#FF5520]/5' : ''}`}>
+                          <span className={`text-sm font-semibold font-mono ${item.isToday ? 'text-[#FF5520] font-bold' : 'text-slate-600 dark:text-slate-300'}`}>{item.dayNum}</span>
+                          <span className={`text-[10px] font-mono uppercase mt-1 ${item.isToday ? 'text-[#FF5520] font-bold' : 'text-slate-400 dark:text-slate-400'}`}>{item.weekdayShort}</span>
                           {/* Dot indicator on days with cultos or events */}
                           {item.hasEvent ? (
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520] mt-1" />

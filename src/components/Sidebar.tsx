@@ -184,16 +184,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </button>
 
-            {/* Histórico Geral (Escalas, Reuniões, Ensaios e Cultos) */}
-            <button
-              onClick={() => onNavigateTab('historico_geral')}
-              className={navItemClass('historico_geral')}
-            >
-              <div className="flex items-center gap-2.5">
-                <History className="w-4 h-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
-                <span>Histórico Geral</span>
-              </div>
-            </button>
+            {/* Histórico Geral (Escalas, Reuniões, Ensaios e Cultos) - Apenas Líderes, Ministros e Admins */}
+            {!isOnlyLiderado && (
+              <button
+                onClick={() => onNavigateTab('historico_geral')}
+                className={navItemClass('historico_geral')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <History className="w-4 h-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
+                  <span>Histórico Geral</span>
+                </div>
+              </button>
+            )}
 
             {/* Repertório (Acessível a todos os voluntários e ministros) */}
             <button

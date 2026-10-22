@@ -22,7 +22,7 @@ import {
 interface PendingApprovalViewProps {
   currentUser: User;
   currentChurch?: Church | ChurchProfile | null;
-  onLogout: () => Promise<void>;
+  onLogout: () => void | Promise<void>;
   onApproved: (updatedUser: User) => void;
 }
 

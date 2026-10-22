@@ -72,6 +72,7 @@ import { PendingApprovalView } from './components/PendingApprovalView';
 import { JoinRequestsModal } from './components/JoinRequestsModal';
 import { InviteMembersModal } from './components/InviteMembersModal';
 import { OnboardingTour } from './components/OnboardingTour';
+import { LogoutConfirmationModal } from './components/LogoutConfirmationModal';
 import { calculateAge, isBirthdayToday } from './utils/dateUtils';
 import { buildInviteLink, getAppUrlParam } from './utils/urlUtils';
 import {
@@ -149,6 +150,25 @@ export default function App() {
   const [joinRequests, setJoinRequests] = useState<ChurchJoinRequest[]>([]);
   const [isJoinRequestsModalOpen, setIsJoinRequestsModalOpen] = useState(false);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleRequestLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      setIsLogoutModalOpen(false);
+    } catch (e) {
+      console.error('Erro ao efetuar logout:', e);
+      toast.error('Ocorreu um erro ao deslogar. Tente novamente.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   const [ministries, setMinistries] = useState<Ministry[]>(() => {
     if (isDemoChurch) return INITIAL_MINISTRIES;
     return [];
@@ -1011,7 +1031,7 @@ export default function App() {
         setActiveTab(tab);
         return;
       }
-      if (['pessoas', 'escalas_equipe', 'liderados', 'whatsapp', 'admin_ministerios', 'relatorios'].includes(tab)) {
+      if (['pessoas', 'escalas_equipe', 'liderados', 'whatsapp', 'admin_ministerios', 'relatorios', 'historico_geral'].includes(tab)) {
         setActiveTab('minhas_escalas');
         return;
       }
@@ -2319,15 +2339,25 @@ export default function App() {
     (currentUser.status === 'INVITATION_PENDING' && !currentUser.approvalStatus)
   ) {
     return (
-      <PendingApprovalView
-        currentUser={currentUser}
-        currentChurch={currentChurch || churchProfile}
-        onLogout={logout}
-        onApproved={updated => {
-          setAuthUser(updated);
-          toast.success('Seu acesso à congregação foi aprovado!', 'Bem-vindo(a)');
-        }}
-      />
+      <>
+        <PendingApprovalView
+          currentUser={currentUser}
+          currentChurch={currentChurch || churchProfile}
+          onLogout={handleRequestLogout}
+          onApproved={updated => {
+            setAuthUser(updated);
+            toast.success('Seu acesso à congregação foi aprovado!', 'Bem-vindo(a)');
+          }}
+        />
+        <LogoutConfirmationModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={handleConfirmLogout}
+          isLoading={isLoggingOut}
+          userName={currentUser?.name}
+          churchName={churchProfile?.name}
+        />
+      </>
     );
   }
 
@@ -2343,7 +2373,7 @@ export default function App() {
         activeTab={activeTab}
         onNavigateTab={handleNavigateTab}
         notifications={notifications}
-        onLogout={logout}
+        onLogout={handleRequestLogout}
         onEditProfile={() => setIsMyProfileModalOpen(true)}
         onStartTour={handleStartTour}
         onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
@@ -2361,7 +2391,7 @@ export default function App() {
           pendingSwapsCount={pendingSwapsCount}
           unreadNotificationsCount={unreadNotificationsCount}
           unreadAvisosCount={unreadAvisosCount}
-          onLogout={logout}
+          onLogout={handleRequestLogout}
           onStartTour={handleStartTour}
         />
 
@@ -2443,8 +2473,8 @@ export default function App() {
             />
           )}
 
-          {/* TAB HISTÓRICO GERAL: ESCALAS, REUNIÕES, ENSAIOS E CULTOS */}
-          {activeTab === 'historico_geral' && (
+          {/* TAB HISTÓRICO GERAL: ESCALAS, REUNIÕES, ENSAIOS E CULTOS (Apenas Líderes, Ministros e Admins) */}
+          {activeTab === 'historico_geral' && (currentUser.isAdmin || userLeadsAnyMinistry(currentUser) || userIsMinister(currentUser)) && (
             <HistoricoGeralView
               currentUser={currentUser}
               cultos={cultos}
@@ -2452,7 +2482,7 @@ export default function App() {
               ministries={ministries}
               allUsers={allUsers}
               scalePublications={scalePublications}
-              onNavigateTab={setActiveTab}
+              onNavigateTab={handleNavigateTab}
             />
           )}
 
@@ -2766,7 +2796,7 @@ export default function App() {
         pendingSwapsCount={pendingSwapsCount}
         unreadNotificationsCount={unreadNotificationsCount}
         unreadAvisosCount={unreadAvisosCount}
-        onLogout={logout}
+        onLogout={handleRequestLogout}
       />
 
       {/* Edit Current User Profile Modal */}
@@ -2815,6 +2845,16 @@ export default function App() {
         currentUser={currentUser}
         activeTab={activeTab}
         onNavigateTab={handleNavigateTab}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleConfirmLogout}
+        isLoading={isLoggingOut}
+        userName={currentUser?.name}
+        churchName={churchProfile?.name}
       />
     </div>
   );

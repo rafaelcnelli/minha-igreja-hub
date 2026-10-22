@@ -631,19 +631,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                 </button>
 
-                <button
-                  onClick={() => handleTabClick('historico_geral')}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <History className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">Histórico Geral</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Escalas passadas, cultos, reuniões e ensaios</p>
+                {(isAdmin || isLeader || isMinister) && (
+                  <button
+                    onClick={() => handleTabClick('historico_geral')}
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <History className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Histórico Geral</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Escalas passadas, cultos, reuniões e ensaios</p>
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                </button>
+                    <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  </button>
+                )}
               </div>
 
               {/* Reports & Metrics (Apenas Líderes e Administrador) */}
