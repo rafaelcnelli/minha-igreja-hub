@@ -331,12 +331,27 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     }
   };
 
+  const markTourDismissed = () => {
+    try {
+      localStorage.setItem('minha_igreja_tour_seen_v1', 'true');
+      localStorage.setItem('minha_igreja_tour_seen', 'true');
+      localStorage.setItem('minha_igreja_tour_completed', 'true');
+      localStorage.setItem('minha_igreja_tour_dismissed', 'true');
+      if (currentUser?.id) {
+        localStorage.setItem(`kairs_onboarding_tour_completed_${currentUser.id}`, 'true');
+        localStorage.setItem(`kairs_tour_seen_${currentUser.id}`, 'true');
+      }
+    } catch {}
+  };
+
   const handleFinish = () => {
+    markTourDismissed();
     onComplete();
     onClose();
   };
 
   const handleSkipOrClose = () => {
+    markTourDismissed();
     onComplete();
     onClose();
   };

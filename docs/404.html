@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecionando - Minha Igreja Hub</title>
+    <script>
+      (function() {
+        var base = '/minha-igreja-hub/';
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+
+        // If path already starts with /minha-igreja-hub, keep the search & hash
+        if (path.startsWith(base)) {
+          window.location.replace(base + search + hash);
+        } else {
+          window.location.replace(base + search + hash);
+        }
+      })();
+    </script>
+  </head>
+  <body style="font-family: sans-serif; text-align: center; padding: 40px; color: #475569;">
+    <p>Redirecionando para Minha Igreja Hub...</p>
+  </body>
+</html>

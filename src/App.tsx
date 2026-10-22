@@ -799,7 +799,7 @@ export default function App() {
   // Active navigation tab
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
-  // Onboarding Tour state - opens ONLY when clicked by the user in the TopBar
+  // Onboarding Tour state - strictly manual, opens ONLY when clicked by the user in the TopBar or Sidebar
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   const markTourAsSeen = () => {
@@ -817,10 +817,11 @@ export default function App() {
     }
   };
 
-  // Ensure tour is marked as seen on mount so it never pops up uninvited
+  // Ensure tour is marked as seen on mount and whenever user logs in or switches, keeping it closed
   useEffect(() => {
+    setIsTourOpen(false);
     markTourAsSeen();
-  }, []);
+  }, [currentUser?.id]);
 
   const handleCompleteTour = () => {
     markTourAsSeen();
