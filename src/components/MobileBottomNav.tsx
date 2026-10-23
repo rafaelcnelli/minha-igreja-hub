@@ -29,9 +29,12 @@ import {
   Send,
   Lock,
   ShieldAlert,
-  Church
+  Church,
+  Smartphone,
+  Download
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { InstallAppTwoStepModal } from './InstallAppTwoStepModal';
 
 interface MobileBottomNavProps {
   currentUser: User;
@@ -64,6 +67,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [isRestrictedModalOpen, setIsRestrictedModalOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const isAdmin = currentUser.isAdmin;
   const isLeader = userLeadsAnyMinistry(currentUser);
@@ -443,6 +447,36 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               </div>
             </div>
 
+            {/* Botão de Instalar App no Celular (com Confirmação em 2 Etapas) */}
+            <div className="p-3.5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 dark:from-orange-950/40 dark:via-amber-950/30 dark:to-orange-950/40 border border-orange-200/80 dark:border-orange-900/60 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5520] to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-orange-500/30">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Instalar no Celular
+                    </p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/80 text-orange-700 dark:text-orange-300">
+                      2 Etapas
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    Adicionar app à tela inicial do celular
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInstallModalOpen(true)}
+                className="px-3 py-2 bg-[#FF5520] hover:bg-orange-600 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Instalar</span>
+              </button>
+            </div>
+
             {/* Menu Sections */}
             <div className="space-y-4">
               {/* WhatsApp Module (Apenas Líderes e Administrador) */}
@@ -748,6 +782,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de Instalação com Confirmação em 2 Etapas */}
+      <InstallAppTwoStepModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+      />
     </>
   );
 };

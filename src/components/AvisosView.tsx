@@ -26,13 +26,14 @@ import {
   Trash2,
   Edit3,
   CheckCircle2,
-  Search,
-  Filter,
   X,
   Eye,
   Calendar,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  AlertOctagon,
+  Check
 } from 'lucide-react';
 
 interface AvisosViewProps {
@@ -69,10 +70,10 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
     return ministries.filter(m => ledMinistryIds.includes(m.id));
   }, [isAdmin, ministries, ledMinistryIds]);
 
-  // View & Filter States
-  const [activeFilter, setActiveFilter] = useState<'all' | 'general' | 'ministry' | 'unread' | 'pinned'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMinistryFilter, setSelectedMinistryFilter] = useState<string>('all');
+  // Two-step Delete Confirmation State
+  const [avisoToDelete, setAvisoToDelete] = useState<Aviso | null>(null);
+  const [deleteConfirmationStep, setDeleteConfirmationStep] = useState<1 | 2>(1);
+  const [deleteConfirmedCheckbox, setDeleteConfirmedCheckbox] = useState(false);
 
   // Create / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,37 +94,42 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
     return avisos.filter(aviso => canUserViewAviso(currentUser, aviso));
   }, [avisos, currentUser]);
 
-  // Filtered Avisos based on search and active tab
-  const filteredAvisos = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-
-    return accessibleAvisos.filter(aviso => {
-      // Search text match
-      const matchesSearch = !term ||
-        aviso.title.toLowerCase().includes(term) ||
-        aviso.content.toLowerCase().includes(term) ||
-        aviso.authorName.toLowerCase().includes(term) ||
-        (aviso.targetMinistryName || '').toLowerCase().includes(term);
-
-      // Audience / Type filter
-      let matchesType = true;
-      if (activeFilter === 'general') {
-        matchesType = aviso.targetAudience === 'all';
-      } else if (activeFilter === 'ministry') {
-        matchesType = aviso.targetAudience === 'ministry';
-      } else if (activeFilter === 'unread') {
-        matchesType = !(aviso.readBy || []).includes(currentUser.id);
-      } else if (activeFilter === 'pinned') {
-        matchesType = !!aviso.pinned;
-      }
-
-      // Ministry filter
-      const matchesMinistry = selectedMinistryFilter === 'all' ||
-        (aviso.targetAudience === 'ministry' && aviso.targetMinistryId === selectedMinistryFilter);
-
-      return matchesSearch && matchesType && matchesMinistry;
+  // Displayed Avisos: Pinned first, then sorted by most recent
+  const displayedAvisos = useMemo(() => {
+    return [...accessibleAvisos].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [accessibleAvisos, searchTerm, activeFilter, selectedMinistryFilter, currentUser.id]);
+  }, [accessibleAvisos]);
+
+  // Two-step Deletion Handlers
+  const handleInitiateDelete = (aviso: Aviso) => {
+    setAvisoToDelete(aviso);
+    setDeleteConfirmationStep(1);
+    setDeleteConfirmedCheckbox(false);
+  };
+
+  const handleCancelDelete = () => {
+    setAvisoToDelete(null);
+    setDeleteConfirmationStep(1);
+    setDeleteConfirmedCheckbox(false);
+  };
+
+  const handleProceedToStep2 = () => {
+    setDeleteConfirmationStep(2);
+  };
+
+  const handleBackToStep1 = () => {
+    setDeleteConfirmationStep(1);
+  };
+
+  const handleConfirmFinalDelete = () => {
+    if (avisoToDelete) {
+      onDeleteAviso(avisoToDelete.id);
+      handleCancelDelete();
+    }
+  };
 
   // Open Modal to create new aviso
   const handleOpenNewModal = () => {
@@ -248,7 +254,7 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
                   Mural de <span className="font-editorial italic font-normal text-[#FF5520]">Avisos</span> & Comunicados
                 </h1>
                 <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2C2E35]">
-                  COMUNICAÇÃO OFICIAL
+                  {displayedAvisos.length} COMUNICADO(S)
                 </span>
                 {unreadCount > 0 && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FF5520] text-white shadow-xs">
@@ -274,113 +280,10 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
         </div>
       </div>
 
-      {/* Filter and Real-Time Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Buscar comunicados por título, conteúdo ou autor..."
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Ministry Dropdown (if ministry view is active) */}
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedMinistryFilter}
-              onChange={e => setSelectedMinistryFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="all">Todos os Ministérios</option>
-              {ministries.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1.5 rounded-xl transition ${
-              activeFilter === 'all'
-                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Todos ({accessibleAvisos.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('general')}
-            className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
-              activeFilter === 'general'
-                ? 'bg-rose-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Avisos Gerais ADM</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('ministry')}
-            className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
-              activeFilter === 'ministry'
-                ? 'bg-indigo-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Avisos dos Meus Ministérios</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('pinned')}
-            className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
-              activeFilter === 'pinned'
-                ? 'bg-amber-500 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Pin className="w-3.5 h-3.5" />
-            <span>Fixados no Topo</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('unread')}
-            className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
-              activeFilter === 'unread'
-                ? 'bg-sky-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Não Lidos ({unreadCount})</span>
-          </button>
-        </div>
-      </div>
-
       {/* Avisos List */}
-      {filteredAvisos.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 flex items-center justify-center mx-auto">
+      {displayedAvisos.length === 0 ? (
+        <div className="bg-white dark:bg-[#16171A] border border-dashed border-slate-300 dark:border-[#2C2E35] rounded-3xl p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-[#202126] text-indigo-500 dark:text-[#FF5520] flex items-center justify-center mx-auto">
             <Megaphone className="w-6 h-6" />
           </div>
           <div>
@@ -388,15 +291,13 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
               Nenhum aviso encontrado
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-              {searchTerm
-                ? `Nenhum comunicado corresponde à pesquisa "${searchTerm}".`
-                : 'Não há comunicados cadastrados para este filtro no momento.'}
+              Não há comunicados cadastrados no mural no momento.
             </p>
           </div>
           {canCreateAvisos && (
             <button
               onClick={handleOpenNewModal}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition hover:bg-indigo-700"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition hover:bg-indigo-700 shadow-xs"
             >
               <Plus className="w-4 h-4" />
               <span>Publicar o Primeiro Aviso</span>
@@ -405,7 +306,7 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredAvisos.map(aviso => {
+          {displayedAvisos.map(aviso => {
             const isRead = (aviso.readBy || []).includes(currentUser.id);
             const isAuthor = aviso.authorId === currentUser.id;
             const canManage = isAuthor || isAdmin;
@@ -480,13 +381,9 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            if (window.confirm('Deseja realmente excluir este aviso?')) {
-                              onDeleteAviso(aviso.id);
-                            }
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                          title="Excluir comunicado"
+                          onClick={() => handleInitiateDelete(aviso)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                          title="Excluir comunicado (Confirmação em 2 etapas)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -550,6 +447,194 @@ export const AvisosView: React.FC<AvisosViewProps> = ({
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* TWO-STEP DELETE CONFIRMATION MODAL */}
+      {avisoToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="bg-white dark:bg-[#16171A] border border-slate-200 dark:border-[#2C2E35] rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 dark:border-[#2C2E35]">
+              <div className="flex items-center justify-between mb-3">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  deleteConfirmationStep === 1
+                    ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700'
+                }`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Etapa {deleteConfirmationStep} de 2: {deleteConfirmationStep === 1 ? 'Revisão do Comunicado' : 'Confirmação Definitiva'}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCancelDelete}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Progress step bar */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-1.5 rounded-full bg-amber-500 transition-all" />
+                <div className={`h-1.5 rounded-full transition-all ${
+                  deleteConfirmationStep === 2 ? 'bg-rose-600' : 'bg-slate-200 dark:bg-slate-800'
+                }`} />
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 text-xs">
+              {deleteConfirmationStep === 1 ? (
+                <>
+                  <div className="flex items-start gap-3">
+                    <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 border border-amber-200 dark:border-amber-900/60 shrink-0">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                        Excluir este comunicado?
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        Você solicitou a exclusão de um comunicado do mural. Por favor, revise as informações abaixo antes de prosseguir para a confirmação final.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Summary Preview Box */}
+                  <div className="bg-slate-50 dark:bg-[#202126] border border-slate-200 dark:border-[#2C2E35] rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {avisoToDelete.targetAudience === 'all' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-2 py-0.5 rounded-md">
+                          <ShieldCheck className="w-3 h-3" />
+                          Aviso Geral ADM
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950 px-2 py-0.5 rounded-md">
+                          <Users className="w-3 h-3" />
+                          {avisoToDelete.targetMinistryName || 'Ministério'}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-slate-400">
+                        {formatDayMonthBR(avisoToDelete.createdAt.slice(0, 10))} • {avisoToDelete.authorName}
+                      </span>
+                    </div>
+
+                    <h5 className="font-bold text-slate-900 dark:text-white text-sm">
+                      {avisoToDelete.title}
+                    </h5>
+
+                    <p className="text-slate-600 dark:text-slate-400 text-xs line-clamp-3 italic">
+                      "{avisoToDelete.content}"
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 text-[11px] leading-relaxed">
+                    <strong>Etapa de Segurança:</strong> Ao clicar em avançar, você será solicitado(a) a confirmar definitivamente a exclusão do comunicado.
+                  </div>
+
+                  {/* Step 1 Actions */}
+                  <div className="pt-2 flex items-center justify-end gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handleCancelDelete}
+                      className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleProceedToStep2}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs transition"
+                    >
+                      <span>Avançar para Confirmação</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3">
+                    <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-900/60 shrink-0">
+                      <AlertOctagon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                        Confirmação Final: Tem certeza absoluta?
+                      </h4>
+                      <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">
+                        Esta ação é irreversível e apagará o comunicado imediatamente.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-4 space-y-2">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                      Você está prestes a remover permanentemente o comunicado:
+                    </p>
+                    <p className="text-sm font-bold text-rose-900 dark:text-rose-200 bg-white dark:bg-[#16171A] p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/80">
+                      "{avisoToDelete.title}"
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Ele desaparecerá do mural de todos os membros, e o histórico de leituras será excluído.
+                    </p>
+                  </div>
+
+                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-[#202126] border border-slate-200 dark:border-[#2C2E35] cursor-pointer hover:bg-slate-100/60 dark:hover:bg-[#282a30] transition">
+                    <input
+                      type="checkbox"
+                      checked={deleteConfirmedCheckbox}
+                      onChange={e => setDeleteConfirmedCheckbox(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 text-rose-600 rounded border-slate-300 dark:border-slate-700 focus:ring-rose-500"
+                    />
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">
+                      Sim, estou ciente e confirmo a exclusão definitiva deste comunicado.
+                    </span>
+                  </label>
+
+                  {/* Step 2 Actions */}
+                  <div className="pt-2 flex items-center justify-between gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handleBackToStep1}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Voltar</span>
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelDelete}
+                        className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold transition"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleConfirmFinalDelete}
+                        disabled={!deleteConfirmedCheckbox}
+                        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-white shadow-xs transition ${
+                          deleteConfirmedCheckbox
+                            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 cursor-pointer'
+                            : 'bg-rose-400/50 cursor-not-allowed opacity-60'
+                        }`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Confirmar Exclusão</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
