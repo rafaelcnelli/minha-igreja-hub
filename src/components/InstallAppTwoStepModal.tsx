@@ -29,7 +29,9 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
   onClose
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    return (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent }).__pwaInstallPrompt || null;
+  });
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
@@ -49,8 +51,15 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
     setIsIOS(isApple);
     setIsAndroid(isDroid);
 
+    // Pick up globally captured prompt if available
+    const globalPrompt = (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent }).__pwaInstallPrompt;
+    if (globalPrompt) {
+      setDeferredPrompt(globalPrompt);
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent }).__pwaInstallPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
@@ -59,6 +68,7 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
       setInstallSuccess(true);
       setCurrentStep(3);
       setDeferredPrompt(null);
+      (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent | null }).__pwaInstallPrompt = null;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -70,31 +80,38 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
     };
   }, []);
 
-  // Reset step whenever modal is reopened
+  // Reset step and check prompt whenever modal is reopened
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
       setInstallSuccess(false);
+      const globalPrompt = (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent }).__pwaInstallPrompt;
+      if (globalPrompt) {
+        setDeferredPrompt(globalPrompt);
+      }
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleTriggerNativeInstall = async () => {
-    if (deferredPrompt) {
+    const promptToUse = deferredPrompt || (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent }).__pwaInstallPrompt;
+    if (promptToUse) {
       try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
+        await promptToUse.prompt();
+        const choice = await promptToUse.userChoice;
         if (choice.outcome === 'accepted') {
           setInstallSuccess(true);
           setCurrentStep(3);
         }
         setDeferredPrompt(null);
+        (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent | null }).__pwaInstallPrompt = null;
       } catch (err) {
         console.warn('Erro ao disparar prompt nativo:', err);
+        setInstallSuccess(true);
+        setCurrentStep(3);
       }
     } else {
-      // In case native prompt is not present, guide user and advance
       setInstallSuccess(true);
       setCurrentStep(3);
     }
@@ -107,9 +124,11 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
         {/* Modal Header */}
         <div className="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF5520] dark:text-orange-400 flex items-center justify-center shadow-2xs">
-              <Smartphone className="w-5 h-5" />
-            </div>
+            <img
+              src="./icon-192.png"
+              alt="Igreja Hub"
+              className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-2xs border border-black/10 dark:border-white/10"
+            />
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-sm">
                 Instalar no Celular
@@ -427,8 +446,15 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
           ) : (
             /* ================= ETAPA 3: SUCESSO / CONCLUÍDO ================= */
             <div className="text-center py-4 space-y-4">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm animate-in zoom-in-75 duration-200">
-                <CheckCircle2 className="w-9 h-9" />
+              <div className="relative inline-block mx-auto">
+                <img
+                  src="./icon-192.png"
+                  alt="Igreja Hub"
+                  className="w-20 h-20 rounded-2xl object-cover shadow-lg border border-black/10 dark:border-white/10 animate-in zoom-in-75 duration-200"
+                />
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
               </div>
               <div className="space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white text-base">

@@ -9,13 +9,14 @@
     <meta property="og:description" content="Sistema de Gestão de Cultos, Cadastro de Pessoas, Escalas de Ministérios e Convites para Igrejas e Comunidades." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="manifest" href="./assets/manifest-v7zg00ik.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#09090b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Igreja Hub">
-    <link rel="icon" type="image/svg+xml" href="./icon-192.svg">
-    <link rel="apple-touch-icon" href="./icon-192.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192-BYO5mkw4.png">
+    <link rel="apple-touch-icon" href="./assets/icon-192-BYO5mkw4.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icon-192-BYO5mkw4.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="./assets/icon-512-tofQH5qs.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600;1,9..144,700&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -42,6 +43,13 @@
       })();
     </script>
     <script>
+      // Capture beforeinstallprompt as early as possible so it is never missed
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__pwaInstallPrompt = e;
+        console.log('[PWA] beforeinstallprompt capturado com sucesso');
+      });
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('./sw.js', { scope: './' })
@@ -54,8 +62,8 @@
         });
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-eVxfi0nD.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DvXP9C3i.css">
+    <script type="module" crossorigin src="./assets/index-sLRDZOty.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CaIbot-S.css">
   </head>
   <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
     <div id="root"></div>

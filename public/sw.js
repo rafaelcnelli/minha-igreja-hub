@@ -1,10 +1,12 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v1';
+const CACHE_NAME = 'igreja-hub-v2';
 
 const STATIC_PRECACHE = [
   './',
   './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
   './icon.svg',
   './icon-192.svg',
   './icon-512.svg'
@@ -12,10 +14,15 @@ const STATIC_PRECACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_PRECACHE).catch((err) => {
-        console.warn('[SW] Pré-cacheamento parcial:', err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Usar Promise.allSettled para garantir que mesmo com pequenas oscilações o SW instale
+      await Promise.allSettled(
+        STATIC_PRECACHE.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn('[SW] Pré-cache ignorou URL com aviso:', url, err);
+          })
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -69,7 +76,6 @@ self.addEventListener('fetch', (event) => {
         });
         return networkResponse;
       }).catch(() => {
-        // Se offline e não encontrado, não faz nada
         return cachedResponse;
       });
     })

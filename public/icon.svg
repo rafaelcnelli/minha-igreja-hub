@@ -1,44 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#18181b"/>
-      <stop offset="100%" stop-color="#09090b"/>
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff6b35"/>
-      <stop offset="100%" stop-color="#ea580c"/>
-    </linearGradient>
-    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffedd5" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#ea580c" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-  <!-- App Icon Base -->
-  <rect width="512" height="512" rx="108" fill="url(#bgGrad)"/>
-  <rect x="14" y="14" width="484" height="484" rx="94" fill="none" stroke="#ea580c" stroke-opacity="0.35" stroke-width="4"/>
+  <!-- Background -->
+  <rect width="512" height="512" rx="105" fill="#18191c"/>
   
-  <!-- Ambient Glow -->
-  <circle cx="256" cy="240" r="160" fill="url(#glowGrad)"/>
+  <!-- Top Cross (Golden Yellow) -->
+  <path d="M239 84 C239 80 242 77 246 77 L266 77 C270 77 273 80 273 84 L273 103 L293 103 C297 103 300 106 300 110 L300 128 C300 132 297 135 293 135 L273 135 L273 150 C273 154 270 157 266 157 L246 157 C242 157 239 154 239 150 L239 135 L219 135 C215 135 212 132 212 128 L212 110 C212 106 215 103 219 103 L239 103 Z" fill="#fab82a"/>
   
-  <!-- Church Cross -->
-  <rect x="238" y="90" width="36" height="230" rx="18" fill="url(#accentGrad)"/>
-  <rect x="166" y="160" width="180" height="36" rx="18" fill="url(#accentGrad)"/>
+  <!-- Roof Chevron (White stroke with rounded caps & corners) -->
+  <path d="M88 266 L256 168 L424 266" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
   
-  <!-- Hub Network & Arches -->
-  <path d="M130 385 L256 305 L382 385" fill="none" stroke="#ff6b35" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Church Body (White stroke) -->
+  <path d="M168 424 L168 296 L256 244 L344 296 L344 424" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
   
-  <!-- Hub Nodes -->
-  <circle cx="130" cy="385" r="24" fill="#ffffff"/>
-  <circle cx="130" cy="385" r="14" fill="#ea580c"/>
-  
-  <circle cx="256" cy="305" r="26" fill="#ffffff"/>
-  <circle cx="256" cy="305" r="16" fill="#ea580c"/>
-  
-  <circle cx="382" cy="385" r="24" fill="#ffffff"/>
-  <circle cx="382" cy="385" r="14" fill="#ea580c"/>
-  
-  <circle cx="256" cy="90" r="18" fill="#ffffff"/>
-  
-  <!-- Foundation bar -->
-  <rect x="186" y="425" width="140" height="18" rx="9" fill="#ff6b35" fill-opacity="0.8"/>
+  <!-- Arched Door (Golden Yellow fill) -->
+  <path d="M224 424 L224 366 C224 340 288 340 288 366 L288 424 Z" fill="#fab82a"/>
 </svg>

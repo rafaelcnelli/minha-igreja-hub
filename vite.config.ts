@@ -6,7 +6,19 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     base: './',
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'preserve-pwa-manifest',
+        transformIndexHtml: {
+          order: 'post',
+          handler(html: string) {
+            return html.replace(/<link rel="manifest"[^>]*>/, '<link rel="manifest" href="./manifest.json">');
+          }
+        }
+      }
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

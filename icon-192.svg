@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <!-- Background -->
+  <rect width="512" height="512" rx="105" fill="#18191c"/>
+  
+  <!-- Top Cross (Golden Yellow) -->
+  <path d="M239 84 C239 80 242 77 246 77 L266 77 C270 77 273 80 273 84 L273 103 L293 103 C297 103 300 106 300 110 L300 128 C300 132 297 135 293 135 L273 135 L273 150 C273 154 270 157 266 157 L246 157 C242 157 239 154 239 150 L239 135 L219 135 C215 135 212 132 212 128 L212 110 C212 106 215 103 219 103 L239 103 Z" fill="#fab82a"/>
+  
+  <!-- Roof Chevron (White stroke with rounded caps & corners) -->
+  <path d="M88 266 L256 168 L424 266" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Church Body (White stroke) -->
+  <path d="M168 424 L168 296 L256 244 L344 296 L344 424" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Arched Door (Golden Yellow fill) -->
+  <path d="M224 424 L224 366 C224 340 288 340 288 366 L288 424 Z" fill="#fab82a"/>
+</svg>

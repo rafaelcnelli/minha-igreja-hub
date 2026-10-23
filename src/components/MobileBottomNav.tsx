@@ -450,9 +450,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             {/* Botão de Instalar App no Celular (com Confirmação em 2 Etapas) */}
             <div className="p-3.5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 dark:from-orange-950/40 dark:via-amber-950/30 dark:to-orange-950/40 border border-orange-200/80 dark:border-orange-900/60 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5520] to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-orange-500/30">
-                  <Smartphone className="w-5 h-5" />
-                </div>
+                <img
+                  src="./icon-192.png"
+                  alt="Igreja Hub"
+                  className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-sm border border-black/10 dark:border-white/10"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
