@@ -32,7 +32,39 @@ export interface User {
   vacationMode?: boolean; // Modo Férias: suspende envio de lembretes pelo WhatsApp e retira do rodízio inteligente
   vacationUntil?: string; // Data prevista de retorno (opcional)
   vacationReason?: string; // Motivo das férias (opcional)
+  pushPreferences?: PushNotificationPreferences; // Preferências personalizadas de notificações push no celular
 }
+
+export type PushNotificationCategory = 
+  | 'notifyScaleAssigned'
+  | 'notifyScaleReminderTomorrow'
+  | 'notifyScaleReminderToday'
+  | 'notifyPendingApprovals'
+  | 'notifySwapRequests'
+  | 'notifyRehearsals'
+  | 'notifyNewAvisos';
+
+export interface PushNotificationPreferences {
+  enabled: boolean; // Chave mestre: ativar/desativar todas as notificações push
+  notifyScaleAssigned: boolean; // Você foi escalado (confirme sua presença)
+  notifyScaleReminderTomorrow: boolean; // Lembrete de que você está escalado amanhã
+  notifyScaleReminderToday: boolean; // Alerta de que você está escalado hoje no horário X
+  notifyPendingApprovals: boolean; // Nova pessoa esperando aprovação (Admins e Líderes)
+  notifySwapRequests: boolean; // Pedidos e confirmações de troca de escala
+  notifyRehearsals: boolean; // Ensaios e reuniões de equipe agendados
+  notifyNewAvisos: boolean; // Novos comunicados e avisos publicados no mural
+}
+
+export const DEFAULT_PUSH_PREFERENCES: PushNotificationPreferences = {
+  enabled: true,
+  notifyScaleAssigned: true,
+  notifyScaleReminderTomorrow: true,
+  notifyScaleReminderToday: true,
+  notifyPendingApprovals: true,
+  notifySwapRequests: true,
+  notifyRehearsals: true,
+  notifyNewAvisos: true
+};
 
 export interface Ministry {
   id: string;
@@ -121,7 +153,19 @@ export interface AppNotification {
   message: string;
   date: string;
   read: boolean;
-  type: 'culto_created' | 'escala_published' | 'slot_assigned' | 'swap_request' | 'system' | 'birthday' | 'custom' | 'aviso';
+  type: 
+    | 'culto_created' 
+    | 'escala_published' 
+    | 'slot_assigned' 
+    | 'swap_request' 
+    | 'system' 
+    | 'birthday' 
+    | 'custom' 
+    | 'aviso' 
+    | 'pending_approval' 
+    | 'scale_reminder_tomorrow' 
+    | 'scale_reminder_today' 
+    | 'rehearsal_scheduled';
   linkTab?: string;
   linkCultoId?: string;
   linkMinistryId?: string;

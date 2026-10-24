@@ -25,7 +25,10 @@ import {
   MessageCircle,
   History,
   CalendarDays,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  Filter,
+  Users2
 } from 'lucide-react';
 import { openLeaderWhatsAppChat } from '../utils/whatsappUtils';
 
@@ -64,6 +67,7 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'escalas' | 'indisponibilidades'>('escalas');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
+  const [selectedMinistryFilter, setSelectedMinistryFilter] = useState<string>('all');
 
   const canAccessHistorico = currentUser.isAdmin || userLeadsAnyMinistry(currentUser) || userIsMinister(currentUser);
 
@@ -152,10 +156,20 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
     }).length;
   }, [baseMySlots, periodFilter]);
 
-  // Filtered and sorted slots based on active scales, periodFilter, and past cultos toggle
+  // Distinct ministries in user's assigned slots
+  const userAssignedMinistries = useMemo(() => {
+    const minIds = Array.from(new Set(baseMySlots.map(item => item.slot.ministryId)));
+    return ministries.filter(m => minIds.includes(m.id));
+  }, [baseMySlots, ministries]);
+
+  // Filtered and sorted slots based on active scales, periodFilter, ministryFilter, and past cultos toggle
   const mySlots = useMemo(() => {
     return baseMySlots
       .filter(item => {
+        // Optional ministry filter
+        if (selectedMinistryFilter !== 'all' && item.slot.ministryId !== selectedMinistryFilter) {
+          return false;
+        }
         // Optional month filter
         if (periodFilter !== 'all') {
           if (!matchesPeriodFilter(item.culto!.date, periodFilter)) return false;
@@ -167,7 +181,7 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
         return true;
       })
       .sort((a, b) => a.culto!.date.localeCompare(b.culto!.date));
-  }, [baseMySlots, periodFilter, showPastCultos]);
+  }, [baseMySlots, selectedMinistryFilter, periodFilter, showPastCultos]);
 
   // Current user's unavailabilities
   const myUnavailabilities = unavailabilities.filter(u => u.userId === currentUser.id);
@@ -295,48 +309,69 @@ export const MinhasEscalasView: React.FC<MinhasEscalasViewProps> = ({
               )}
             </div>
 
-            {/* Filtro de Mês Padrão com Toggle de Cultos/Escalas Passadas */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <div className="flex flex-wrap items-center gap-2 max-w-full">
-                <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
-                  {getPeriodFilterOptions().map(pf => (
-                    <button
-                      key={pf.key}
-                      type="button"
-                      onClick={() => setPeriodFilter(pf.key)}
-                      className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                        periodFilter === pf.key
-                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-                      }`}
-                    >
-                      <span className="text-xs font-bold leading-tight">{pf.label}</span>
-                      <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                        {pf.subLabel}
-                      </span>
-                    </button>
-                  ))}
+            {/* Filtros em Estilo Dropdown (Ministério e Período) */}
+            <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                <Users2 className="w-3.5 h-3.5 text-amber-500" />
+                <span>Selecione a equipe ou período para visualizar:</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+                  {/* Dropdown 1: Ministério (exibido se usuário tiver escalas) */}
+                <div className="relative min-w-[210px] w-full sm:w-auto">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+                    <Users2 className="w-3.5 h-3.5 text-amber-500" />
+                  </div>
+                  <select
+                    value={selectedMinistryFilter}
+                    onChange={e => setSelectedMinistryFilter(e.target.value)}
+                    className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-500 cursor-pointer transition-colors"
+                  >
+                    <option value="all">
+                      Todos os Ministérios ({baseMySlots.length})
+                    </option>
+                    {userAssignedMinistries.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </div>
 
-                <PastCultosToggle
-                  showPast={showPastCultos}
-                  onToggle={setShowPastCultos}
-                  pastCount={pastSlotsCountInPeriod}
-                  label="Exibir escalas passadas"
-                />
+                {/* Dropdown 2: Período / Mês */}
+                <div className="relative min-w-[210px] w-full sm:w-auto">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+                    <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+                  </div>
+                  <select
+                    value={periodFilter}
+                    onChange={e => setPeriodFilter(e.target.value as PeriodFilter)}
+                    className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 cursor-pointer transition-colors"
+                  >
+                    {getPeriodFilterOptions().map(pf => (
+                      <option key={pf.key} value={pf.key}>
+                        {pf.label} ({pf.subLabel})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
 
-              {periodFilter !== 'this_month' && (
-                <button
-                  type="button"
-                  onClick={() => setPeriodFilter('this_month')}
-                  className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline shrink-0"
-                >
-                  Voltar para o Mês Atual
-                </button>
-              )}
+              <PastCultosToggle
+                showPast={showPastCultos}
+                onToggle={setShowPastCultos}
+                pastCount={pastSlotsCountInPeriod}
+                label="Exibir escalas passadas"
+              />
             </div>
           </div>
+        </div>
 
           {/* Cards List with contextual empty states */}
           {mySlots.length === 0 ? (

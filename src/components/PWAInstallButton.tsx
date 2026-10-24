@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Download, Smartphone } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { InstallAppTwoStepModal } from './InstallAppTwoStepModal';
+import { usePWAInstalled } from '../hooks/usePWAInstalled';
 
 export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const isInstalled = usePWAInstalled();
+
+  // Se o aplicativo já estiver instalado no dispositivo, o botão é totalmente removido
+  if (isInstalled) {
+    return null;
+  }
 
   return (
     <>

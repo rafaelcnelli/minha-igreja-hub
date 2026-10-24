@@ -12,9 +12,15 @@ import {
   Trash2, 
   UserCheck, 
   Users,
-  Cake
+  Cake,
+  Smartphone,
+  Users2,
+  Megaphone,
+  SlidersHorizontal
 } from 'lucide-react';
 import { formatDateFullBR } from '../utils/dateUtils';
+import { PushNotificationPreferences } from '../types';
+import { PushNotificationSettingsModal } from './PushNotificationSettingsModal';
 
 interface NotificationsViewProps {
   currentUser: User;
@@ -23,6 +29,7 @@ interface NotificationsViewProps {
   onMarkAsRead: (id: string) => void;
   onClearNotifications: () => void;
   onNavigateTab: (tab: string, cultoId?: string, ministryId?: string) => void;
+  onSavePushPreferences?: (prefs: PushNotificationPreferences) => Promise<void> | void;
 }
 
 export const NotificationsView: React.FC<NotificationsViewProps> = ({
@@ -31,9 +38,11 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   onMarkAllAsRead,
   onMarkAsRead,
   onClearNotifications,
-  onNavigateTab
+  onNavigateTab,
+  onSavePushPreferences
 }) => {
   const [filterType, setFilterType] = useState<'all' | 'unread' | 'cultos' | 'escalas'>('all');
+  const [isPushSettingsModalOpen, setIsPushSettingsModalOpen] = useState(false);
 
   // Filter notifications relevant to current user
   const userNotifications = notifications.filter(notif => {
@@ -82,8 +91,18 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
       case 'slot_assigned':
         return <UserCheck className="w-5 h-5 text-sky-500" />;
+      case 'scale_reminder_tomorrow':
+        return <Calendar className="w-5 h-5 text-indigo-500" />;
+      case 'scale_reminder_today':
+        return <Clock className="w-5 h-5 text-amber-500" />;
+      case 'pending_approval':
+        return <Users2 className="w-5 h-5 text-purple-500" />;
       case 'swap_request':
-        return <Users className="w-5 h-5 text-amber-500" />;
+        return <Users className="w-5 h-5 text-blue-500" />;
+      case 'rehearsal_scheduled':
+        return <Sparkles className="w-5 h-5 text-sky-500" />;
+      case 'aviso':
+        return <Megaphone className="w-5 h-5 text-rose-500" />;
       case 'birthday':
         return <Cake className="w-5 h-5 text-pink-500" />;
       default:
@@ -128,8 +147,18 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            type="button"
+            onClick={() => setIsPushSettingsModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl text-slate-900 dark:text-white bg-slate-100 dark:bg-[#202126] hover:bg-slate-200 dark:hover:bg-[#282a31] border border-slate-200/90 dark:border-[#2C2E35] transition shadow-2xs cursor-pointer"
+            title="Configurar quais notificações push chegam no celular"
+          >
+            <Smartphone className="w-4 h-4 text-[#FF5520]" />
+            <span>Configurar Notificações no Celular</span>
+          </button>
+
+          <button
             onClick={onMarkAllAsRead}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
           >
             <CheckCheck className="w-4 h-4 text-emerald-500" />
             Marcar tudo como lido
@@ -137,7 +166,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
           {userNotifications.length > 0 && (
             <button
               onClick={onClearNotifications}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition"
             >
               <Trash2 className="w-4 h-4" />
               Limpar avisos
@@ -278,6 +307,18 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
           ))}
         </div>
       )}
+
+      {/* Modal de Preferências de Notificações Push */}
+      <PushNotificationSettingsModal
+        isOpen={isPushSettingsModalOpen}
+        onClose={() => setIsPushSettingsModalOpen(false)}
+        currentUser={currentUser}
+        onSavePreferences={async (newPrefs) => {
+          if (onSavePushPreferences) {
+            await onSavePushPreferences(newPrefs);
+          }
+        }}
+      />
     </div>
   );
 };

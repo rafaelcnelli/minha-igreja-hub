@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User } from '../types';
-import { UserCheck, Phone, Calendar, ShieldCheck, AlertCircle, X, Sparkles, Image, Check, Cake, Camera, Trash2, Upload, Palmtree, Sun, Plane } from 'lucide-react';
+import { User, PushNotificationPreferences } from '../types';
+import { UserCheck, Phone, Calendar, ShieldCheck, AlertCircle, X, Sparkles, Image, Check, Cake, Camera, Trash2, Upload, Palmtree, Sun, Plane, Smartphone } from 'lucide-react';
 import { compressImageFile } from '../utils/imageUtils';
+import { PushNotificationSettingsModal } from './PushNotificationSettingsModal';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const [isPushSettingsOpen, setIsPushSettingsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -426,11 +428,37 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             )}
           </div>
 
-          {/* Readonly info: Ministries & Email */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-xs space-y-1 text-slate-500 dark:text-slate-400">
-            <p><strong>E-mail cadastrado:</strong> {targetUser.email}</p>
-            <p><strong>Ministérios:</strong> {targetUser.memberships.length > 0 ? targetUser.memberships.map(m => m.ministryId.replace('min-', '')).join(', ') : 'Nenhum'}</p>
-          </div>
+            {/* Notificações Push no Celular Shortcut */}
+            {isSelf && (
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-[#FF5520] flex items-center justify-center shrink-0">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      Notificações Push no Celular
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Personalize quais alertas chegam no seu aparelho móvel.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPushSettingsOpen(true)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-800 dark:text-slate-200 transition shadow-2xs cursor-pointer"
+                >
+                  Configurar
+                </button>
+              </div>
+            )}
+
+            {/* Readonly info: Ministries & Email */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-xs space-y-1 text-slate-500 dark:text-slate-400">
+              <p><strong>E-mail cadastrado:</strong> {targetUser.email}</p>
+              <p><strong>Ministérios:</strong> {targetUser.memberships.length > 0 ? targetUser.memberships.map(m => m.ministryId.replace('min-', '')).join(', ') : 'Nenhum'}</p>
+            </div>
 
           {/* Action buttons */}
           <div className="pt-4 flex items-center justify-end gap-2.5">
@@ -453,6 +481,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         </form>
 
       </div>
+
+      {/* Modal de Configurações de Notificações Push */}
+      {isSelf && (
+        <PushNotificationSettingsModal
+          isOpen={isPushSettingsOpen}
+          onClose={() => setIsPushSettingsOpen(false)}
+          currentUser={currentUser}
+          onSavePreferences={(prefs: PushNotificationPreferences) => {
+            onSave({
+              ...currentUser,
+              pushPreferences: prefs
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

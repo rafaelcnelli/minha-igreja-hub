@@ -381,25 +381,26 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
           </p>
         </div>
 
-        {/* Period Filter and Past Cultos Toggle */}
+        {/* Period Filter (Estilo Dropdown) and Past Cultos Toggle */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto max-w-full">
-          <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
-            {getPeriodFilterOptions().map(pf => (
-              <button
-                key={pf.key}
-                onClick={() => setPeriodFilter(pf.key)}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                  periodFilter === pf.key
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-600'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-                }`}
-              >
-                <span className="text-xs font-bold leading-tight">{pf.label}</span>
-                <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                  {pf.subLabel}
-                </span>
-              </button>
-            ))}
+          <div className="relative min-w-[210px] w-full sm:w-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+              <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+            </div>
+            <select
+              value={periodFilter}
+              onChange={e => setPeriodFilter(e.target.value as PeriodFilter)}
+              className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 cursor-pointer transition-colors"
+            >
+              {getPeriodFilterOptions().map(pf => (
+                <option key={pf.key} value={pf.key}>
+                  {pf.label} ({pf.subLabel})
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+              <ChevronDown className="w-4 h-4" />
+            </div>
           </div>
 
           <PastCultosToggle
@@ -427,69 +428,80 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
       )}
 
       {/* Ministry Selector Tabs with distinction between 'Minhas Equipes' and 'Outros Líderes' */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-500 px-1">
-          <span>Selecione a equipe para gerenciar ou visualizar:</span>
-          {isLeaderOfCurrentMinistry ? (
-            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Modo Gestão (Líder)
+      {/* SELETOR DE MINISTÉRIO / EQUIPE EM ESTILO DROPDOWN */}
+      <div className="bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <Users2 className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-slate-700 dark:text-slate-200">
+              Selecione a equipe para gerenciar ou visualizar:
+            </span>
+          </div>
+          {isAdmin ? (
+            <span className="font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto flex items-center gap-1 text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Gestão Total (Administrador Geral)
+            </span>
+          ) : isLeaderOfCurrentMinistry ? (
+            <span className="font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto flex items-center gap-1 text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Modo Gestão (Líder da Equipe)
             </span>
           ) : (
-            <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+            <span className="font-bold text-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 self-start sm:self-auto text-[11px]">
               <Eye className="w-3.5 h-3.5" />
               Versão Resumida (Outro Líder)
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {/* Led ministries first */}
-          {ledMinistries.map(m => (
-            <button
-              key={m.id}
-              onClick={() => setSelectedMinistryId(m.id)}
-              className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 border ${
-                selectedMinistryId === m.id
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-xs font-bold'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
-              }`}
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
-                style={{ backgroundColor: m.color }}
-              />
-              <span>{m.name}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                selectedMinistryId === m.id ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-600'
-              }`}>
-                Minha Equipe
-              </span>
-            </button>
-          ))}
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <span
+              className="w-3.5 h-3.5 rounded-full inline-block shrink-0 ring-2 ring-white dark:ring-slate-900 shadow-2xs"
+              style={{ backgroundColor: currentMinistry?.color || '#3b82f6' }}
+            />
+          </div>
+          <select
+            value={selectedMinistryId}
+            onChange={e => setSelectedMinistryId(e.target.value)}
+            className="w-full appearance-none pl-10 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-[#FF5520]/25 focus:border-[#FF5520] cursor-pointer transition-colors"
+          >
+            {isAdmin ? (
+              <optgroup label="Todas as Equipes (Acesso Total de Gestão)">
+                {ministries.map(m => (
+                  <option key={m.id} value={m.id}>
+                    ⭐ {m.name} {userLeadsMinistry(currentUser, m.id) ? '(Sua Liderança Direta)' : '(Gestão de Admin)'}
+                  </option>
+                ))}
+              </optgroup>
+            ) : (
+              <>
+                {ledMinistries.length > 0 && (
+                  <optgroup label="Minhas Equipes (Modo Gestão)">
+                    {ledMinistries.map(m => (
+                      <option key={m.id} value={m.id}>
+                        ⭐ {m.name} (Minha Equipe)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
 
-          {/* Other ministries (for summarized viewing) */}
-          {otherMinistries.map(m => (
-            <button
-              key={m.id}
-              onClick={() => setSelectedMinistryId(m.id)}
-              className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 border ${
-                selectedMinistryId === m.id
-                  ? 'bg-indigo-900 text-white border-indigo-900 shadow-xs font-bold'
-                  : 'bg-indigo-50/50 text-indigo-900 border-indigo-100 hover:border-indigo-300'
-              }`}
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
-                style={{ backgroundColor: m.color }}
-              />
-              <span>{m.name}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                selectedMinistryId === m.id ? 'bg-indigo-800 text-indigo-100' : 'bg-indigo-100 text-indigo-700'
-              }`}>
-                Ver Resumo
-              </span>
-            </button>
-          ))}
+                {otherMinistries.length > 0 && (
+                  <optgroup label="Outras Equipes (Visualização Resumida)">
+                    {otherMinistries.map(m => (
+                      <option key={m.id} value={m.id}>
+                        👥 {m.name} (Ver Resumo)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </>
+            )}
+          </select>
+          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+            <ChevronDown className="w-4 h-4" />
+          </div>
         </div>
       </div>
 

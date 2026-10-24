@@ -7,22 +7,19 @@ import {
   User as UserIcon,
   Phone,
   Sparkles,
-  Church,
   ArrowRight,
   CheckCircle2,
   AlertCircle,
   KeyRound,
-  PlusCircle,
-  LogIn,
   ShieldCheck,
   Calendar,
   Building2,
-  Clock,
-  ArrowLeft,
-  AlertTriangle,
   Copy,
   Check,
-  ExternalLink
+  Sun,
+  Moon,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { ChurchProfile } from '../types';
 import { getAppUrlParam } from '../utils/urlUtils';
@@ -41,12 +38,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
     registerAndJoinChurch,
     completeGoogleRegistration,
     googlePendingUser,
-    setGooglePendingUser,
     authError,
     clearError,
     isLoading
   } = useAuth();
-  const { setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   const [copiedDomain, setCopiedDomain] = useState(false);
   const currentDomain = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'rafaelcnelli.github.io';
@@ -58,8 +54,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
       setTimeout(() => setCopiedDomain(false), 2500);
     }
   };
-
-  // Respect saved user theme preference from localStorage
 
   // Parse URL params (both standard search params and hash query params)
   const urlChurchCode = getAppUrlParam('igreja') || getAppUrlParam('codigo') || getAppUrlParam('church');
@@ -94,7 +88,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
   const [joinPassword, setJoinPassword] = useState('');
   const [joinPhone, setJoinPhone] = useState('');
   const [joinBirthDate, setJoinBirthDate] = useState('');
-  const [joinChurchCode, setJoinChurchCode] = useState(urlChurchCode || churchProfile?.code || '');
+  const [joinChurchCode, setJoinChurchCode] = useState(() => {
+    if (urlChurchCode) return urlChurchCode.toUpperCase().trim();
+    return '';
+  });
   const [joinInviteToken] = useState(urlInviteToken || '');
   const [targetMinistryId] = useState(urlMinistryId || undefined);
   const [invitedByUserId] = useState(urlInvitedBy || undefined);
@@ -108,7 +105,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
   });
   const [googleChurchName, setGoogleChurchName] = useState('');
   const [googleCampus, setGoogleCampus] = useState('');
-  const [googleChurchCode, setGoogleChurchCode] = useState(urlChurchCode || churchProfile?.code || '');
+  const [googleChurchCode, setGoogleChurchCode] = useState(() => {
+    if (urlChurchCode) return urlChurchCode.toUpperCase().trim();
+    return '';
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -300,18 +300,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
   const renderGoogleButton = (text: string) => (
     <div className="pt-2">
       <div className="flex items-center gap-3 my-3">
-        <div className="h-px bg-slate-200 flex-1" />
-        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
+        <div className="h-px bg-slate-200 dark:bg-[#33343d] flex-1" />
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold">
           ou use sua conta Google
         </span>
-        <div className="h-px bg-slate-200 flex-1" />
+        <div className="h-px bg-slate-200 dark:bg-[#33343d] flex-1" />
       </div>
 
       <button
         type="button"
         onClick={handleGoogleLogin}
         disabled={submitting || isLoading}
-        className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2.5 border border-slate-300 disabled:opacity-50 cursor-pointer min-h-[40px]"
+        className="w-full py-2.5 px-4 bg-white dark:bg-[#202024] hover:bg-slate-50 dark:hover:bg-[#27272a] text-slate-800 dark:text-slate-100 font-bold text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2.5 border border-slate-300 dark:border-[#33343d] disabled:opacity-50 cursor-pointer min-h-[44px]"
       >
         <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
           <path
@@ -337,306 +337,258 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-amber-100 selection:text-amber-900">
-      <div className="w-full max-w-xl space-y-6">
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-md shadow-amber-500/20 mb-1">
-            <Church className="w-7 h-7" />
+    <div className="w-full min-h-screen bg-[#edf0f5] dark:bg-[#121214] py-6 sm:py-10 px-3 sm:px-6 flex flex-col items-center justify-center text-slate-900 dark:text-white transition-colors selection:bg-amber-100 selection:text-amber-900">
+      
+      {/* MAIN LUXURY CARD CONTAINER (MATCHING DUAL MOBILE EXPERIENCE TELA DE INICIO) */}
+      <div className="w-full max-w-md sm:max-w-lg bg-white dark:bg-[#18181b] rounded-[38px] shadow-[0_24px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-[#33343d] overflow-hidden flex flex-col relative transition-all animate-in fade-in zoom-in-95 duration-200 pb-8">
+        
+        {/* TOP CURVED DARK HEADER CARD */}
+        <div className="bg-[#18191d] dark:bg-[#202024] text-white pt-8 pb-7 px-6 sm:px-8 rounded-b-[36px] relative overflow-hidden shadow-md dark:border-b dark:border-[#33343d]">
+          
+          {/* Flowing Soundwave SVG Lines Pattern */}
+          <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M-40 100 C 90 220, 210 30, 440 170" stroke="white" strokeWidth="1.2" fill="none" opacity="0.6"/>
+            <path d="M-40 125 C 90 245, 230 50, 440 195" stroke="white" strokeWidth="1" fill="none" opacity="0.4"/>
+            <path d="M-40 80 C 70 200, 190 10, 440 150" stroke="white" strokeWidth="0.8" fill="none" opacity="0.3"/>
+            <path d="M-40 145 C 110 265, 250 70, 440 215" stroke="white" strokeWidth="0.8" fill="none" opacity="0.5"/>
+            <path d="M-40 165 C 130 285, 270 90, 440 235" stroke="white" strokeWidth="0.6" fill="none" opacity="0.3"/>
+          </svg>
+
+          {/* Top row: Campus badge and Theme Toggle */}
+          <div className="flex items-center justify-between relative z-10 mb-4">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#FF5520] animate-pulse" />
+              MINHA IGREJA HUB · {churchProfile?.campus && churchProfile.code !== 'HUB-777' ? churchProfile.campus.toUpperCase() : 'SISTEMA OFICIAL'}
+            </span>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Alternar Modo Claro / Escuro"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            </button>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            {googlePendingUser
-              ? 'Completar Cadastro Google'
-              : mode === 'create_church'
-              ? 'Criar Nova Igreja'
-              : mode === 'join_church'
-              ? 'Entrar em Igreja Existente'
-              : 'Minha Igreja Hub'}
-          </h1>
-          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-            {googlePendingUser
-              ? 'Informe sua data de aniversário e defina se deseja criar uma congregação ou entrar com um código.'
-              : mode === 'create_church'
-              ? 'Cadastre sua igreja do zero, obtenha um código exclusivo e gerencie seus cultos e equipes sem interferência de outras igrejas.'
-              : mode === 'join_church'
-              ? 'Insira o Código da Igreja fornecido pelo seu pastor ou líder. Sua entrada será analisada e aprovada pela liderança.'
-              : 'Acesso para pastores, líderes e voluntários já cadastrados.'}
-          </p>
+
+          {/* Church Icon, Editorial Greeting, and Description */}
+          <div className="flex items-center gap-3.5 relative z-10">
+            <img
+              src="./icon-192.png"
+              alt="Minha Igreja Hub"
+              className="w-13 h-13 rounded-2xl object-cover shadow-lg border border-white/10 shrink-0"
+            />
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
+                <span className="font-editorial italic font-normal text-[#FF5520]">Olá,</span> Bem-vindo(a) —
+              </h1>
+              <p className="text-xs text-slate-300 font-medium mt-0.5 leading-snug">
+                {googlePendingUser
+                  ? 'Complete seus dados para acessar sua congregação'
+                  : mode === 'create_church'
+                  ? 'Cadastre sua igreja e organize escalas e cultos'
+                  : mode === 'join_church'
+                  ? 'Entre na congregação usando o código fornecido'
+                  : 'Acesse suas escalas, repertório e compromissos'}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Auth Mode Switcher (Pill Navigation) - Only shown if not in Google completion */}
         {!googlePendingUser && (
-          <div className="bg-slate-200/90 p-1 rounded-2xl flex items-center gap-1 text-xs font-bold text-slate-600 shadow-inner">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('create_church');
-                setLocalError(null);
-                clearError();
-              }}
-              className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'create_church'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'hover:text-slate-900'
-              }`}
-            >
-              <PlusCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="truncate">Criar Igreja</span>
-            </button>
+          <div className="px-6 sm:px-8 pt-5">
+            <div className="bg-slate-100 dark:bg-[#121214] p-1.5 rounded-2xl flex items-center gap-1 text-xs font-bold border border-slate-200/80 dark:border-[#33343d]">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('create_church');
+                  setLocalError(null);
+                  clearError();
+                }}
+                className={`flex-1 py-2 px-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center ${
+                  mode === 'create_church'
+                    ? 'bg-white dark:bg-[#202024] text-slate-900 dark:text-white shadow-xs font-bold border border-slate-200/60 dark:border-[#3a3b45]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Criar Igreja</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMode('join_church');
-                setLocalError(null);
-                clearError();
-              }}
-              className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'join_church'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'hover:text-slate-900'
-              }`}
-            >
-              <KeyRound className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span className="truncate">Entrar com Código</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('join_church');
+                  setLocalError(null);
+                  clearError();
+                }}
+                className={`flex-1 py-2 px-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center ${
+                  mode === 'join_church'
+                    ? 'bg-white dark:bg-[#202024] text-slate-900 dark:text-white shadow-xs font-bold border border-slate-200/60 dark:border-[#3a3b45]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Entrar c/ Código</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMode('login');
-                setLocalError(null);
-                clearError();
-              }}
-              className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'login'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'hover:text-slate-900'
-              }`}
-            >
-              <LogIn className="w-4 h-4 text-slate-700 shrink-0" />
-              <span className="truncate">Já Tenho Conta</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setLocalError(null);
+                  clearError();
+                }}
+                className={`flex-1 py-2 px-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center ${
+                  mode === 'login'
+                    ? 'bg-white dark:bg-[#202024] text-slate-900 dark:text-white shadow-xs font-bold border border-slate-200/60 dark:border-[#3a3b45]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Acessar</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-5">
-          {/* Direct Invite Badge if URL params present */}
-          {urlChurchCode && !googlePendingUser && (
-            <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex items-center gap-2.5">
-              <KeyRound className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span>
-                Convite detectado com o código <strong>{urlChurchCode.toUpperCase()}</strong>. Complete os dados abaixo para solicitar sua aprovação!
-              </span>
-            </div>
-          )}
-
-          {/* Feedback Messages */}
+        {/* Content Area */}
+        <div className="px-6 sm:px-8 pt-5 space-y-4">
+          {/* Alerts / Error Notices */}
           {(localError || authError) && (
-            (localError?.includes('unauthorized-domain') ||
-             localError?.includes('Domínio não autorizado') ||
-             authError?.includes('unauthorized-domain') ||
-             authError?.includes('Domínio não autorizado')) ? (
-              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs space-y-3.5 animate-in fade-in duration-200 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-200/70 flex items-center justify-center shrink-0 text-amber-800">
-                    <AlertTriangle className="w-4 h-4" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-bold text-sm text-amber-950">
-                      Domínio do GitHub Pages precisa ser autorizado no Firebase
-                    </p>
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      O Firebase Authentication bloqueia o login quando o site está em um domínio novo (como <strong>{currentDomain}</strong>) até que ele seja incluído nos <em>Domínios autorizados</em>.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-3.5 rounded-xl border border-amber-200 space-y-2.5 shadow-2xs">
-                  <p className="font-bold text-[11px] text-slate-800 uppercase tracking-wider">
-                    Como autorizar em 3 passos rápidos:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-slate-600 text-xs leading-relaxed">
-                    <li>Abra o Console do Firebase pelo link abaixo.</li>
-                    <li>Na aba <strong>Configurações (Settings)</strong> &gt; seção <strong>Domínios autorizados</strong>, clique em <strong>Adicionar domínio</strong>.</li>
-                    <li>Cole o domínio do seu site e clique em <strong>Salvar</strong>:</li>
-                  </ol>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <code className="flex-1 px-3 py-2 bg-slate-100 text-amber-900 font-mono text-xs font-semibold rounded-lg border border-slate-200 select-all">
-                      {currentDomain}
-                    </code>
+            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-200 animate-in fade-in duration-150">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold">Aviso de Acesso</p>
+                <p className="leading-relaxed">{localError || authError}</p>
+                {(authError || '').includes('Domínio não autorizado') && (
+                  <div className="pt-2 flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleCopyDomain}
-                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-rose-900/40 border border-rose-300 dark:border-rose-700 rounded-lg text-rose-900 dark:text-rose-200 cursor-pointer shadow-2xs"
                     >
-                      {copiedDomain ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedDomain ? 'Copiado!' : 'Copiar Domínio'}</span>
+                      {copiedDomain ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedDomain ? 'Copiado!' : `Copiar "${currentDomain}"`}</span>
                     </button>
-                  </div>
-
-                  <div className="pt-1.5">
                     <a
-                      href="https://console.firebase.google.com/project/gen-lang-client-0184131312/authentication/settings"
+                      href="https://console.firebase.google.com/"
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 hover:underline"
                     >
-                      <span>Abrir Configurações do Firebase Console</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Abrir Firebase Console</span>
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
-                </div>
-
-                <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => loginAsDemoUser('admin')}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Entrar Agora em Modo Demonstração (Admin)</span>
-                  </button>
-                  <span className="text-[11px] text-amber-800/80 text-center sm:text-right">
-                    Você pode usar o sistema agora enquanto autoriza o domínio!
-                  </span>
-                </div>
+                )}
               </div>
-            ) : (
-              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{localError || authError}</span>
-              </div>
-            )
+            </div>
           )}
 
           {joinSuccessNotice && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
-              <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="font-bold">Aguardando Validação da Liderança</p>
-                <p className="leading-relaxed">{joinSuccessNotice}</p>
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl flex items-start gap-3 text-xs text-emerald-900 dark:text-emerald-200">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 leading-relaxed">
+                <p className="font-bold text-emerald-950 dark:text-emerald-100">Solicitação Enviada!</p>
+                <p>{joinSuccessNotice}</p>
               </div>
             </div>
           )}
 
           {/* ================================================================= */}
-          {/* FLOW: COMPLETAR CADASTRO COM GOOGLE                               */}
+          {/* GOOGLE ONBOARDING COMPLETION                                      */}
           {/* ================================================================= */}
           {googlePendingUser && (
             <form onSubmit={handleGoogleCompleteSubmit} className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 shrink-0">
-                    {googlePendingUser.displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-bold">{googlePendingUser.displayName}</p>
-                    <p className="text-[11px] text-emerald-700">{googlePendingUser.email}</p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-lg">
-                  Google Conectado
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-950 text-xs flex items-start gap-2">
-                <Calendar className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  Para que a igreja acompanhe seu aniversário e organize as escalas, é <strong>obrigatório fornecer sua data de nascimento</strong>.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Data de Nascimento / Aniversário *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Calendar className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <input
-                      type="date"
-                      required
-                      value={googleBirthDate}
-                      onChange={e => setGoogleBirthDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    WhatsApp / Telefone *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="tel"
-                      required
-                      value={googlePhone}
-                      onChange={e => setGooglePhone(e.target.value)}
-                      placeholder="(11) 98765-4321"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
-                  </div>
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 rounded-2xl flex items-center gap-3">
+                <img
+                  src={googlePendingUser.photoURL || './icon-192.png'}
+                  alt={googlePendingUser.displayName}
+                  className="w-10 h-10 rounded-full object-cover border border-amber-300"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {googlePendingUser.displayName}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    {googlePendingUser.email}
+                  </p>
                 </div>
               </div>
 
-              {/* Action selection: Create Church or Join Existing */}
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 mb-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Data de Aniversário <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="date"
+                    required
+                    value={googleBirthDate}
+                    onChange={e => setGoogleBirthDate(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  WhatsApp / Telefone <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    value={googlePhone}
+                    onChange={e => setGooglePhone(e.target.value)}
+                    placeholder="(11) 98765-4321"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   O que você deseja fazer agora?
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 text-xs">
                   <button
                     type="button"
                     onClick={() => setGoogleAction('create_church')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                    className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                       googleAction === 'create_church'
-                        ? 'border-amber-500 bg-amber-50/50 text-slate-900 ring-2 ring-amber-500/20'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        ? 'border-[#FF5520] bg-orange-50/60 dark:bg-orange-950/30 text-[#FF5520] font-bold ring-2 ring-[#FF5520]/20'
+                        : 'border-slate-200 dark:border-[#33343d] bg-slate-50 dark:bg-[#202024] text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      <PlusCircle className="w-3.5 h-3.5 text-amber-600" />
-                      Criar Nova Igreja
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Serei o pastor/administrador geral da congregação.
-                    </span>
+                    <Building2 className="w-4 h-4 mb-1" />
+                    <span>Criar Nova Igreja</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setGoogleAction('join_church')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                    className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                       googleAction === 'join_church'
-                        ? 'border-indigo-500 bg-indigo-50/50 text-slate-900 ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        ? 'border-[#FF5520] bg-orange-50/60 dark:bg-orange-950/30 text-[#FF5520] font-bold ring-2 ring-[#FF5520]/20'
+                        : 'border-slate-200 dark:border-[#33343d] bg-slate-50 dark:bg-[#202024] text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
-                      Entrar em Igreja Existente
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Tenho o código da igreja fornecido pela liderança.
-                    </span>
+                    <KeyRound className="w-4 h-4 mb-1" />
+                    <span>Entrar com Código</span>
                   </button>
                 </div>
               </div>
 
               {googleAction === 'create_church' ? (
-                <div className="space-y-3 pt-1 animate-in fade-in duration-200">
+                <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Nome Oficial da Igreja *
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Nome da Igreja <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -644,62 +596,52 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                       value={googleChurchName}
                       onChange={e => setGoogleChurchName(e.target.value)}
                       placeholder="Ex: Igreja Batista da Paz"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Campus ou Sede</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Campus / Bairro (Opcional)
+                    </label>
                     <input
                       type="text"
                       value={googleCampus}
                       onChange={e => setGoogleCampus(e.target.value)}
-                      placeholder="Ex: Campus Sede"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                      placeholder="Ex: Sede Central"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="space-y-3 pt-1 animate-in fade-in duration-200">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Código da Igreja * (Fornecido pelo líder/pastor)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={googleChurchCode}
-                      onChange={e => setGoogleChurchCode(e.target.value.toUpperCase())}
-                      placeholder="EX: IBP-4821 OU HUB-2026"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-wider text-slate-900 uppercase placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Código da Igreja <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={googleChurchCode}
+                    onChange={e => setGoogleChurchCode(e.target.value.toUpperCase())}
+                    placeholder="Ex: HUB-777"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white font-mono uppercase font-bold placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
               )}
 
-              <div className="pt-2 flex flex-col gap-2">
-                <button
-                  type="submit"
-                  disabled={submitting || isLoading}
-                  className="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
-                >
-                  {submitting ? (
-                    <span>Salvando Cadastro...</span>
-                  ) : (
-                    <>
-                      <span>Concluir Cadastro & Entrar</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setGooglePendingUser(null)}
-                  className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 font-semibold transition"
-                >
-                  Cancelar e voltar
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={submitting || isLoading}
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#FF5520] to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold text-xs rounded-2xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+              >
+                {submitting ? (
+                  <span>Salvando Dados...</span>
+                ) : (
+                  <>
+                    <span>Concluir e Acessar</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
             </form>
           )}
 
@@ -707,52 +649,68 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
           {/* TAB 1: CRIAR UMA NOVA IGREJA                                      */}
           {/* ================================================================= */}
           {!googlePendingUser && mode === 'create_church' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  Ao criar sua igreja, você será cadastrado como <strong>Administrador Geral</strong>, receberá o <strong>Código de Acesso Exclusivo</strong> da sua congregação e terá cultos, membros e ministérios próprios isolados de outras igrejas.
-                </p>
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nome da Congregação / Igreja <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={createChurchName}
+                    onChange={e => setCreateChurchName(e.target.value)}
+                    placeholder="Ex: Igreja Batista da Aliança"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Seu Nome Completo (Pastor / Administrador) <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={createAdminName}
+                    onChange={e => setCreateAdminName(e.target.value)}
+                    placeholder="Ex: Pr. Marcos Silva"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nome Oficial da Igreja *
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Aniversário <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Church className="w-4 h-4" />
+                      <Calendar className="w-4 h-4" />
                     </div>
                     <input
-                      type="text"
+                      type="date"
                       required
-                      value={createChurchName}
-                      onChange={e => setCreateChurchName(e.target.value)}
-                      placeholder="Ex: Igreja Batista da Paz, Comunidade da Fé"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                      value={createBirthDate}
+                      onChange={e => setCreateBirthDate(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Campus ou Sede</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Building2 className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      value={createCampus}
-                      onChange={e => setCreateCampus(e.target.value)}
-                      placeholder="Ex: Campus Sede, Zona Sul"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp da Igreja / Pastor</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    WhatsApp
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Phone className="w-4 h-4" />
@@ -761,247 +719,202 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                       type="tel"
                       value={createPhone}
                       onChange={e => setCreatePhone(e.target.value)}
-                      placeholder="(11) 99999-9999"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                      placeholder="(11) 98765-4321"
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Seu Nome Completo (Pastor / Administrador) *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={createAdminName}
-                      onChange={e => setCreateAdminName(e.target.value)}
-                      placeholder="Pr. Roberto Silva"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  E-mail de Acesso <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4" />
                   </div>
+                  <input
+                    type="email"
+                    required
+                    value={createEmail}
+                    onChange={e => setCreateEmail(e.target.value)}
+                    placeholder="pastor@suaigreja.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Data de Nascimento / Aniversário *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Calendar className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <input
-                      type="date"
-                      required
-                      value={createBirthDate}
-                      onChange={e => setCreateBirthDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Crie sua Senha <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Obrigatório para registrar seu aniversário e alertas ministeriais.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">E-mail de Acesso *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="email"
-                      required
-                      value={createEmail}
-                      onChange={e => setCreateEmail(e.target.value)}
-                      placeholder="pastor@igreja.com.br"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Crie sua Senha *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="password"
-                      required
-                      value={createPassword}
-                      onChange={e => setCreatePassword(e.target.value)}
-                      placeholder="Sua senha secreta (mínimo 4 caracteres)"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
-                    />
-                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={createPassword}
+                    onChange={e => setCreatePassword(e.target.value)}
+                    placeholder="Mínimo 4 caracteres"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={submitting || isLoading}
-                className="w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#FF5520] to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold text-xs rounded-2xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {submitting ? (
-                  <span>Criando Igreja & Perfil...</span>
+                  <span>Criando Congregação...</span>
                 ) : (
                   <>
-                    <span>Criar Igreja e Obter Código de Acesso</span>
+                    <span>Criar Minha Igreja e Começar</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
 
-              {renderGoogleButton('Criar Igreja com Conta Google')}
+              {renderGoogleButton('Cadastrar Igreja com Conta Google')}
             </form>
           )}
 
           {/* ================================================================= */}
-          {/* TAB 2: ENTRAR EM IGREJA EXISTENTE (COM CÓDIGO OU CONVITE)        */}
+          {/* TAB 2: ENTRAR EM IGREJA EXISTENTE (VOLUNTÁRIOS / LIDERADOS)      */}
           {/* ================================================================= */}
           {!googlePendingUser && mode === 'join_church' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 text-xs space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-indigo-900">
-                  <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span>Entrada Protegida com Código & Aprovação Prévia</span>
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="p-3 bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-900/60 rounded-2xl">
+                <label className="block text-xs font-bold text-slate-800 dark:text-white mb-1">
+                  Código da Igreja <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound className="w-4 h-4 text-[#FF5520]" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={joinChurchCode}
+                    onChange={e => setJoinChurchCode(e.target.value.toUpperCase())}
+                    placeholder="Ex: HUB-777"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#202024] border border-orange-200 dark:border-orange-900/60 rounded-2xl text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase focus:outline-none focus:ring-2 focus:ring-[#FF5520]/30 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
-                <p className="text-[11px] text-indigo-800 leading-relaxed">
-                  Para que pessoas não autorizadas não acessem os cultos e contatos dos membros, é necessário informar o <strong>Código da Igreja</strong> fornecido pela liderança. Ao solicitar entrada, o <strong>ADM ou líder</strong> precisará <strong>aprovar ou negar</strong> sua entrada antes da liberação do sistema.
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  Peça o código de 6 a 8 dígitos para o pastor ou líder da sua equipe.
                 </p>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Seu Nome Completo <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={joinName}
+                    onChange={e => setJoinName(e.target.value)}
+                    placeholder="Ex: David Oliveira"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Código da Igreja * (Fornecido pelo Pastor ou Líder)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <KeyRound className="w-4 h-4 text-indigo-500" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={joinChurchCode}
-                      onChange={e => setJoinChurchCode(e.target.value.toUpperCase())}
-                      placeholder="EX: IBP-4821 OU HUB-2026"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-wider text-slate-900 uppercase placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
-                    />
-                  </div>
-                  {urlChurchCode && (
-                    <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 shrink-0" />
-                      <span>Código <strong>{urlChurchCode.toUpperCase()}</strong> preenchido automaticamente pelo link de convite.</span>
-                    </p>
-                  )}
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Seu Nome Completo *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={joinName}
-                      onChange={e => setJoinName(e.target.value)}
-                      placeholder="Ex: Matheus Oliveira"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Data de Nascimento / Aniversário *
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Aniversário <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Calendar className="w-4 h-4 text-indigo-500" />
+                      <Calendar className="w-4 h-4" />
                     </div>
                     <input
                       type="date"
                       required
                       value={joinBirthDate}
                       onChange={e => setJoinBirthDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Obrigatório para registrar seu aniversário e alertas ministeriais.
-                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Telefone *</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    WhatsApp
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Phone className="w-4 h-4" />
                     </div>
                     <input
                       type="tel"
-                      required
                       value={joinPhone}
                       onChange={e => setJoinPhone(e.target.value)}
                       placeholder="(11) 98765-4321"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Seu E-mail de Acesso *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="email"
-                      required
-                      value={joinEmail}
-                      onChange={e => setJoinEmail(e.target.value)}
-                      placeholder="seu.email@exemplo.com"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
-                    />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Seu E-mail <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4" />
                   </div>
+                  <input
+                    type="email"
+                    required
+                    value={joinEmail}
+                    onChange={e => setJoinEmail(e.target.value)}
+                    placeholder="seu.email@exemplo.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Crie sua Senha *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="password"
-                      required
-                      value={joinPassword}
-                      onChange={e => setJoinPassword(e.target.value)}
-                      placeholder="Sua senha secreta"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-inner"
-                    />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Crie sua Senha <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
                   </div>
+                  <input
+                    type="password"
+                    required
+                    value={joinPassword}
+                    onChange={e => setJoinPassword(e.target.value)}
+                    placeholder="Mínimo 4 caracteres"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
+                  />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={submitting || isLoading}
-                className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#FF5520] to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold text-xs rounded-2xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {submitting ? (
                   <span>Enviando Solicitação...</span>
                 ) : (
                   <>
-                    <span>Entrar na Igreja com o Código</span>
+                    <span>Solicitar Entrada na Congregação</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -1017,7 +930,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
           {!googlePendingUser && mode === 'login' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">E-mail Cadastrado</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  E-mail Cadastrado
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Mail className="w-4 h-4" />
@@ -1028,13 +943,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                     value={loginEmail}
                     onChange={e => setLoginEmail(e.target.value)}
                     placeholder="seu.email@exemplo.com"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Senha de Acesso</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Senha de Acesso
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Lock className="w-4 h-4" />
@@ -1045,7 +962,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                     value={loginPassword}
                     onChange={e => setLoginPassword(e.target.value)}
                     placeholder="Sua senha secreta"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#202024] border border-slate-200 dark:border-[#33343d] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:bg-white dark:focus:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#FF5520]/20 focus:border-[#FF5520] transition-all"
                   />
                 </div>
               </div>
@@ -1053,7 +970,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
               <button
                 type="submit"
                 disabled={submitting || isLoading}
-                className="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#FF5520] to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold text-xs rounded-2xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {submitting ? (
                   <span>Conectando...</span>
@@ -1068,25 +985,43 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
               {renderGoogleButton('Conectar com Conta Google')}
             </form>
           )}
-        </div>
 
-        {/* Security Note Footer */}
-        <div className="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Igrejas isoladas com dados protegidos, data de aniversário obrigatória e aprovação de novos membros por ADM e Líderes.</span>
-        </div>
+          {/* Security Note Footer */}
+          <div className="pt-2 text-center text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Dados protegidos por congregação com aprovação de novos membros por ADM e Líderes.</span>
+          </div>
 
-        {/* Quick Demo Access */}
-        <div className="pt-2 border-t border-slate-200/80 flex flex-col items-center justify-center gap-1.5 text-center">
-          <span className="text-[11px] text-slate-400">Quer apenas explorar o sistema sem cadastro?</span>
-          <button
-            type="button"
-            onClick={() => loginAsDemoUser('admin')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer font-semibold shadow-2xs"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Entrar em Modo Demonstração (Pr. Roberto - Admin)</span>
-          </button>
+          {/* Quick Demo Access - Matching Home Screen Pill Style */}
+          <div className="pt-3 border-t border-slate-200/80 dark:border-[#33343d] space-y-2 text-center">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 block font-bold">
+              Explorar sem Cadastro (Modo Demonstração)
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => loginAsDemoUser('admin')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#202024] hover:bg-slate-200 dark:hover:bg-[#27272a] rounded-xl transition cursor-pointer font-semibold border border-slate-200 dark:border-[#33343d]"
+              >
+                <Sparkles className="w-3 h-3 text-[#FF5520]" />
+                <span>Pr. Roberto (Admin)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => loginAsDemoUser('leader')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#202024] hover:bg-slate-200 dark:hover:bg-[#27272a] rounded-xl transition cursor-pointer font-semibold border border-slate-200 dark:border-[#33343d]"
+              >
+                <span>Priscila (Líder)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => loginAsDemoUser('member')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#202024] hover:bg-slate-200 dark:hover:bg-[#27272a] rounded-xl transition cursor-pointer font-semibold border border-slate-200 dark:border-[#33343d]"
+              >
+                <span>David (Voluntário)</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   User as FirebaseUser,
   onAuthStateChanged,
@@ -115,10 +115,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [googlePendingUser, setGooglePendingUser] = useState<GooglePendingUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const isLoggingOutRef = useRef<boolean>(false);
+
+  const clearLogoutFlags = () => {
+    isLoggingOutRef.current = false;
+    sessionStorage.removeItem('kairos_is_logged_out');
+    localStorage.removeItem('kairos_is_logged_out');
+  };
 
   // Monitor Firebase Auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      const isLoggedOut =
+        isLoggingOutRef.current ||
+        sessionStorage.getItem('kairos_is_logged_out') === 'true' ||
+        localStorage.getItem('kairos_is_logged_out') === 'true';
+
+      if (isLoggedOut) {
+        setFirebaseUser(null);
+        setCurrentUser(null);
+        setCurrentChurch(null);
+        setIsLoading(false);
+        return;
+      }
+
       setFirebaseUser(fbUser);
       if (fbUser) {
         try {
@@ -134,7 +154,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const cSnap = await getDoc(churchDocRef);
               if (cSnap.exists()) {
                 setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
+              } else {
+                setCurrentChurch(null);
               }
+            } else {
+              setCurrentChurch(null);
             }
           } else {
             // Check matching email in pre-existing data
@@ -150,12 +174,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               };
               await savePessoaDoc(profile);
               setCurrentUser(profile);
+              setCurrentChurch(null);
             }
           }
         } catch (err) {
           console.warn('Note reading user doc from Firestore:', err);
         }
       } else {
+        // If actively logging out or marked logged out, do not restore local session!
+        if (
+          isLoggingOutRef.current ||
+          sessionStorage.getItem('kairos_is_logged_out') === 'true' ||
+          localStorage.getItem('kairos_is_logged_out') === 'true'
+        ) {
+          setIsLoading(false);
+          return;
+        }
+
         // Check local storage for remembered session
         const storedUserId = localStorage.getItem('kairos_active_user_id');
         if (storedUserId) {
@@ -170,12 +205,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const cSnap = await getDoc(churchDocRef);
                 if (cSnap.exists()) {
                   setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
+                } else {
+                  setCurrentChurch(null);
                 }
+              } else {
+                setCurrentChurch(null);
               }
             } else {
               const matched = INITIAL_USERS.find(u => u.id === storedUserId);
               if (matched) {
                 setCurrentUser(matched);
+                setCurrentChurch(null);
               }
             }
           } catch (e) {
@@ -190,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithEmail = async (emailInput: string, pass: string) => {
+    clearLogoutFlags();
     setIsLoading(true);
     setAuthError(null);
 
@@ -209,8 +250,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, u.churchId));
           if (cSnap.exists()) {
             setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
+          } else {
+            setCurrentChurch(null);
           }
+        } else {
+          setCurrentChurch(null);
         }
+      } else {
+        setCurrentChurch(null);
       }
     } catch (fbErr: any) {
       console.warn('Firebase signInWithEmailAndPassword note:', fbErr.code || fbErr.message);
@@ -246,7 +293,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, finalUser.churchId));
             if (cSnap.exists()) {
               setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
+            } else {
+              setCurrentChurch(null);
             }
+          } else {
+            setCurrentChurch(null);
           }
           setIsLoading(false);
           return;
@@ -276,6 +327,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     birthDate: string,
     campus?: string
   ): Promise<Church> => {
+    clearLogoutFlags();
     if (!birthDate || !birthDate.trim()) {
       throw new Error('A data de nascimento / aniversário é obrigatória.');
     }
@@ -380,6 +432,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     targetMinistryId?: string,
     invitedByUserId?: string
   ): Promise<{ church: Church; requiresApproval: boolean }> => {
+    clearLogoutFlags();
     if (!birthDate || !birthDate.trim()) {
       throw new Error('A data de nascimento / aniversário é obrigatória.');
     }
@@ -465,6 +518,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGoogle = async (): Promise<{ isNewUser: boolean }> => {
+    clearLogoutFlags();
     setIsLoading(true);
     setAuthError(null);
     try {
@@ -482,6 +536,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, u.churchId));
           if (cSnap.exists()) {
             setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
+          } else {
+            setCurrentChurch(null);
           }
           setIsLoading(false);
           return { isNewUser: false };
@@ -518,6 +574,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     campus?: string;
     churchCode?: string;
   }): Promise<{ requiresApproval: boolean; church: Church }> => {
+    clearLogoutFlags();
     if (!googlePendingUser && !firebaseUser) {
       throw new Error('Nenhuma conta Google ativa encontrada para concluir o cadastro.');
     }
@@ -653,6 +710,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginAsDemoUser = async (role: 'admin' | 'leader' | 'member' = 'admin') => {
+    clearLogoutFlags();
     setIsLoading(true);
     setAuthError(null);
     try {
@@ -693,18 +751,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    try {
-      await signOut(auth);
-    } catch (err) {
-      console.warn('SignOut note:', err);
-    }
+    isLoggingOutRef.current = true;
+    sessionStorage.setItem('kairos_is_logged_out', 'true');
+    localStorage.setItem('kairos_is_logged_out', 'true');
+    localStorage.removeItem('kairos_active_user_id');
+    sessionStorage.removeItem('kairos_active_user_id');
     setFirebaseUser(null);
     setCurrentUser(null);
     setCurrentChurch(null);
     setGooglePendingUser(null);
-    localStorage.removeItem('kairos_active_user_id');
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.warn('SignOut note:', err);
+    } finally {
+      sessionStorage.setItem('kairos_is_logged_out', 'true');
+      localStorage.setItem('kairos_is_logged_out', 'true');
+      localStorage.removeItem('kairos_active_user_id');
+      sessionStorage.removeItem('kairos_active_user_id');
+      setFirebaseUser(null);
+      setCurrentUser(null);
+      setCurrentChurch(null);
+      setGooglePendingUser(null);
+      setIsLoading(false);
+      setTimeout(() => {
+        isLoggingOutRef.current = false;
+      }, 5000);
+    }
   };
 
   const clearError = () => setAuthError(null);

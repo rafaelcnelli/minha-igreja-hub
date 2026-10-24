@@ -28,6 +28,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Filter,
   Repeat,
   Check,
@@ -133,6 +134,8 @@ export const CultosView: React.FC<CultosViewProps> = ({
       localStorage.setItem('hub_cultos_event_type', type);
     } catch {}
   };
+
+  const [selectedMinistryFilter, setSelectedMinistryFilter] = useState<string>('all');
 
   // Toggle for viewing past cultos (default false: hide cultos before today)
   const [showPastCultos, setShowPastCultosState] = useState<boolean>(() => {
@@ -249,17 +252,23 @@ export const CultosView: React.FC<CultosViewProps> = ({
     const matchesCamp = selectedCampus === 'all' || c.campus.includes(selectedCampus);
     const itemType = c.type || 'culto';
     const matchesType = selectedEventType === 'all' || itemType === selectedEventType;
-    return matchesPeriod && matchesCamp && matchesType && isDateInPast(c.date);
+    const matchesMinistry = selectedMinistryFilter === 'all' ||
+      (c.participatingMinistryIds || []).includes(selectedMinistryFilter) ||
+      c.targetMinistryId === selectedMinistryFilter;
+    return matchesPeriod && matchesCamp && matchesType && matchesMinistry && isDateInPast(c.date);
   }).length;
 
-  // Filter cultos by period, campus, event type, and past cultos toggle
+  // Filter cultos by period, campus, event type, ministry, and past cultos toggle
   const filteredCultos = cultos.filter(c => {
     const matchesPeriod = matchesPeriodFilter(c.date, periodFilter);
     const matchesCamp = selectedCampus === 'all' || c.campus.includes(selectedCampus);
     const itemType = c.type || 'culto';
     const matchesType = selectedEventType === 'all' || itemType === selectedEventType;
+    const matchesMinistry = selectedMinistryFilter === 'all' ||
+      (c.participatingMinistryIds || []).includes(selectedMinistryFilter) ||
+      c.targetMinistryId === selectedMinistryFilter;
     const matchesPast = showPastCultos || !isDateInPast(c.date);
-    return matchesPeriod && matchesCamp && matchesType && matchesPast;
+    return matchesPeriod && matchesCamp && matchesType && matchesMinistry && matchesPast;
   }).sort((a, b) => (a.date > b.date ? 1 : -1));
 
   // Reset form based on event type
@@ -539,71 +548,96 @@ export const CultosView: React.FC<CultosViewProps> = ({
         </div>
       </div>
 
-      {/* Filter Tabs (Event Type & Period) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Event Type Filter */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setSelectedEventType('all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              selectedEventType === 'all'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Todos os Eventos ({cultos.length})
-          </button>
-          <button
-            onClick={() => setSelectedEventType('culto')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              selectedEventType === 'culto'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            ⛪ Cultos ({cultos.filter(c => (c.type || 'culto') === 'culto').length})
-          </button>
-          <button
-            onClick={() => setSelectedEventType('ensaio')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              selectedEventType === 'ensaio'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            🎵 Ensaios ({cultos.filter(c => c.type === 'ensaio').length})
-          </button>
-          <button
-            onClick={() => setSelectedEventType('reuniao')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              selectedEventType === 'reuniao'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            👥 Reuniões ({cultos.filter(c => c.type === 'reuniao').length})
-          </button>
+      {/* SELETOR DE EVENTOS, EQUIPE E PERÍODO PARA GESTÃO / VISUALIZAÇÃO */}
+      <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-slate-700 dark:text-slate-200">
+              Selecione o tipo de evento para gerenciar ou visualizar:
+            </span>
+          </div>
+          <span className="font-bold text-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 self-start sm:self-auto text-[11px]">
+            {isAdmin ? 'Gestão Geral de Eventos (Admin)' : isLeader ? 'Gestão de Ensaios & Reuniões (Líder)' : 'Visualização de Cronograma'}
+          </span>
         </div>
 
-        {/* Period Filter with Month reference: Mês anterior, Mês atual, Próximo mês, Próximos 3 meses */}
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto max-w-full">
-          <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 max-w-full">
-            {getPeriodFilterOptions().map(pf => (
-              <button
-                key={pf.key}
-                onClick={() => setPeriodFilter(pf.key)}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-left flex flex-col justify-center min-w-[100px] ${
-                  periodFilter === pf.key
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-bold border border-slate-300 dark:border-slate-700'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
-                }`}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+            {/* Event Type Filter (Estilo Dropdown) */}
+            <div className="relative w-full sm:w-auto min-w-[210px]">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+                <Filter className="w-3.5 h-3.5 text-amber-500" />
+              </div>
+              <select
+                value={selectedEventType}
+                onChange={e => setSelectedEventType(e.target.value as 'all' | 'culto' | 'ensaio' | 'reuniao')}
+                className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-500 cursor-pointer transition-colors"
               >
-                <span className="text-xs font-bold leading-tight">{pf.label}</span>
-                <span className={`text-[10px] leading-tight ${periodFilter === pf.key ? 'text-indigo-600 dark:text-amber-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
-                  {pf.subLabel}
-                </span>
-              </button>
-            ))}
+                <option value="all">
+                  Todos os Eventos ({cultos.length})
+                </option>
+                <option value="culto">
+                  ⛪ Cultos ({cultos.filter(c => (c.type || 'culto') === 'culto').length})
+                </option>
+                <option value="ensaio">
+                  🎵 Ensaios ({cultos.filter(c => c.type === 'ensaio').length})
+                </option>
+                <option value="reuniao">
+                  👥 Reuniões ({cultos.filter(c => c.type === 'reuniao').length})
+                </option>
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Ministry / Team Filter (Dropdown para Cultos) */}
+            {ministries.length > 0 && (
+              <div className="relative w-full sm:w-auto min-w-[200px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+                  <Users2 className="w-3.5 h-3.5 text-amber-500" />
+                </div>
+                <select
+                  value={selectedMinistryFilter}
+                  onChange={e => setSelectedMinistryFilter(e.target.value)}
+                  className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-500 cursor-pointer transition-colors"
+                >
+                  <option value="all">
+                    Todas as Equipes
+                  </option>
+                  {ministries.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+            )}
+
+            {/* Period Filter (Estilo Dropdown) */}
+            <div className="relative w-full sm:w-auto min-w-[200px]">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+                <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+              </div>
+              <select
+                value={periodFilter}
+                onChange={e => setPeriodFilter(e.target.value as PeriodFilter)}
+                className="w-full appearance-none pl-9 pr-9 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 cursor-pointer transition-colors"
+              >
+                {getPeriodFilterOptions().map(pf => (
+                  <option key={pf.key} value={pf.key}>
+                    {pf.label} ({pf.subLabel})
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
           </div>
 
           <PastCultosToggle

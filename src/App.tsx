@@ -24,12 +24,20 @@ import {
   ChurchJoinRequest,
   Aviso,
   canUserViewAviso,
-  ChurchConfigBackup
+  ChurchConfigBackup,
+  PushNotificationCategory,
+  PushNotificationPreferences,
+  DEFAULT_PUSH_PREFERENCES
 } from './types';
 import {
   renderReminderMessage,
   check24hEligibility
 } from './utils/whatsappReminderUtils';
+import {
+  sendDevicePushNotification,
+  getPushPreferences,
+  persistPushPreferencesLocally
+} from './utils/pushNotificationService';
 import {
   INITIAL_AUDIT_LOGS,
   INITIAL_CULTOS,
@@ -160,8 +168,11 @@ export default function App() {
   const handleConfirmLogout = async () => {
     try {
       setIsLoggingOut(true);
-      await logout();
       setIsLogoutModalOpen(false);
+      await logout();
+      setChurchProfile(DEFAULT_CHURCH_PROFILE);
+      setAllUsers(INITIAL_USERS);
+      setActiveTab('dashboard');
     } catch (e) {
       console.error('Erro ao efetuar logout:', e);
       toast.error('Ocorreu um erro ao deslogar. Tente novamente.');
@@ -274,6 +285,8 @@ export default function App() {
         email: currentChurch.email,
         address: currentChurch.address
       });
+    } else {
+      setChurchProfile(DEFAULT_CHURCH_PROFILE);
     }
   }, [currentChurch]);
 
@@ -432,7 +445,7 @@ export default function App() {
     saveAuditLogDoc(newEntry).catch(console.warn);
   };
 
-  // Helper to dispatch in-app notifications
+  // Helper to dispatch in-app notifications and trigger device push notifications
   const addNotification = (notif: Omit<AppNotification, 'id' | 'date' | 'read'>) => {
     const newNotif: AppNotification = {
       id: generateFirestoreId('notif'),
@@ -442,7 +455,176 @@ export default function App() {
     };
     setNotifications(prev => [newNotif, ...prev]);
     saveNotificationDoc(newNotif).catch(console.warn);
+
+    // Dispara notificação push nativa no celular se o usuário atual for destinatário
+    if (isAuthenticated && currentUser) {
+      const isTargetedToMe = !newNotif.userId || newNotif.userId === currentUser.id;
+      const isAdmin = currentUser.isAdmin;
+      const isLeader = userLeadsAnyMinistry(currentUser);
+
+      let roleMatches = false;
+      if (!newNotif.targetRole || newNotif.targetRole === 'ALL') roleMatches = true;
+      if (newNotif.targetRole === 'ADMIN' && isAdmin) roleMatches = true;
+      if (newNotif.targetRole === 'LIDER' && (isLeader || isAdmin)) roleMatches = true;
+      if (newNotif.targetRole === 'LIDERADO' && (!isAdmin && !isLeader)) roleMatches = true;
+
+      if (isTargetedToMe && roleMatches) {
+        let category: PushNotificationCategory = 'notifyScaleAssigned';
+        if (newNotif.type === 'slot_assigned' || newNotif.type === 'escala_published') {
+          category = 'notifyScaleAssigned';
+        } else if (newNotif.type === 'scale_reminder_tomorrow') {
+          category = 'notifyScaleReminderTomorrow';
+        } else if (newNotif.type === 'scale_reminder_today') {
+          category = 'notifyScaleReminderToday';
+        } else if (newNotif.type === 'pending_approval') {
+          category = 'notifyPendingApprovals';
+        } else if (newNotif.type === 'swap_request') {
+          category = 'notifySwapRequests';
+        } else if (newNotif.type === 'rehearsal_scheduled') {
+          category = 'notifyRehearsals';
+        } else if (newNotif.type === 'aviso') {
+          category = 'notifyNewAvisos';
+        }
+
+        const prefs = getPushPreferences(currentUser);
+        sendDevicePushNotification(
+          {
+            title: newNotif.title,
+            body: newNotif.message,
+            category,
+            tag: `push-notif-${newNotif.id}`,
+            tab: newNotif.linkTab || 'notificacoes',
+            cultoId: newNotif.linkCultoId,
+            ministryId: newNotif.linkMinistryId
+          },
+          prefs
+        ).catch(console.warn);
+      }
+    }
   };
+
+  const handleSavePushPreferences = async (newPrefs: PushNotificationPreferences) => {
+    persistPushPreferencesLocally(currentUser.id, newPrefs);
+    const updatedUser: User = {
+      ...currentUser,
+      pushPreferences: newPrefs
+    };
+    handleUpdatePerson(updatedUser);
+    toast.success('Preferências de notificações no celular salvas com sucesso!', 'Notificações Atualizadas');
+  };
+
+  // =========================================================================
+  // AUTOMATED PUSH REMINDERS: ESCALA AMANHÃ (D-1) E ESCALA HOJE (D-0 COM HORÁRIO)
+  // =========================================================================
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser?.id) return;
+
+    const checkScaleReminders = () => {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      const prefs = getPushPreferences(currentUser);
+
+      // Encontrar slots onde o usuário atual está escalado e não recusou
+      const mySlots = slots.filter(s => s.userId === currentUser.id && s.status !== 'declined');
+
+      mySlots.forEach(slot => {
+        const culto = cultos.find(c => c.id === slot.cultoId);
+        if (!culto) return;
+
+        // 1. LEMBRETE: ESCALA AMANHÃ
+        if (culto.date === tomorrowStr && prefs.enabled && prefs.notifyScaleReminderTomorrow) {
+          const sentKey = `push_sent_tomorrow_${currentUser.id}_${slot.id}_${tomorrowStr}`;
+          if (!localStorage.getItem(sentKey)) {
+            localStorage.setItem(sentKey, 'true');
+            const cultoTime = culto.startTime || '19:00';
+            const roleName = slot.roleTitle || 'Voluntário';
+
+            addNotification({
+              userId: currentUser.id,
+              type: 'scale_reminder_tomorrow',
+              title: '📅 Lembrete: Você está escalado amanhã!',
+              message: `Você está escalado amanhã às ${cultoTime} como "${roleName}" no culto "${culto.title}". Acesse para conferir.`,
+              linkTab: 'minhas_escalas',
+              linkCultoId: culto.id,
+              linkMinistryId: slot.ministryId
+            });
+          }
+        }
+
+        // 2. LEMBRETE: ESCALA HOJE (COM HORÁRIO DE CHEGADA)
+        if (culto.date === todayStr && prefs.enabled && prefs.notifyScaleReminderToday) {
+          const sentKey = `push_sent_today_${currentUser.id}_${slot.id}_${todayStr}`;
+          if (!localStorage.getItem(sentKey)) {
+            localStorage.setItem(sentKey, 'true');
+            const cultoTime = culto.startTime || '19:00';
+            const rehearsalTime = culto.rehearsalTime ? ` (Passagem de som às ${culto.rehearsalTime})` : '';
+            const roleName = slot.roleTitle || 'Voluntário';
+
+            addNotification({
+              userId: currentUser.id,
+              type: 'scale_reminder_today',
+              title: '⏰ Você está escalado hoje!',
+              message: `Hoje você está escalado às ${cultoTime}${rehearsalTime} como "${roleName}" no culto "${culto.title}". Bom ministério!`,
+              linkTab: 'minhas_escalas',
+              linkCultoId: culto.id,
+              linkMinistryId: slot.ministryId
+            });
+          }
+        }
+      });
+    };
+
+    checkScaleReminders();
+    const interval = setInterval(checkScaleReminders, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, currentUser?.id, slots, cultos]);
+
+  // =========================================================================
+  // AUTOMATED PUSH ALERT: NOVA PESSOA ESPERANDO APROVAÇÃO (ADMINS E LÍDERES)
+  // =========================================================================
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser?.id) return;
+    const isAdmin = currentUser.isAdmin;
+    const isLeader = userLeadsAnyMinistry(currentUser);
+    if (!isAdmin && !isLeader) return;
+
+    const prefs = getPushPreferences(currentUser);
+    if (!prefs.enabled || !prefs.notifyPendingApprovals) return;
+
+    const userLedMinistryIds = currentUser.memberships
+      .filter(m => m.roleInMinistry === 'LIDER')
+      .map(m => m.ministryId);
+
+    const pendingReqs = joinRequests.filter(r => r.status === 'pending');
+
+    pendingReqs.forEach(req => {
+      const isRelevant = isAdmin || (req.targetMinistryId ? userLedMinistryIds.includes(req.targetMinistryId) : true);
+      if (!isRelevant) return;
+
+      const sentKey = `push_sent_pending_req_${currentUser.id}_${req.id}`;
+      if (!localStorage.getItem(sentKey)) {
+        localStorage.setItem(sentKey, 'true');
+
+        const ministryName = ministries.find(m => m.id === req.targetMinistryId)?.name || req.targetMinistryName;
+        const targetDesc = ministryName ? `para a equipe de ${ministryName}` : 'para a congregação';
+
+        addNotification({
+          userId: currentUser.id,
+          targetRole: isAdmin ? 'ADMIN' : 'LIDER',
+          ministryId: req.targetMinistryId,
+          type: 'pending_approval',
+          title: '👥 Nova pessoa esperando aprovação',
+          message: `${req.userName || 'Um novo voluntário'} solicitou entrada ${targetDesc}. Toque para revisar e liberar a entrada.`,
+          linkTab: 'pessoas'
+        });
+      }
+    });
+  }, [isAuthenticated, currentUser?.id, joinRequests, ministries]);
 
   const handleMarkAllNotificationsAsRead = () => {
     setNotifications(prev => {
@@ -2328,7 +2510,7 @@ export default function App() {
   // Ensure only authenticated users can interact with the church platform
   // "Garanta que apenas usuários autenticados possam interagir com o sistema."
   if (!isAuthenticated || !authUser) {
-    return <LoginView churchProfile={churchProfile} />;
+    return <LoginView churchProfile={DEFAULT_CHURCH_PROFILE} />;
   }
 
   // Intercept users who are pending approval or rejected
@@ -2725,6 +2907,7 @@ export default function App() {
               onMarkAllAsRead={handleMarkAllNotificationsAsRead}
               onMarkAsRead={handleMarkNotificationAsRead}
               onClearNotifications={handleClearNotifications}
+              onSavePushPreferences={handleSavePushPreferences}
               onNavigateTab={(tab, cultoId, minId) => {
                 if (cultoId && minId) {
                   setWhatsAppPreselected({ cultoId, ministryId: minId });
