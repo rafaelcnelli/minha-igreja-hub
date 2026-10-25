@@ -40,6 +40,12 @@
             document.documentElement.setAttribute('data-theme', 'light');
             document.documentElement.style.colorScheme = 'light';
           }
+
+          var savedContrast = localStorage.getItem('high_contrast') || localStorage.getItem('hub_high_contrast');
+          if (savedContrast === 'true') {
+            document.documentElement.classList.add('high-contrast');
+            document.documentElement.setAttribute('data-high-contrast', 'true');
+          }
         } catch (e) {}
       })();
     </script>

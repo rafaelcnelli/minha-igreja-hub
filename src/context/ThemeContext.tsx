@@ -6,6 +6,9 @@ interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
+  highContrast: boolean;
+  toggleHighContrast: () => void;
+  setHighContrast: (enabled: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -19,6 +22,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // localStorage may fail in restricted environments
     }
     return 'light';
+  });
+
+  const [highContrast, setHighContrastState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('high_contrast') || localStorage.getItem('hub_high_contrast');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
   });
 
   useEffect(() => {
@@ -41,6 +53,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [theme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) {
+      root.classList.add('high-contrast');
+      root.setAttribute('data-high-contrast', 'true');
+    } else {
+      root.classList.remove('high-contrast');
+      root.removeAttribute('data-high-contrast');
+    }
+
+    try {
+      localStorage.setItem('high_contrast', String(highContrast));
+      localStorage.setItem('hub_high_contrast', String(highContrast));
+    } catch (e) {
+      console.warn('Erro ao salvar high_contrast no localStorage:', e);
+    }
+  }, [highContrast]);
+
   const toggleTheme = () => {
     setThemeState(prev => (prev === 'light' ? 'dark' : 'light'));
   };
@@ -49,8 +79,25 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState(newTheme);
   };
 
+  const toggleHighContrast = () => {
+    setHighContrastState(prev => !prev);
+  };
+
+  const setHighContrast = (enabled: boolean) => {
+    setHighContrastState(enabled);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        toggleTheme,
+        setTheme,
+        highContrast,
+        toggleHighContrast,
+        setHighContrast
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

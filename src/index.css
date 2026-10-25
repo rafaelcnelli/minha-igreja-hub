@@ -328,3 +328,140 @@ html.dark .text-white {
   animation: indeterminate-loading 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* ========================================================================== */
+/* MODO DE ALTO CONTRASTE (ACESSIBILIDADE: PESO DAS FONTES E CORES DE BORDA)  */
+/* ========================================================================== */
+
+html.high-contrast,
+html[data-high-contrast="true"] {
+  /* Peso geral aumentado para todas as fontes */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.high-contrast body,
+html[data-high-contrast="true"] body {
+  font-weight: 500;
+}
+
+/* Reforço de peso de fontes para leitura rápida */
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast label,
+html.high-contrast a,
+html.high-contrast li,
+html.high-contrast button,
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea,
+html.high-contrast th,
+html.high-contrast td {
+  font-weight: 600;
+}
+
+html.high-contrast .font-normal,
+html.high-contrast .font-light {
+  font-weight: 550 !important;
+}
+
+html.high-contrast .font-medium {
+  font-weight: 650 !important;
+}
+
+html.high-contrast .font-semibold {
+  font-weight: 700 !important;
+}
+
+html.high-contrast .font-bold,
+html.high-contrast .font-extrabold,
+html.high-contrast .font-black {
+  font-weight: 800 !important;
+}
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6 {
+  font-weight: 800 !important;
+}
+
+/* Espessura aprimorada para bordas de controles interativos e cards */
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea,
+html.high-contrast button,
+html.high-contrast [role="button"],
+html.high-contrast table,
+html.high-contrast th,
+html.high-contrast td {
+  border-width: max(1.5px, 1px);
+}
+
+/* ALTO CONTRASTE NO MODO CLARO */
+html.high-contrast:not(.dark) {
+  --color-border-light: #1E293B;
+  --color-border-subtle: #334155;
+}
+
+html.high-contrast:not(.dark) .border,
+html.high-contrast:not(.dark) [class*="border-slate-100"],
+html.high-contrast:not(.dark) [class*="border-slate-200"],
+html.high-contrast:not(.dark) [class*="border-slate-300"] {
+  border-color: #334155 !important;
+}
+
+html.high-contrast:not(.dark) input,
+html.high-contrast:not(.dark) select,
+html.high-contrast:not(.dark) textarea {
+  border-color: #1E293B !important;
+  color: #000000 !important;
+}
+
+html.high-contrast:not(.dark) .text-slate-500,
+html.high-contrast:not(.dark) .text-slate-400 {
+  color: #1E293B !important;
+}
+
+html.high-contrast:not(.dark) .text-slate-600 {
+  color: #0F172A !important;
+}
+
+/* ALTO CONTRASTE NO MODO ESCURO */
+html.high-contrast.dark {
+  --color-dark-border: #94A3B8;
+  --color-dark-border-subtle: #64748B;
+}
+
+html.high-contrast.dark .border,
+html.high-contrast.dark [class*="border-slate-700"],
+html.high-contrast.dark [class*="border-slate-800"],
+html.high-contrast.dark [class*="border-[#33343d]"],
+html.high-contrast.dark [class*="border-[#2C2E35]"] {
+  border-color: #64748B !important;
+}
+
+html.high-contrast.dark input,
+html.high-contrast.dark select,
+html.high-contrast.dark textarea {
+  border-color: #94A3B8 !important;
+  color: #FFFFFF !important;
+}
+
+html.high-contrast.dark .text-slate-400,
+html.high-contrast.dark .text-slate-500 {
+  color: #CBD5E1 !important;
+}
+
+html.high-contrast.dark .text-slate-300 {
+  color: #F8FAFC !important;
+}
+
+/* Foco evidente em alto contraste */
+html.high-contrast *:focus-visible {
+  outline: 3px solid #FF5520 !important;
+  outline-offset: 2px !important;
+}
+
+

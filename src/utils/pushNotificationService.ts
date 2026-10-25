@@ -137,8 +137,17 @@ export async function sendDevicePushNotification(
     return false;
   }
 
-  const iconUrl = './icon-192.png';
-  const badgeUrl = './icon-badge.png';
+  const getAbsoluteAssetUrl = (relativePath: string) => {
+    try {
+      if (typeof window !== 'undefined') {
+        return new URL(relativePath, window.location.href).href;
+      }
+    } catch {}
+    return relativePath;
+  };
+
+  const iconUrl = getAbsoluteAssetUrl('./icon-192.png?v=11');
+  const badgeUrl = getAbsoluteAssetUrl('./icon-badge.png?v=11');
   const notificationOptions: NotificationOptions & { renotify?: boolean; vibrate?: number[] } = {
     body: payload.body,
     icon: iconUrl,

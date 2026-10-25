@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, PushNotificationPreferences } from '../types';
-import { UserCheck, Phone, Calendar, ShieldCheck, AlertCircle, X, Sparkles, Image, Check, Cake, Camera, Trash2, Upload, Palmtree, Sun, Plane, Smartphone } from 'lucide-react';
+import { UserCheck, Phone, Calendar, ShieldCheck, AlertCircle, X, Sparkles, Image, Check, Cake, Camera, Trash2, Upload, Palmtree, Sun, Plane, Smartphone, Contrast } from 'lucide-react';
 import { compressImageFile } from '../utils/imageUtils';
 import { PushNotificationSettingsModal } from './PushNotificationSettingsModal';
+import { useTheme } from '../context/ThemeContext';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -32,6 +33,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [vacationUntil, setVacationUntil] = useState<string>(targetUser?.vacationUntil || '');
   const [vacationReason, setVacationReason] = useState<string>(targetUser?.vacationReason || '');
 
+  const { highContrast, setHighContrast } = useTheme();
+  const [localHighContrast, setLocalHighContrast] = useState<boolean>(targetUser?.highContrast ?? highContrast);
+
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
@@ -48,10 +52,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       setVacationMode(targetUser.vacationMode ?? false);
       setVacationUntil(targetUser.vacationUntil || '');
       setVacationReason(targetUser.vacationReason || '');
+      setLocalHighContrast(targetUser.highContrast ?? highContrast);
       setFeedbackSuccess(false);
       setErrorMessage(null);
     }
-  }, [targetUser, isOpen]);
+  }, [targetUser, isOpen, highContrast]);
 
   if (!isOpen || !targetUser) return null;
 
@@ -80,7 +85,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       avatarUrl: avatarUrl.trim() || undefined,
       vacationMode,
       vacationUntil: vacationUntil.trim() || undefined,
-      vacationReason: vacationReason.trim() || undefined
+      vacationReason: vacationReason.trim() || undefined,
+      highContrast: localHighContrast
     };
 
     onSave(updated);
@@ -427,6 +433,43 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               </div>
             )}
           </div>
+
+            {/* Modo de Alto Contraste (Acessibilidade) */}
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3 transition-colors">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Contrast className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      Modo de Alto Contraste
+                    </p>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                      Acessibilidade
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Aumenta o peso das fontes e reforça as bordas e contornos para maior legibilidade.
+                  </p>
+                </div>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={localHighContrast}
+                  disabled={!canEdit}
+                  onChange={e => {
+                    const newVal = e.target.checked;
+                    setLocalHighContrast(newVal);
+                    setHighContrast(newVal);
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF5520] dark:peer-checked:bg-[#FF5520]"></div>
+              </label>
+            </div>
 
             {/* Notificações Push no Celular Shortcut */}
             {isSelf && (

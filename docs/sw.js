@@ -1,5 +1,5 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v8';
+const CACHE_NAME = 'igreja-hub-v9';
 
 
 const STATIC_PRECACHE = [
@@ -143,10 +143,17 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  let defaultIcon = './icon-192.png';
+  let defaultBadge = './icon-badge.png';
+  try {
+    defaultIcon = new URL('./icon-192.png?v=11', self.location.href).href;
+    defaultBadge = new URL('./icon-badge.png?v=11', self.location.href).href;
+  } catch (e) {}
+
   const options = {
     body: payload.body,
-    icon: payload.icon || './icon-192.png',
-    badge: payload.badge || './icon-badge.png',
+    icon: payload.icon || defaultIcon,
+    badge: payload.badge || defaultBadge,
     vibrate: [200, 100, 200],
     data: payload.data || { url: './' },
     tag: payload.tag || 'general-push',

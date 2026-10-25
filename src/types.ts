@@ -33,6 +33,7 @@ export interface User {
   vacationUntil?: string; // Data prevista de retorno (opcional)
   vacationReason?: string; // Motivo das férias (opcional)
   pushPreferences?: PushNotificationPreferences; // Preferências personalizadas de notificações push no celular
+  highContrast?: boolean; // Modo de Alto Contraste: aumenta o peso das fontes e reforça as cores de borda para acessibilidade
 }
 
 export type PushNotificationCategory = 

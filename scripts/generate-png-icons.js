@@ -31,14 +31,42 @@ if (fs.existsSync(sourceArtwork)) {
       execSync(`convert /tmp/raw_sq.png -resize 142x142 /tmp/sq_192.png`);
       execSync(`convert -size 192x192 xc:black /tmp/sq_192.png -gravity center -composite "${path.join(publicDir, 'icon-192.png')}"`);
 
-      // 4. Generate icon-badge.png for mobile notification status bar
-      execSync(`convert "${path.join(publicDir, 'icon-192.png')}" -resize 96x96 "${path.join(publicDir, 'icon-badge.png')}"`);
+      // 4. Generate icon-badge.png for mobile notification status bar and header circle
+      // Android requires badge icons to have 100% transparent background with alpha-only silhouette.
+      // A solid background causes Android to render an opaque dark square.
+      execSync(`convert "${sourceArtwork}" -crop 520x480+279+131 +repage /tmp/wide_sq.ppm`);
+      const rawWide = fs.readFileSync('/tmp/wide_sq.ppm');
+      let pWide = 15;
+      const wWide = 520, hWide = 480;
+      const badgeRgba = Buffer.alloc(wWide * hWide * 4);
+      for (let i = 0; i < wWide * hWide; i++) {
+        const r = rawWide[pWide++];
+        const g = rawWide[pWide++];
+        const b = rawWide[pWide++];
+        if (r > 30 && r > g * 1.15 && r > b * 1.15) {
+          const edge = Math.min(1, Math.max(0, (r - 20) / 45));
+          const alpha = Math.round(edge * 255);
+          badgeRgba[i * 4 + 0] = 255;
+          badgeRgba[i * 4 + 1] = 255;
+          badgeRgba[i * 4 + 2] = 255;
+          badgeRgba[i * 4 + 3] = alpha;
+        } else {
+          badgeRgba[i * 4 + 0] = 0;
+          badgeRgba[i * 4 + 1] = 0;
+          badgeRgba[i * 4 + 2] = 0;
+          badgeRgba[i * 4 + 3] = 0;
+        }
+      }
+      fs.writeFileSync('/tmp/badge_raw.rgba', badgeRgba);
+      execSync(`convert -size ${wWide}x${hWide} -depth 8 /tmp/badge_raw.rgba -trim +repage /tmp/badge_trimmed.png`);
+      execSync(`convert /tmp/badge_trimmed.png -resize 68x68 -gravity center -background none -extent 96x96 -define png:color-type=6 "${path.join(publicDir, 'icon-badge.png')}"`);
 
       // 5. Generate full logo with text
       execSync(`convert "${sourceArtwork}" -crop 960x1020+60+100 +repage "${path.join(publicDir, 'logo-full.png')}"`);
     } else {
       execSync(`convert "${sourceArtwork}" -fill "#1E1E1E" -fuzz 15% -draw "color 0,0 floodfill" -draw "color 2047,0 floodfill" -draw "color 0,2047 floodfill" -draw "color 2047,2047 floodfill" -resize 512x512 "${path.join(publicDir, 'icon-512.png')}"`);
       execSync(`convert "${sourceArtwork}" -fill "#1E1E1E" -fuzz 15% -draw "color 0,0 floodfill" -draw "color 2047,0 floodfill" -draw "color 0,2047 floodfill" -draw "color 2047,2047 floodfill" -resize 192x192 "${path.join(publicDir, 'icon-192.png')}"`);
+      execSync(`convert "${path.join(publicDir, 'icon-192.png')}" -resize 68x68 -gravity center -background none -extent 96x96 -define png:color-type=6 "${path.join(publicDir, 'icon-badge.png')}"`);
     }
 
     const png512 = fs.readFileSync(path.join(publicDir, 'icon-512.png'));

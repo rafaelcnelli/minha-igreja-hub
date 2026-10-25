@@ -1557,6 +1557,18 @@ export default function App() {
           : 'Modo Férias desativado: disponível para novas escalas.',
         'Modo Férias'
       );
+    } else if (previous && previous.highContrast !== updatedPerson.highContrast) {
+      addAuditLog(
+        updatedPerson.highContrast ? 'Ativou Modo Alto Contraste' : 'Desativou Modo Alto Contraste',
+        'VOLUNTARIO',
+        `${updatedPerson.name} ${updatedPerson.highContrast ? 'ativou' : 'desativou'} a acessibilidade de Alto Contraste`
+      );
+      toast.success(
+        updatedPerson.highContrast
+          ? 'Modo de Alto Contraste ativado: fontes e bordas reforçadas!'
+          : 'Modo de Alto Contraste desativado.',
+        'Acessibilidade'
+      );
     } else {
       addAuditLog(
         'Atualizou dados do perfil',

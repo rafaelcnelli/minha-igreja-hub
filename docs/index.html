@@ -13,11 +13,11 @@
     <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192-BoJWWWyW.png?v=10">
-    <link rel="icon" type="image/png" sizes="512x512" href="./assets/icon-512-DRaEhl4u.png?v=10">
-    <link rel="apple-touch-icon" href="./assets/icon-192-BoJWWWyW.png?v=10">
-    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icon-192-BoJWWWyW.png?v=10">
-    <link rel="apple-touch-icon" sizes="512x512" href="./assets/icon-512-DRaEhl4u.png?v=10">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192-BkKuql8P.png?v=10">
+    <link rel="icon" type="image/png" sizes="512x512" href="./assets/icon-512-gVT3hnl_.png?v=10">
+    <link rel="apple-touch-icon" href="./assets/icon-192-BkKuql8P.png?v=10">
+    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icon-192-BkKuql8P.png?v=10">
+    <link rel="apple-touch-icon" sizes="512x512" href="./assets/icon-512-gVT3hnl_.png?v=10">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600;1,9..144,700&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -39,6 +39,12 @@
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
             document.documentElement.style.colorScheme = 'light';
+          }
+
+          var savedContrast = localStorage.getItem('high_contrast') || localStorage.getItem('hub_high_contrast');
+          if (savedContrast === 'true') {
+            document.documentElement.classList.add('high-contrast');
+            document.documentElement.setAttribute('data-high-contrast', 'true');
           }
         } catch (e) {}
       })();
@@ -64,8 +70,8 @@
         });
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-xMHzy0Od.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CuwbNLnQ.css">
+    <script type="module" crossorigin src="./assets/index-r01HcWVV.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D_gZTTs3.css">
   </head>
   <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
     <div id="root"></div>
