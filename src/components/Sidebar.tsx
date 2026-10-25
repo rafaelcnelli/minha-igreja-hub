@@ -20,7 +20,8 @@ import {
   Megaphone,
   Church,
   Trash2,
-  Database
+  Database,
+  UserCircle2
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -117,6 +118,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span>Visão Geral</span>
               </div>
             </button>
+
+            {/* Meu Perfil (Edição rápida de perfil e foto) */}
+            {onEditProfile && (
+              <button
+                type="button"
+                onClick={onEditProfile}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl transition-all text-left text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <UserCircle2 className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span>Meu Perfil</span>
+                </div>
+              </button>
+            )}
 
             {/* Mural de Avisos (Para todos os usuários) */}
             <button

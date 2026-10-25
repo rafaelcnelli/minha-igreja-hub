@@ -2,6 +2,7 @@ import React from 'react';
 import { AppNotification, User, ChurchProfile, userIsAdmin, userLeadsAnyMinistry } from '../types';
 import { ShieldCheck, Users, UserCheck, UserPlus, Sun, Moon, Bell, LogOut, Compass, KeyRound, Share2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface TopBarProps {
   currentUser: User;
@@ -292,6 +293,9 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <span className="text-[11px] font-bold">Tour</span>
               </button>
             )}
+
+            {/* BOTÃO DE BAIXAR / INSTALAR APP (Visível no navegador, oculto no app standalone) */}
+            <PWAInstallButton compact={true} />
 
             {/* CURRENT USER AUTHENTICATED CHIP (REPLACES EASY ACCESS SIMULATOR) */}
             <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-slate-800">

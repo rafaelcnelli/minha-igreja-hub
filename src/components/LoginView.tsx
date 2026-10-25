@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ChurchProfile } from '../types';
 import { getAppUrlParam } from '../utils/urlUtils';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface LoginViewProps {
   churchProfile?: ChurchProfile;
@@ -354,20 +355,23 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
             <path d="M-40 165 C 130 285, 270 90, 440 235" stroke="white" strokeWidth="0.6" fill="none" opacity="0.3"/>
           </svg>
 
-          {/* Top row: Campus badge and Theme Toggle */}
+          {/* Top row: Campus badge and Actions (Install + Theme Toggle) */}
           <div className="flex items-center justify-between relative z-10 mb-4">
             <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#FF5520] animate-pulse" />
               MINHA IGREJA HUB · {churchProfile?.campus && churchProfile.code !== 'HUB-777' ? churchProfile.campus.toUpperCase() : 'SISTEMA OFICIAL'}
             </span>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              title="Alternar Modo Claro / Escuro"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <PWAInstallButton compact={true} />
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Alternar Modo Claro / Escuro"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+              </button>
+            </div>
           </div>
 
           {/* Church Icon, Editorial Greeting, and Description */}

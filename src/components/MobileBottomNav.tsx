@@ -168,13 +168,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             )}
           </button>
 
-          {/* Slot 5: Mais (Menu Drawer Trigger) */}
+          {/* Slot 5 (Mobile): Mais (Menu Drawer Trigger) */}
           <button
             onClick={() => {
               setIsMenuOpen(!isMenuOpen);
               setIsCreateSheetOpen(false);
             }}
-            className={`min-h-[48px] flex flex-col items-center justify-center transition-colors relative ${
+            className={`md:hidden min-h-[48px] flex flex-col items-center justify-center transition-colors relative ${
               isMenuOpen
                 ? 'text-slate-900 dark:text-white font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -193,6 +193,35 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               )}
             </div>
             <span className="text-[10px] mt-1 tracking-tight">Mais</span>
+          </button>
+
+          {/* Slot 5 (Desktop): Meu Perfil */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              setIsCreateSheetOpen(false);
+              if (onEditProfile) {
+                onEditProfile();
+              }
+            }}
+            className="hidden md:flex min-h-[48px] flex-col items-center justify-center transition-colors relative text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white group cursor-pointer"
+            title="Abrir Meu Perfil"
+          >
+            <div className="relative">
+              {currentUser.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={currentUser.name}
+                  className="w-5 h-5 rounded-full object-cover border border-slate-300 dark:border-slate-600 group-hover:scale-110 transition-transform shadow-2xs"
+                />
+              ) : (
+                <UserCircle2 className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-[#FF5520] transition-colors" />
+              )}
+            </div>
+            <span className="text-[10px] mt-1 tracking-tight font-medium group-hover:font-bold">
+              Meu perfil
+            </span>
           </button>
         </div>
       </nav>

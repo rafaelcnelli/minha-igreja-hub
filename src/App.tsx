@@ -2512,13 +2512,13 @@ export default function App() {
             />
           </div>
 
-          {/* Barra de carregamento e texto Igreja Hub */}
+          {/* Barra de carregamento e texto carregando */}
           <div className="w-48 sm:w-56 flex flex-col items-center">
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative shadow-inner">
               <div className="animate-loading-bar bg-gradient-to-r from-[#FF5520] via-amber-400 to-[#FF5520] rounded-full shadow-[0_0_12px_rgba(255,85,32,0.8)]" />
             </div>
             <p className="mt-4 text-xs font-bold tracking-[0.22em] text-slate-300 uppercase select-none">
-              Igreja Hub
+              carregando...
             </p>
           </div>
         </div>
@@ -2594,6 +2594,7 @@ export default function App() {
           unreadNotificationsCount={unreadNotificationsCount}
           unreadAvisosCount={unreadAvisosCount}
           onLogout={handleRequestLogout}
+          onEditProfile={() => setIsMyProfileModalOpen(true)}
           onStartTour={handleStartTour}
         />
 

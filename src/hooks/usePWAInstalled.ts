@@ -1,79 +1,63 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Checks whether the app is currently running in standalone (installed app) mode.
+ * - Returns TRUE if running as an installed PWA on mobile or desktop.
+ * - Returns FALSE if running inside a regular web browser (Chrome, Safari, Firefox, Edge, etc.).
+ */
+export function checkIsStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const isStandaloneMedia = window.matchMedia?.('(display-mode: standalone)')?.matches ?? false;
+  const isMinimalUIMedia = window.matchMedia?.('(display-mode: minimal-ui)')?.matches ?? false;
+  const isFullscreenMedia = window.matchMedia?.('(display-mode: fullscreen)')?.matches ?? false;
+  const isNavigatorStandalone = (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+  const isAndroidReferrer = typeof document !== 'undefined' && document.referrer.includes('android-app://');
+
+  return isStandaloneMedia || isMinimalUIMedia || isFullscreenMedia || isNavigatorStandalone || isAndroidReferrer;
+}
+
 export function usePWAInstalled(): boolean {
-  const [isInstalled, setIsInstalled] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-
-    // 1. Is the current window running in standalone mode? (Installed PWA)
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-      document.referrer.includes('android-app://');
-
-    if (isStandalone) {
-      try {
-        localStorage.setItem('pwa_app_installed', 'true');
-      } catch {}
-      return true;
-    }
-
-    // 2. Check if previously recorded as installed
+  // Always purge legacy persistent flags so that uninstalling the app
+  // allows the download/install prompt to re-appear in the browser immediately.
+  if (typeof window !== 'undefined') {
     try {
-      return localStorage.getItem('pwa_app_installed') === 'true';
-    } catch {
-      return false;
-    }
+      localStorage.removeItem('pwa_app_installed');
+      localStorage.removeItem('pwa_installed');
+    } catch {}
+  }
+
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => {
+    return checkIsStandalone();
   });
 
   useEffect(() => {
-    // Media query listener for standalone mode changes
-    const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        setIsInstalled(true);
-        try {
-          localStorage.setItem('pwa_app_installed', 'true');
-        } catch {}
-      }
+    const updateStatus = () => {
+      setIsInstalled(checkIsStandalone());
     };
 
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleMediaChange);
+    updateStatus();
+
+    const mediaStandalone = window.matchMedia?.('(display-mode: standalone)');
+    const mediaMinimal = window.matchMedia?.('(display-mode: minimal-ui)');
+
+    if (mediaStandalone?.addEventListener) {
+      mediaStandalone.addEventListener('change', updateStatus);
+    }
+    if (mediaMinimal?.addEventListener) {
+      mediaMinimal.addEventListener('change', updateStatus);
     }
 
-    // If beforeinstallprompt fires, the browser certifies the app is NOT currently installed!
-    // (e.g. user uninstalled it or is visiting anew from browser)
-    const handleBeforeInstallPrompt = () => {
-      // Check if running in standalone mode right now; if not, app is uninstalled
-      const currentlyStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-
-      if (!currentlyStandalone) {
-        setIsInstalled(false);
-        try {
-          localStorage.removeItem('pwa_app_installed');
-        } catch {}
-      }
-    };
-
-    // When the app is successfully installed via prompt or browser
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      try {
-        localStorage.setItem('pwa_app_installed', 'true');
-      } catch {}
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('appinstalled', updateStatus);
 
     return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handleMediaChange);
+      if (mediaStandalone?.removeEventListener) {
+        mediaStandalone.removeEventListener('change', updateStatus);
       }
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      if (mediaMinimal?.removeEventListener) {
+        mediaMinimal.removeEventListener('change', updateStatus);
+      }
+      window.removeEventListener('appinstalled', updateStatus);
     };
   }, []);
 

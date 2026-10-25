@@ -69,9 +69,6 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
       setCurrentStep(3);
       setDeferredPrompt(null);
       (window as unknown as { __pwaInstallPrompt?: BeforeInstallPromptEvent | null }).__pwaInstallPrompt = null;
-      try {
-        localStorage.setItem('pwa_app_installed', 'true');
-      } catch {}
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
