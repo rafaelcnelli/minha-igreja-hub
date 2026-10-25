@@ -13,10 +13,10 @@
     <meta name="theme-color" content="#09090b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192-B0NlfwgS.png">
-    <link rel="apple-touch-icon" href="./assets/icon-192-B0NlfwgS.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icon-192-B0NlfwgS.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="./assets/icon-512-C4FM4ePX.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192-CPzu6j-Q.png">
+    <link rel="apple-touch-icon" href="./assets/icon-192-CPzu6j-Q.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icon-192-CPzu6j-Q.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="./assets/icon-512-Cwdut763.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600;1,9..144,700&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -55,6 +55,7 @@
           navigator.serviceWorker.register('./sw.js', { scope: './' })
             .then(function(reg) {
               console.log('[PWA] Service Worker registrado com sucesso no escopo:', reg.scope);
+              reg.update();
             })
             .catch(function(err) {
               console.warn('[PWA] Erro ao registrar Service Worker:', err);
@@ -62,8 +63,8 @@
         });
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-C9X4tTp8.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DhaGJptN.css">
+    <script type="module" crossorigin src="./assets/index-Db7MbYMZ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DkFgxk6L.css">
   </head>
   <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
     <div id="root"></div>

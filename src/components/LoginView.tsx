@@ -973,7 +973,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
                 className="w-full py-3.5 px-4 bg-gradient-to-r from-[#FF5520] to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold text-xs rounded-2xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {submitting ? (
-                  <span>Conectando...</span>
+                  <span>Entrando...</span>
                 ) : (
                   <>
                     <span>Entrar no Sistema</span>

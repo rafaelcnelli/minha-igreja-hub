@@ -2500,12 +2500,32 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white space-y-4">
-        <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Conectando ao Firebase...</p>
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 selection:bg-amber-100 selection:text-amber-900">
+        <div className="relative flex flex-col items-center max-w-xs w-full animate-in fade-in duration-300">
+          {/* Logo Oficial do Sistema */}
+          <div className="relative mb-6">
+            <div className="absolute -inset-4 bg-gradient-to-r from-[#FF5520]/25 via-amber-500/15 to-[#FF5520]/25 rounded-3xl blur-xl animate-pulse" />
+            <img
+              src="./logo-full.png"
+              alt="Igreja Hub"
+              className="relative w-44 sm:w-48 h-auto object-contain drop-shadow-2xl"
+            />
+          </div>
+
+          {/* Barra de carregamento e texto Igreja Hub */}
+          <div className="w-48 sm:w-56 flex flex-col items-center">
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative shadow-inner">
+              <div className="animate-loading-bar bg-gradient-to-r from-[#FF5520] via-amber-400 to-[#FF5520] rounded-full shadow-[0_0_12px_rgba(255,85,32,0.8)]" />
+            </div>
+            <p className="mt-4 text-xs font-bold tracking-[0.22em] text-slate-300 uppercase select-none">
+              Igreja Hub
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
+
 
   // Ensure only authenticated users can interact with the church platform
   // "Garanta que apenas usuários autenticados possam interagir com o sistema."

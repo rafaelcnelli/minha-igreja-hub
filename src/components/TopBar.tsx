@@ -106,9 +106,11 @@ export const TopBar: React.FC<TopBarProps> = ({
                   className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-[#1c1d22] border border-slate-200 dark:border-[#2C2E35] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
-                  <span>{churchProfile?.name ? churchProfile.name.charAt(0) : 'K'}</span>
-                </div>
+                <img
+                  src="./icon-192.png"
+                  alt="Igreja Hub"
+                  className="w-9 h-9 rounded-xl object-cover shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
+                />
               )}
               <div className="min-w-0">
                 <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[140px] sm:max-w-[220px] lg:max-w-[280px]">

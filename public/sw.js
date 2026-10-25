@@ -1,5 +1,6 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v2';
+const CACHE_NAME = 'igreja-hub-v5';
+
 
 const STATIC_PRECACHE = [
   './',
@@ -7,6 +8,8 @@ const STATIC_PRECACHE = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-badge.png',
+  './logo-full.png',
   './icon.svg',
   './icon-192.svg',
   './icon-512.svg'
@@ -15,7 +18,6 @@ const STATIC_PRECACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // Usar Promise.allSettled para garantir que mesmo com pequenas oscilações o SW instale
       await Promise.allSettled(
         STATIC_PRECACHE.map((url) =>
           cache.add(url).catch((err) => {
@@ -60,7 +62,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Recursos estáticos (scripts, css, imagens, fontes): Cache-first com fallback para network e atualização de cache
+  // Scripts e estilos: Network-first para garantir sempre a versão mais recente e evitar bundles antigos
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.includes('/assets/')) {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Demais recursos estáticos (imagens, fontes): Cache-first com fallback para rede
   event.respondWith(
     caches.match(req).then((cachedResponse) => {
       if (cachedResponse) {
@@ -128,7 +146,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: payload.body,
     icon: payload.icon || './icon-192.png',
-    badge: payload.badge || './icon-192.png',
+    badge: payload.badge || './icon-badge.png',
     vibrate: [200, 100, 200],
     data: payload.data || { url: './' },
     tag: payload.tag || 'general-push',

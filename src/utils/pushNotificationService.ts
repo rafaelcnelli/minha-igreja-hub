@@ -138,10 +138,11 @@ export async function sendDevicePushNotification(
   }
 
   const iconUrl = './icon-192.png';
+  const badgeUrl = './icon-badge.png';
   const notificationOptions: NotificationOptions & { renotify?: boolean; vibrate?: number[] } = {
     body: payload.body,
     icon: iconUrl,
-    badge: iconUrl,
+    badge: badgeUrl,
     tag: payload.tag || `igreja-${payload.category}-${Date.now()}`,
     renotify: true,
     data: {
