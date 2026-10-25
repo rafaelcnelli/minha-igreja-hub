@@ -14,7 +14,7 @@ export default defineConfig(() => {
         transformIndexHtml: {
           order: 'post',
           handler(html: string) {
-            return html.replace(/<link rel="manifest"[^>]*>/, '<link rel="manifest" href="./manifest.json">');
+            return html.replace(/<link rel="manifest"[^>]*>/, '<link rel="manifest" href="./manifest.json?v=10">');
           }
         }
       }

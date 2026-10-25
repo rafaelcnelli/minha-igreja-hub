@@ -1,5 +1,5 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v6';
+const CACHE_NAME = 'igreja-hub-v8';
 
 
 const STATIC_PRECACHE = [
