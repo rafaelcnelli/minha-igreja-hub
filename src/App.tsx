@@ -155,7 +155,15 @@ export default function App() {
     if (isDemoChurch) return INITIAL_USERS;
     return authUser ? [authUser] : [];
   });
-  const [churchProfile, setChurchProfile] = useState<ChurchProfile>(DEFAULT_CHURCH_PROFILE);
+  const [churchProfile, setChurchProfile] = useState<ChurchProfile>(() => {
+    try {
+      const cached = localStorage.getItem(`hub_church_profile_${activeChurchId}`) || localStorage.getItem('hub_church_profile');
+      if (cached) {
+        return { ...DEFAULT_CHURCH_PROFILE, ...JSON.parse(cached) };
+      }
+    } catch (e) {}
+    return DEFAULT_CHURCH_PROFILE;
+  });
   const [joinRequests, setJoinRequests] = useState<ChurchJoinRequest[]>([]);
   const [isJoinRequestsModalOpen, setIsJoinRequestsModalOpen] = useState(false);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState(false);
@@ -308,10 +316,19 @@ export default function App() {
   // Listen to church profile in real-time
   useEffect(() => {
     const unsubChurch = subscribeChurchProfile(profile => {
-      if (profile) setChurchProfile(profile);
+      if (profile) {
+        setChurchProfile(prev => {
+          const merged = { ...prev, ...profile };
+          try {
+            localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(merged));
+            localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
+      }
     });
     return () => unsubChurch();
-  }, []);
+  }, [activeChurchId]);
 
   // Listen to join requests in real-time (scoped to church)
   useEffect(() => {
@@ -429,10 +446,14 @@ export default function App() {
 
   // Helper to save church profile & logo
   const handleSaveChurchProfile = async (updated: ChurchProfile) => {
-    await saveChurchProfileDoc(updated);
+    try {
+      localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(updated));
+      localStorage.setItem('hub_church_profile', JSON.stringify(updated));
+    } catch (e) {}
     setChurchProfile(updated);
+    await saveChurchProfileDoc(updated);
     addAuditLog('Atualizou dados e logo da igreja', 'SISTEMA', `Igreja: ${updated.name}`);
-    toast.success('Perfil e identidade da igreja atualizados!', 'Configurações Salvas');
+    toast.success('Perfil e logo da igreja atualizados e fixados com sucesso!', 'Identidade da Igreja Salva');
   };
 
   // Helper to record an audit action
@@ -2578,7 +2599,7 @@ export default function App() {
   // Ensure only authenticated users can interact with the church platform
   // "Garanta que apenas usuários autenticados possam interagir com o sistema."
   if (!isAuthenticated || !authUser) {
-    return <LoginView churchProfile={DEFAULT_CHURCH_PROFILE} />;
+    return <LoginView churchProfile={churchProfile || DEFAULT_CHURCH_PROFILE} />;
   }
 
   // Intercept users who are pending approval or rejected
@@ -2635,6 +2656,7 @@ export default function App() {
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <Sidebar
           currentUser={currentUser}
+          churchProfile={churchProfile}
           activeTab={activeTab}
           onNavigateTab={handleNavigateTab}
           pendingConfirmationsCount={pendingConfirmationsCount}

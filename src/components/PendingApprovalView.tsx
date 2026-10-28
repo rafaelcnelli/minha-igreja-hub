@@ -18,6 +18,7 @@ import {
   XCircle,
   AlertTriangle
 } from 'lucide-react';
+import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface PendingApprovalViewProps {
   currentUser: User;
@@ -177,12 +178,12 @@ export const PendingApprovalView: React.FC<PendingApprovalViewProps> = ({
       <div className="w-full max-w-lg space-y-5">
         {/* Header Logo */}
         <div className="text-center space-y-3">
-          <div className="inline-block relative">
-            <div className="absolute -inset-3 bg-[#FF5520]/20 rounded-3xl blur-md" />
+          <div className="flex justify-center">
             <img
-              src="./logo-principal.png"
+              src={getAppLogo()}
               alt="Minha Igreja Hub"
-              className="relative w-24 sm:w-28 h-auto object-contain mx-auto rounded-2xl bg-black p-1.5 shadow-xl border border-slate-800"
+              onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
+              className="h-10 sm:h-11 w-auto object-contain mx-auto"
             />
           </div>
           <div className="space-y-1">

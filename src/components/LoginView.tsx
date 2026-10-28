@@ -24,6 +24,8 @@ import {
 import { ChurchProfile } from '../types';
 import { getAppUrlParam } from '../utils/urlUtils';
 import { PWAInstallButton } from './PWAInstallButton';
+import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
+import appSymbolImg from '../assets/app-symbol.png';
 
 interface LoginViewProps {
   churchProfile?: ChurchProfile;
@@ -374,18 +376,27 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
             </div>
           </div>
 
-          {/* Church Official Logo, Editorial Greeting, and Description */}
+          {/* Símbolo Oficial do App Igreja Hub (somente o símbolo, um pouco maior) e Saudação */}
           <div className="flex items-center gap-4 relative z-10">
             <div className="relative shrink-0">
-              <div className="absolute -inset-1.5 bg-[#FF5520]/25 rounded-2xl blur-xs" />
               <img
-                src="./logo-principal.png"
-                alt="Minha Igreja Hub"
-                className="relative w-14 sm:w-16 h-auto object-contain rounded-2xl bg-black p-1 shadow-xl border border-white/15 shrink-0"
+                src={appSymbolImg}
+                alt="Igreja Hub"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-contain bg-black p-0.5 shadow-md border border-white/15 shrink-0"
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (!target.dataset.fallbackTried) {
+                    target.dataset.fallbackTried = '1';
+                    target.src = './icon-192.png';
+                  } else if (target.dataset.fallbackTried === '1') {
+                    target.dataset.fallbackTried = '2';
+                    target.src = './icon-512.png';
+                  }
+                }}
               />
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
+            <div className="min-w-0 border-l border-white/10 pl-3.5">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
                 <span className="font-editorial italic font-normal text-[#FF5520]">Olá,</span> Bem-vindo(a) —
               </h1>
               <p className="text-xs text-slate-300 font-medium mt-0.5 leading-snug">

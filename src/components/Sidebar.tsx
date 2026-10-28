@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, userIsAdmin, userLeadsAnyMinistry, userIsMinister } from '../types';
+import { User, ChurchProfile, userIsAdmin, userLeadsAnyMinistry, userIsMinister } from '../types';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -25,10 +25,11 @@ import {
   Settings
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
-import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
+import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface SidebarProps {
   currentUser: User;
+  churchProfile?: ChurchProfile;
   activeTab: string;
   onNavigateTab: (tab: string) => void;
   pendingConfirmationsCount?: number;
@@ -42,6 +43,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
+  churchProfile,
   activeTab,
   onNavigateTab,
   pendingConfirmationsCount = 0,
@@ -75,22 +77,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 min-h-[calc(100vh-4rem)] p-4 transition-colors">
-      {/* Official Igreja Hub Branding */}
+      {/* Identidade Oficial da Igreja (Logo da Igreja e Nome da Congregação) */}
       <div className="mb-4 pb-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-        <img
-          src={getAppLogo()}
-          alt="Igreja Hub"
-          onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
-          className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-2xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
-        />
-        <div className="min-w-0">
+        {churchProfile?.logoUrl ? (
+          <img
+            src={churchProfile.logoUrl}
+            alt={churchProfile.name || 'Logo da Igreja'}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
+            className="w-10 h-10 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-2xs border border-slate-200 dark:border-slate-700 shrink-0"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-2xs shrink-0">
+            <Church className="w-5 h-5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">
-              IGREJA <span className="text-[#FF5520]">HUB</span>
+            <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white truncate block">
+              {churchProfile?.name || 'Minha Igreja'}
             </span>
           </div>
           <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block truncate">
-            Gestão & Escalas
+            {churchProfile?.campus || churchProfile?.subtitle || 'Campus Sede'}
           </span>
         </div>
       </div>
@@ -370,8 +380,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isAdmin && 'Perfil Administrador Geral: controle total de cultos, ministérios e pessoas.'}
           </p>
         </div>
-
         <PWAInstallButton />
+
+        {/* Identificador Oficial da Plataforma (Logo do Sistema Igreja Hub) */}
+        <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500">
+            <img
+              src={getAppSymbol()}
+              alt="Igreja Hub"
+              className="w-4 h-4 rounded-md object-contain bg-black p-0.5 shrink-0 shadow-2xs"
+            />
+            <span>IGREJA <span className="text-[#FF5520]">HUB</span></span>
+          </div>
+          <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500">Sistema</span>
+        </div>
 
         {onStartTour && (
           <button

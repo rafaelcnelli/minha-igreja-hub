@@ -63,7 +63,7 @@ import { ChurchConfigBackup } from '../types';
 import { downloadBackupFile, parseUploadedBackupJson } from '../utils/backupUtils';
 import { getCultos, getPessoas, getEscalas, saveChurchProfileDoc } from '../services/firestoreService';
 import { getBaseAppUrl } from '../utils/urlUtils';
-import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
+import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface AdminSettingsViewProps {
   currentUser: User;
@@ -227,6 +227,34 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       setTimeout(() => setChurchFeedback(null), 3500);
     } catch (err: any) {
       setChurchFeedback('Erro ao salvar dados da igreja: ' + (err?.message || 'Erro desconhecido'));
+    } finally {
+      setChurchSaving(false);
+    }
+  };
+
+  const handleQuickSaveChurchLogo = async (newLogoUrl: string) => {
+    setChurchSaving(true);
+    setChurchFeedback(null);
+    try {
+      const updated: ChurchProfile = {
+        name: churchName.trim() || 'Minha Igreja Hub',
+        subtitle: churchSubtitle.trim(),
+        campus: churchCampus.trim(),
+        logoUrl: newLogoUrl.trim(),
+        phone: churchPhone.trim(),
+        email: churchEmail.trim(),
+        address: churchAddress.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      if (onSaveChurchProfile) {
+        await onSaveChurchProfile(updated);
+      } else {
+        await saveChurchProfileDoc(updated);
+      }
+      setChurchFeedback('Logo da Igreja salva e fixada com sucesso!');
+      setTimeout(() => setChurchFeedback(null), 3500);
+    } catch (err: any) {
+      setChurchFeedback('Erro ao salvar logo da igreja: ' + (err?.message || 'Erro desconhecido'));
     } finally {
       setChurchSaving(false);
     }
@@ -742,19 +770,29 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
           )}
 
           <form onSubmit={handleSaveChurchProfile} className="space-y-6">
-            {/* LOGO DA IGREJA */}
+            {/* 1. LOGO OFICIAL DA IGREJA (CONGREGAÇÃO LOCAL) */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-4">
-              <div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                  Logo Oficial da Igreja
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Esta logo será exibida no topo do aplicativo, na barra lateral e na tela de login dos membros.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                    <Church className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Logo Oficial da sua Igreja (Congregação)
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Identidade visual personalizada pela sua igreja local. Fica salva e fixa na sua conta.
+                    </p>
+                  </div>
+                </div>
+                <span className="self-start sm:self-auto text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
+                  Exclusiva da sua Congregação
+                </span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
-                {/* Logo Preview */}
+                {/* Church Logo Preview - strictly local church, never platform logo */}
                 <div className="shrink-0 flex flex-col items-center gap-2">
                   <div className="w-28 h-28 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-2 border-amber-500 shadow-md p-2 flex items-center justify-center">
                     {churchLogoUrl ? (
@@ -762,21 +800,27 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                         src={churchLogoUrl}
                         alt="Logo da Igreja"
                         className="w-full h-full object-contain"
-                        onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-slate-400 text-center p-1 w-full h-full">
-                        <img
-                          src={getAppLogo()}
-                          alt="Logo Padrão Igreja Hub"
-                          className="w-full h-full object-contain p-1 rounded-xl bg-black"
-                          onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
-                        />
+                      <div className="flex flex-col items-center justify-center text-center p-2 w-full h-full text-amber-600 dark:text-amber-400">
+                        <Church className="w-10 h-10 mb-1 opacity-80" />
+                        <span className="text-[10px] font-bold leading-tight">Sem logo personalizada</span>
+                        <span className="text-[9px] text-slate-400 mt-0.5">Adicione ao lado</span>
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                    {churchLogoUrl ? 'Preview da Logo' : 'Ícone padrão'}
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    {churchLogoUrl ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        <span>Logo Ativa da Igreja</span>
+                      </>
+                    ) : (
+                      <span>Nenhuma logo enviada</span>
+                    )}
                   </span>
                 </div>
 
@@ -801,7 +845,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                           format: 'image/png'
                         });
                         setChurchLogoUrl(compressed);
-                        setChurchFeedback('Logo carregada! Clique em "Salvar Perfil da Igreja" para confirmar.');
+                        await handleQuickSaveChurchLogo(compressed);
                       } catch (err: any) {
                         setChurchFeedback(err?.message || 'Erro ao processar imagem da logo.');
                       } finally {
@@ -822,15 +866,25 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                       <span>{isProcessingChurchLogo ? 'Processando Imagem...' : 'Carregar Logo do Aparelho'}</span>
                     </button>
 
+                    <button
+                      type="button"
+                      disabled={isProcessingChurchLogo || churchSaving}
+                      onClick={() => handleQuickSaveChurchLogo(churchLogoUrl)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{churchSaving ? 'Salvando...' : 'Salvar e Fixar Logo da Igreja'}</span>
+                    </button>
+
                     {churchLogoUrl && (
                       <button
                         type="button"
                         disabled={churchSaving}
-                        onClick={() => {
+                        onClick={async () => {
                           setChurchLogoUrl('');
-                          setChurchFeedback('Logo removida. Clique em salvar para confirmar.');
+                          await handleQuickSaveChurchLogo('');
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-semibold transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-semibold transition cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Remover Logo</span>
@@ -839,22 +893,101 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                   </div>
 
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Formatos recomendados: PNG (fundo transparente), JPG ou SVG. O sistema otimiza a imagem em alta resolução e armazena de forma segura no Firestore.
+                    Formatos recomendados: PNG (fundo transparente), JPG ou SVG. Esta logo é fixada na nuvem e exibida no topo do menu lateral (Sidebar), no topo da tela e nas escalas da sua congregação.
                   </p>
 
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                     <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       Ou informe o link direto da imagem na web:
                     </label>
-                    <input
-                      type="url"
-                      value={churchLogoUrl.startsWith('data:') ? '' : churchLogoUrl}
-                      onChange={e => setChurchLogoUrl(e.target.value)}
-                      placeholder="https://exemplo.com/logo-igreja.png"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-amber-500"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={churchLogoUrl.startsWith('data:') ? '' : churchLogoUrl}
+                        onChange={e => setChurchLogoUrl(e.target.value)}
+                        placeholder="https://exemplo.com/logo-igreja.png"
+                        className="flex-1 px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-amber-500"
+                      />
+                      <button
+                        type="button"
+                        disabled={churchSaving}
+                        onClick={() => handleQuickSaveChurchLogo(churchLogoUrl)}
+                        className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs transition cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        Fixar Link
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* 2. LOGO OFICIAL DO SISTEMA (IGREJA HUB - PLATAFORMA BASE) */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#FF5520] flex items-center justify-center font-bold shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Logo do Sistema (Igreja Hub) · Plataforma Base
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Identidade visual do aplicativo de gestão e escalas. Marca do sistema fixa na plataforma.
+                    </p>
+                  </div>
+                </div>
+                <span className="self-start sm:self-auto text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                  Marca Fixa no Sistema
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Símbolo do App */}
+                <div className="flex items-center gap-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <img
+                    src={getAppSymbol()}
+                    alt="Símbolo Igreja Hub"
+                    className="w-14 h-14 rounded-2xl object-contain bg-black p-1 shadow-md border border-white/10 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">Símbolo do Aplicativo</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Ícone Squircle</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                      Exibido na tela de login dos membros e como ícone do app/PWA no celular.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Logo Horizontal Completa */}
+                <div className="flex items-center gap-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <div className="h-14 px-3 bg-black rounded-2xl border border-white/10 flex items-center justify-center shrink-0 shadow-md">
+                    <img
+                      src={getAppLogo()}
+                      alt="Igreja Hub Completa"
+                      className="h-7 w-auto object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">Igreja Hub Oficial</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200">Plataforma</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                      Identificador oficial no rodapé da barra lateral e na tela de inicialização.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl flex items-start gap-2.5 text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed">
+                <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Separação Definida:</strong> A logo do sistema (Igreja Hub) representa a plataforma de software. Já a logo da sua igreja (no bloco superior) pertence à sua congregação local e fica fixada exclusivamente nas suas escalas, cabeçalho e menu.
+                </span>
               </div>
             </div>
 

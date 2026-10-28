@@ -525,11 +525,11 @@ export interface ChurchProfile {
 
 export const DEFAULT_CHURCH_PROFILE: ChurchProfile = {
   id: 'church-default',
-  name: 'Minha Igreja Hub',
+  name: 'Minha Igreja',
   code: 'HUB-2026',
-  subtitle: 'Gestão & Escalas',
+  subtitle: 'Gestão de Cultos e Escalas',
   campus: 'Campus Sede',
-  logoUrl: './logo-principal.png'
+  logoUrl: ''
 };
 
 export type BackupTriggerType = 'automatic_periodic' | 'manual' | 'pre_reset' | 'pre_restore';

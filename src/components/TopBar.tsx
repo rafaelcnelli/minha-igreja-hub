@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppNotification, User, ChurchProfile, userIsAdmin, userLeadsAnyMinistry } from '../types';
-import { ShieldCheck, Users, UserCheck, UserPlus, Sun, Moon, Bell, LogOut, Compass, KeyRound, Share2, Building2 } from 'lucide-react';
+import { ShieldCheck, Users, UserCheck, UserPlus, Sun, Moon, Bell, LogOut, Compass, KeyRound, Share2, Building2, Church } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { PWAInstallButton } from './PWAInstallButton';
 import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
@@ -105,15 +105,15 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <img
                   src={churchProfile.logoUrl}
                   alt={churchProfile.name || 'Logo da Igreja'}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
                   className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
                 />
               ) : (
-                <img
-                  src={getAppLogo()}
-                  alt="Igreja Hub"
-                  onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
-                  className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
-                />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <Church className="w-5 h-5" />
+                </div>
               )}
               <div className="min-w-0">
                 <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[140px] sm:max-w-[220px] lg:max-w-[280px]">
