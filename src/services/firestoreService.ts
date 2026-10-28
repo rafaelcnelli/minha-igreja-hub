@@ -33,6 +33,7 @@ import {
 } from '../types';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { generateFirestoreId, isValidFirestoreId } from '../utils/idUtils';
+import { sanitizeChurchLogoUrl } from '../utils/logoAsset';
 import {
   INITIAL_CULTOS,
   INITIAL_MINISTRIES,
@@ -1113,40 +1114,125 @@ export async function deleteWhatsAppReminderLogDoc(id: string): Promise<void> {
 }
 
 // ============================================================================
-// CHURCH PROFILE & LOGO (settings/church)
+// CHURCH PROFILE & LOGO (settings/church + churches/{churchId})
 // ============================================================================
-export function subscribeChurchProfile(callback: (profile: ChurchProfile) => void): () => void {
+export function subscribeChurchProfile(
+  callback: (profile: ChurchProfile) => void,
+  churchId?: string
+): () => void {
   console.log(`[Firestore SUBSCRIBE: ${COLLECTIONS.SETTINGS}/church] Iniciando listener em tempo real para o perfil da igreja...`);
   try {
+    let settingsData: Partial<ChurchProfile> | null = null;
+    let churchDocData: Partial<Church> | null = null;
+
+    const emitMerged = () => {
+      if (!settingsData && !churchDocData) return;
+      const settingsLogo = sanitizeChurchLogoUrl(settingsData?.logoUrl);
+      const churchLogo = sanitizeChurchLogoUrl(churchDocData?.logoUrl);
+      const effectiveLogo = settingsLogo || churchLogo || '';
+
+      // Se a logo existe em settings/church mas ainda não estava em churches/{churchId}, sincroniza automaticamente
+      if (settingsLogo && churchId && churchId !== 'church-default' && churchDocData && churchLogo !== settingsLogo) {
+        setDoc(
+          doc(db, COLLECTIONS.CHURCHES, churchId),
+          cleanDataForFirestore({ logoUrl: settingsLogo }),
+          { merge: true }
+        ).catch(() => {});
+      }
+
+      const merged: ChurchProfile = {
+        ...DEFAULT_CHURCH_PROFILE,
+        ...(churchDocData ? {
+          id: churchDocData.id || churchId,
+          name: churchDocData.name || DEFAULT_CHURCH_PROFILE.name,
+          code: churchDocData.code,
+          campus: churchDocData.campus || DEFAULT_CHURCH_PROFILE.campus,
+          subtitle: churchDocData.subtitle || DEFAULT_CHURCH_PROFILE.subtitle,
+          phone: churchDocData.phone,
+          email: churchDocData.email,
+          address: churchDocData.address
+        } : {}),
+        ...(settingsData || {}),
+        id: churchDocData?.id || settingsData?.id || churchId,
+        code: churchDocData?.code || settingsData?.code,
+        name: settingsData?.name || churchDocData?.name || DEFAULT_CHURCH_PROFILE.name,
+        campus: settingsData?.campus || churchDocData?.campus || DEFAULT_CHURCH_PROFILE.campus,
+        subtitle: settingsData?.subtitle || churchDocData?.subtitle || DEFAULT_CHURCH_PROFILE.subtitle,
+        logoUrl: effectiveLogo
+      };
+      callback(merged);
+    };
+
     const docRef = doc(db, COLLECTIONS.SETTINGS, 'church');
-    const unsubscribe = onSnapshot(
+    const unsubSettings = onSnapshot(
       docRef,
       (docSnap) => {
         if (docSnap.exists()) {
-          callback({ ...DEFAULT_CHURCH_PROFILE, ...(docSnap.data() as ChurchProfile) });
+          settingsData = docSnap.data() as ChurchProfile;
         } else {
-          callback(DEFAULT_CHURCH_PROFILE);
+          settingsData = {};
         }
+        emitMerged();
       },
       (error) => {
         console.warn(`[Firestore SUBSCRIBE NOTE: ${COLLECTIONS.SETTINGS}/church]`, error);
-        callback(DEFAULT_CHURCH_PROFILE);
       }
     );
-    return unsubscribe;
+
+    let unsubChurchDoc = () => {};
+    if (churchId && churchId !== 'church-default') {
+      const churchRef = doc(db, COLLECTIONS.CHURCHES, churchId);
+      unsubChurchDoc = onSnapshot(
+        churchRef,
+        (cSnap) => {
+          if (cSnap.exists()) {
+            churchDocData = { id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) };
+            emitMerged();
+          }
+        },
+        (error) => {
+          console.warn(`[Firestore SUBSCRIBE NOTE: ${COLLECTIONS.CHURCHES}/${churchId}]`, error);
+        }
+      );
+    }
+
+    return () => {
+      unsubSettings();
+      unsubChurchDoc();
+    };
   } catch (error) {
     console.warn(`[Firestore SUBSCRIBE ERROR: ${COLLECTIONS.SETTINGS}/church]`, error);
-    callback(DEFAULT_CHURCH_PROFILE);
     return () => {};
   }
 }
 
-export async function saveChurchProfileDoc(profile: ChurchProfile): Promise<void> {
+export async function saveChurchProfileDoc(profile: ChurchProfile, churchId?: string): Promise<void> {
   const path = `${COLLECTIONS.SETTINGS}/church`;
+  const sanitizedProfile: ChurchProfile = {
+    ...profile,
+    logoUrl: sanitizeChurchLogoUrl(profile.logoUrl)
+  };
   console.log(`[Firestore SAVE: ${COLLECTIONS.SETTINGS}/church] Salvando dados e logo da igreja...`);
   try {
-    await setDoc(doc(db, COLLECTIONS.SETTINGS, 'church'), cleanDataForFirestore(profile), { merge: true });
-    console.log(`[Firestore SAVE SUCCESS: ${COLLECTIONS.SETTINGS}/church] Perfil da igreja salvo com sucesso.`);
+    await setDoc(doc(db, COLLECTIONS.SETTINGS, 'church'), cleanDataForFirestore(sanitizedProfile), { merge: true });
+    const targetChurchId = churchId || profile.id;
+    if (targetChurchId && targetChurchId !== 'church-default') {
+      await setDoc(
+        doc(db, COLLECTIONS.CHURCHES, targetChurchId),
+        cleanDataForFirestore({
+          name: sanitizedProfile.name,
+          subtitle: sanitizedProfile.subtitle,
+          campus: sanitizedProfile.campus,
+          logoUrl: sanitizedProfile.logoUrl,
+          phone: sanitizedProfile.phone,
+          email: sanitizedProfile.email,
+          address: sanitizedProfile.address,
+          updatedAt: sanitizedProfile.updatedAt || new Date().toISOString()
+        }),
+        { merge: true }
+      );
+    }
+    console.log(`[Firestore SAVE SUCCESS: ${COLLECTIONS.SETTINGS}/church] Perfil e logo da igreja salvos e sincronizados.`);
   } catch (error) {
     console.error(`[Firestore SAVE ERROR: ${path}] Falha ao salvar perfil da igreja:`, error);
     throw error;

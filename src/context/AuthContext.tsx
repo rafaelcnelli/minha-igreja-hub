@@ -22,6 +22,7 @@ import {
   createDefaultMinistriesForChurch
 } from '../services/firestoreService';
 import { INITIAL_USERS } from '../data/initialData';
+import { sanitizeChurchLogoUrl } from '../utils/logoAsset';
 
 export interface GooglePendingUser {
   uid: string;
@@ -123,6 +124,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('kairos_is_logged_out');
   };
 
+  const resolveChurchWithSettings = async (churchId?: string): Promise<Church | null> => {
+    try {
+      const targetId = churchId || 'church-default';
+      const [cSnap, sSnap] = await Promise.all([
+        targetId ? getDoc(doc(db, COLLECTIONS.CHURCHES, targetId)).catch(() => null) : Promise.resolve(null),
+        getDoc(doc(db, COLLECTIONS.SETTINGS, 'church')).catch(() => null)
+      ]);
+
+      const cData = cSnap && cSnap.exists() ? ({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) } as Church) : null;
+      const sData = sSnap && sSnap.exists() ? (sSnap.data() as Record<string, any>) : null;
+
+      if (!cData && !sData) return null;
+
+      const sLogo = sanitizeChurchLogoUrl(sData?.logoUrl);
+      const cLogo = sanitizeChurchLogoUrl(cData?.logoUrl);
+      const effectiveLogo = sLogo || cLogo || '';
+
+      const merged: Church = {
+        id: cData?.id || targetId,
+        name: sData?.name || cData?.name || 'Minha Igreja Hub',
+        code: cData?.code || sData?.code || 'HUB-2026',
+        campus: sData?.campus || cData?.campus || 'Campus Sede',
+        subtitle: sData?.subtitle || cData?.subtitle || 'Gestão & Escalas',
+        logoUrl: effectiveLogo,
+        adminId: cData?.adminId || 'user-admin',
+        adminName: cData?.adminName || 'Administrador',
+        adminEmail: cData?.adminEmail || '',
+        phone: sData?.phone || cData?.phone,
+        email: sData?.email || cData?.email,
+        address: sData?.address || cData?.address,
+        createdAt: cData?.createdAt || new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem(`hub_church_profile_${merged.id}`, JSON.stringify(merged));
+        localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+      } catch (e) {}
+
+      return merged;
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Monitor Firebase Auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -146,20 +191,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const snap = await getDoc(userDocRef);
           if (snap.exists()) {
             const userData = { id: snap.id, ...(snap.data() as Omit<User, 'id'>) };
+            const resolvedChurch = await resolveChurchWithSettings(userData.churchId);
+            setCurrentChurch(resolvedChurch);
             setCurrentUser(userData);
-
-            // Fetch church data if user has churchId
-            if (userData.churchId) {
-              const churchDocRef = doc(db, COLLECTIONS.CHURCHES, userData.churchId);
-              const cSnap = await getDoc(churchDocRef);
-              if (cSnap.exists()) {
-                setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
-              } else {
-                setCurrentChurch(null);
-              }
-            } else {
-              setCurrentChurch(null);
-            }
           } else {
             // Check matching email in pre-existing data
             const matchedInitial = INITIAL_USERS.find(
@@ -173,8 +207,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 approvalStatus: 'approved'
               };
               await savePessoaDoc(profile);
+              const resolvedChurch = await resolveChurchWithSettings('church-default');
+              setCurrentChurch(resolvedChurch);
               setCurrentUser(profile);
-              setCurrentChurch(null);
             }
           }
         } catch (err) {
@@ -199,23 +234,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const snap = await getDoc(userDocRef);
             if (snap.exists()) {
               const userData = { id: snap.id, ...(snap.data() as Omit<User, 'id'>) };
+              const resolvedChurch = await resolveChurchWithSettings(userData.churchId);
+              setCurrentChurch(resolvedChurch);
               setCurrentUser(userData);
-              if (userData.churchId) {
-                const churchDocRef = doc(db, COLLECTIONS.CHURCHES, userData.churchId);
-                const cSnap = await getDoc(churchDocRef);
-                if (cSnap.exists()) {
-                  setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
-                } else {
-                  setCurrentChurch(null);
-                }
-              } else {
-                setCurrentChurch(null);
-              }
             } else {
               const matched = INITIAL_USERS.find(u => u.id === storedUserId);
               if (matched) {
+                const resolvedChurch = await resolveChurchWithSettings(matched.churchId);
+                setCurrentChurch(resolvedChurch);
                 setCurrentUser(matched);
-                setCurrentChurch(null);
               }
             }
           } catch (e) {
@@ -241,23 +268,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirebaseUser(cred.user);
       localStorage.setItem('kairos_active_user_id', cred.user.uid);
 
-      // Load user profile from Firestore
+      // Load user profile and church profile together from Firestore
       const snap = await getDoc(doc(db, COLLECTIONS.PESSOAS, cred.user.uid));
       if (snap.exists()) {
         const u = { id: snap.id, ...(snap.data() as Omit<User, 'id'>) };
+        const resolvedChurch = await resolveChurchWithSettings(u.churchId);
+        setCurrentChurch(resolvedChurch);
         setCurrentUser(u);
-        if (u.churchId) {
-          const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, u.churchId));
-          if (cSnap.exists()) {
-            setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
-          } else {
-            setCurrentChurch(null);
-          }
-        } else {
-          setCurrentChurch(null);
-        }
       } else {
-        setCurrentChurch(null);
+        const resolvedChurch = await resolveChurchWithSettings('church-default');
+        setCurrentChurch(resolvedChurch);
       }
     } catch (fbErr: any) {
       console.warn('Firebase signInWithEmailAndPassword note:', fbErr.code || fbErr.message);
@@ -286,19 +306,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } catch (e) {}
 
           const finalUser: User = foundUser;
-          setCurrentUser(finalUser);
           localStorage.setItem('kairos_active_user_id', finalUser.id);
-
-          if (finalUser.churchId) {
-            const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, finalUser.churchId));
-            if (cSnap.exists()) {
-              setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
-            } else {
-              setCurrentChurch(null);
-            }
-          } else {
-            setCurrentChurch(null);
-          }
+          const resolvedChurch = await resolveChurchWithSettings(finalUser.churchId);
+          setCurrentChurch(resolvedChurch);
+          setCurrentUser(finalUser);
           setIsLoading(false);
           return;
         }
@@ -531,14 +542,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (snap.exists()) {
         const u = { id: snap.id, ...(snap.data() as Omit<User, 'id'>) };
         if (u.churchId && u.birthDate) {
-          setCurrentUser(u);
           localStorage.setItem('kairos_active_user_id', cred.user.uid);
-          const cSnap = await getDoc(doc(db, COLLECTIONS.CHURCHES, u.churchId));
-          if (cSnap.exists()) {
-            setCurrentChurch({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) });
-          } else {
-            setCurrentChurch(null);
-          }
+          const resolvedChurch = await resolveChurchWithSettings(u.churchId);
+          setCurrentChurch(resolvedChurch);
+          setCurrentUser(u);
           setIsLoading(false);
           return { isNewUser: false };
         }

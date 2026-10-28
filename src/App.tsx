@@ -141,9 +141,10 @@ import {
 } from './services/firestoreService';
 import { buildChurchConfigSnapshot, isPeriodicBackupDue } from './utils/backupUtils';
 import logoFullImg from './assets/logo-full.png';
+import { sanitizeChurchLogoUrl } from './utils/logoAsset';
 
 export default function App() {
-  const { currentUser: authUser, firebaseUser, currentChurch, isAuthenticated, isLoading: authLoading, logout, setCurrentUser: setAuthUser } = useAuth();
+  const { currentUser: authUser, firebaseUser, currentChurch, isAuthenticated, isLoading: authLoading, logout, setCurrentUser: setAuthUser, setCurrentChurch } = useAuth();
   const toast = useToast();
 
   const currentUser = authUser || INITIAL_USERS[0];
@@ -159,7 +160,12 @@ export default function App() {
     try {
       const cached = localStorage.getItem(`hub_church_profile_${activeChurchId}`) || localStorage.getItem('hub_church_profile');
       if (cached) {
-        return { ...DEFAULT_CHURCH_PROFILE, ...JSON.parse(cached) };
+        const parsed = JSON.parse(cached);
+        return {
+          ...DEFAULT_CHURCH_PROFILE,
+          ...parsed,
+          logoUrl: sanitizeChurchLogoUrl(parsed?.logoUrl)
+        };
       }
     } catch (e) {}
     return DEFAULT_CHURCH_PROFILE;
@@ -193,7 +199,6 @@ export default function App() {
       setIsLoggingOut(true);
       setIsLogoutModalOpen(false);
       await logout();
-      setChurchProfile(DEFAULT_CHURCH_PROFILE);
       setAllUsers(INITIAL_USERS);
       setActiveTab('dashboard');
     } catch (e) {
@@ -294,31 +299,59 @@ export default function App() {
   const [whatsappReminderLogs, setWhatsappReminderLogs] = useState<WhatsAppReminderLog[]>([]);
   const [churchBackups, setChurchBackups] = useState<ChurchConfigBackup[]>([]);
 
-  // Sync currentChurch into churchProfile
+  // Sync currentChurch into churchProfile without overwriting an existing or cached church logo
   useEffect(() => {
     if (currentChurch) {
-      setChurchProfile({
-        id: currentChurch.id,
-        name: currentChurch.name,
-        code: currentChurch.code,
-        campus: currentChurch.campus || 'Campus Sede',
-        subtitle: currentChurch.subtitle || 'Gestão & Escalas',
-        logoUrl: currentChurch.logoUrl || '',
-        phone: currentChurch.phone,
-        email: currentChurch.email,
-        address: currentChurch.address
+      setChurchProfile(prev => {
+        let cachedLogo = '';
+        try {
+          const cachedRaw =
+            localStorage.getItem(`hub_church_profile_${currentChurch.id}`) ||
+            localStorage.getItem('hub_church_profile');
+          if (cachedRaw) {
+            cachedLogo = sanitizeChurchLogoUrl(JSON.parse(cachedRaw)?.logoUrl);
+          }
+        } catch (e) {}
+
+        const effectiveLogo =
+          sanitizeChurchLogoUrl(currentChurch.logoUrl) ||
+          sanitizeChurchLogoUrl(prev.logoUrl) ||
+          cachedLogo ||
+          '';
+
+        const merged: ChurchProfile = {
+          ...prev,
+          id: currentChurch.id || prev.id,
+          name: currentChurch.name || prev.name || 'Minha Igreja Hub',
+          code: currentChurch.code || prev.code,
+          campus: currentChurch.campus || prev.campus || 'Campus Sede',
+          subtitle: currentChurch.subtitle || prev.subtitle || 'Gestão & Escalas',
+          logoUrl: effectiveLogo,
+          phone: currentChurch.phone || prev.phone || '',
+          email: currentChurch.email || prev.email || '',
+          address: currentChurch.address || prev.address || ''
+        };
+        try {
+          localStorage.setItem(`hub_church_profile_${merged.id || activeChurchId}`, JSON.stringify(merged));
+          localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+        } catch (e) {}
+        return merged;
       });
-    } else {
-      setChurchProfile(DEFAULT_CHURCH_PROFILE);
     }
-  }, [currentChurch]);
+  }, [currentChurch, activeChurchId]);
 
   // Listen to church profile in real-time
   useEffect(() => {
     const unsubChurch = subscribeChurchProfile(profile => {
       if (profile) {
         setChurchProfile(prev => {
-          const merged = { ...prev, ...profile };
+          const incomingLogo = sanitizeChurchLogoUrl(profile.logoUrl);
+          const prevLogo = sanitizeChurchLogoUrl(prev.logoUrl);
+          const merged: ChurchProfile = {
+            ...prev,
+            ...profile,
+            logoUrl: incomingLogo || prevLogo || ''
+          };
           try {
             localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(merged));
             localStorage.setItem('hub_church_profile', JSON.stringify(merged));
@@ -326,7 +359,7 @@ export default function App() {
           return merged;
         });
       }
-    });
+    }, activeChurchId);
     return () => unsubChurch();
   }, [activeChurchId]);
 
@@ -446,13 +479,32 @@ export default function App() {
 
   // Helper to save church profile & logo
   const handleSaveChurchProfile = async (updated: ChurchProfile) => {
+    const cleanUpdated: ChurchProfile = {
+      ...churchProfile,
+      ...updated,
+      id: updated.id || churchProfile.id || activeChurchId,
+      code: updated.code || churchProfile.code || currentChurch?.code,
+      logoUrl: sanitizeChurchLogoUrl(updated.logoUrl)
+    };
     try {
-      localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(updated));
-      localStorage.setItem('hub_church_profile', JSON.stringify(updated));
+      localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(cleanUpdated));
+      localStorage.setItem('hub_church_profile', JSON.stringify(cleanUpdated));
     } catch (e) {}
-    setChurchProfile(updated);
-    await saveChurchProfileDoc(updated);
-    addAuditLog('Atualizou dados e logo da igreja', 'SISTEMA', `Igreja: ${updated.name}`);
+    setChurchProfile(cleanUpdated);
+    if (currentChurch) {
+      setCurrentChurch({
+        ...currentChurch,
+        name: cleanUpdated.name,
+        subtitle: cleanUpdated.subtitle,
+        campus: cleanUpdated.campus,
+        logoUrl: cleanUpdated.logoUrl,
+        phone: cleanUpdated.phone,
+        email: cleanUpdated.email,
+        address: cleanUpdated.address
+      });
+    }
+    await saveChurchProfileDoc(cleanUpdated, activeChurchId);
+    addAuditLog('Atualizou dados e logo da igreja', 'SISTEMA', `Igreja: ${cleanUpdated.name}`);
     toast.success('Perfil e logo da igreja atualizados e fixados com sucesso!', 'Identidade da Igreja Salva');
   };
 

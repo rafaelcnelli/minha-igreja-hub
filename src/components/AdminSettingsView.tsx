@@ -209,6 +209,9 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
     setChurchFeedback(null);
     try {
       const updated: ChurchProfile = {
+        ...propChurchProfile,
+        id: propChurchProfile?.id || currentUser.churchId,
+        code: propChurchProfile?.code || currentUser.churchCode,
         name: churchName.trim() || 'Minha Igreja Hub',
         subtitle: churchSubtitle.trim(),
         campus: churchCampus.trim(),
@@ -221,7 +224,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       if (onSaveChurchProfile) {
         await onSaveChurchProfile(updated);
       } else {
-        await saveChurchProfileDoc(updated);
+        await saveChurchProfileDoc(updated, updated.id);
       }
       setChurchFeedback('Perfil e Logo da Igreja salvos com sucesso!');
       setTimeout(() => setChurchFeedback(null), 3500);
@@ -237,6 +240,9 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
     setChurchFeedback(null);
     try {
       const updated: ChurchProfile = {
+        ...propChurchProfile,
+        id: propChurchProfile?.id || currentUser.churchId,
+        code: propChurchProfile?.code || currentUser.churchCode,
         name: churchName.trim() || 'Minha Igreja Hub',
         subtitle: churchSubtitle.trim(),
         campus: churchCampus.trim(),
@@ -249,7 +255,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
       if (onSaveChurchProfile) {
         await onSaveChurchProfile(updated);
       } else {
-        await saveChurchProfileDoc(updated);
+        await saveChurchProfileDoc(updated, updated.id);
       }
       setChurchFeedback('Logo da Igreja salva e fixada com sucesso!');
       setTimeout(() => setChurchFeedback(null), 3500);
