@@ -125,9 +125,9 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
         <div className="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <img
-              src="./icon-192.png"
+              src="./logo-full.png"
               alt="Igreja Hub"
-              className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-2xs border border-black/10 dark:border-white/10"
+              className="w-10 h-10 rounded-xl object-contain bg-black p-1 shrink-0 shadow-2xs border border-black/10 dark:border-white/10"
             />
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-sm">
@@ -448,9 +448,9 @@ export const InstallAppTwoStepModal: React.FC<InstallAppTwoStepModalProps> = ({
             <div className="text-center py-4 space-y-4">
               <div className="relative inline-block mx-auto">
                 <img
-                  src="./icon-192.png"
+                  src="./logo-full.png"
                   alt="Igreja Hub"
-                  className="w-20 h-20 rounded-2xl object-cover shadow-lg border border-black/10 dark:border-white/10 animate-in zoom-in-75 duration-200"
+                  className="w-20 h-20 rounded-2xl object-contain bg-black p-2 shadow-lg border border-black/10 dark:border-white/10 animate-in zoom-in-75 duration-200"
                 />
                 <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
                   <CheckCircle2 className="w-4 h-4" />

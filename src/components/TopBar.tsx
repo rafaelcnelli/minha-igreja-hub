@@ -1,8 +1,9 @@
 import React from 'react';
 import { AppNotification, User, ChurchProfile, userIsAdmin, userLeadsAnyMinistry } from '../types';
-import { ShieldCheck, Users, UserCheck, UserPlus, Sun, Moon, Bell, LogOut, Compass, KeyRound, Share2 } from 'lucide-react';
+import { ShieldCheck, Users, UserCheck, UserPlus, Sun, Moon, Bell, LogOut, Compass, KeyRound, Share2, Building2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { PWAInstallButton } from './PWAInstallButton';
+import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface TopBarProps {
   currentUser: User;
@@ -108,9 +109,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                 />
               ) : (
                 <img
-                  src="./icon-192.png"
+                  src={getAppLogo()}
                   alt="Igreja Hub"
-                  className="w-9 h-9 rounded-xl object-cover shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
+                  onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
+                  className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
                 />
               )}
               <div className="min-w-0">
@@ -191,18 +193,18 @@ export const TopBar: React.FC<TopBarProps> = ({
               </button>
             )}
 
-            {/* Quick Link to Pessoas for Admin / Leader */}
+            {/* Quick Link to Ministérios & Voluntários for Admin / Leader */}
             {(isAdmin || isLeader) && (
               <button
-                onClick={() => onNavigateTab('pessoas')}
+                onClick={() => onNavigateTab('liderados')}
                 className={`hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
-                  activeTab === 'pessoas'
+                  (activeTab === 'liderados' || activeTab === 'pessoas' || activeTab === 'admin_ministerios')
                     ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 shadow-2xs'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
                 }`}
               >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Pessoas</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Ministérios & Voluntários</span>
               </button>
             )}
 

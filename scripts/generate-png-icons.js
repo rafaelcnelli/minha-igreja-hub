@@ -100,6 +100,12 @@ if (fs.existsSync(sourceArtwork)) {
     if (fs.existsSync(path.join(publicDir, 'logo-full.png'))) {
       const fullLogoPng = fs.readFileSync(path.join(publicDir, 'logo-full.png'));
       fs.writeFileSync(path.join(rootDir, 'logo-full.png'), fullLogoPng);
+      const srcAssetsDir = path.join(rootDir, 'src', 'assets');
+      if (!fs.existsSync(srcAssetsDir)) {
+        fs.mkdirSync(srcAssetsDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(srcAssetsDir, 'logo-full.png'), fullLogoPng);
+      fs.writeFileSync(path.join(srcAssetsDir, 'icon-192.png'), png192);
     }
 
     // Sync to docs/

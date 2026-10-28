@@ -43,7 +43,8 @@ export type PushNotificationCategory =
   | 'notifyPendingApprovals'
   | 'notifySwapRequests'
   | 'notifyRehearsals'
-  | 'notifyNewAvisos';
+  | 'notifyNewAvisos'
+  | 'notifyOpenSlot';
 
 export interface PushNotificationPreferences {
   enabled: boolean; // Chave mestre: ativar/desativar todas as notificações push
@@ -54,6 +55,7 @@ export interface PushNotificationPreferences {
   notifySwapRequests: boolean; // Pedidos e confirmações de troca de escala
   notifyRehearsals: boolean; // Ensaios e reuniões de equipe agendados
   notifyNewAvisos: boolean; // Novos comunicados e avisos publicados no mural
+  notifyOpenSlot?: boolean; // Vaga aberta por recusa de voluntário na escala (Líderes e Admins)
 }
 
 export const DEFAULT_PUSH_PREFERENCES: PushNotificationPreferences = {
@@ -64,7 +66,8 @@ export const DEFAULT_PUSH_PREFERENCES: PushNotificationPreferences = {
   notifyPendingApprovals: true,
   notifySwapRequests: true,
   notifyRehearsals: true,
-  notifyNewAvisos: true
+  notifyNewAvisos: true,
+  notifyOpenSlot: true
 };
 
 export interface Ministry {
@@ -166,7 +169,8 @@ export interface AppNotification {
     | 'pending_approval' 
     | 'scale_reminder_tomorrow' 
     | 'scale_reminder_today' 
-    | 'rehearsal_scheduled';
+    | 'rehearsal_scheduled'
+    | 'vaga_aberta';
   linkTab?: string;
   linkCultoId?: string;
   linkMinistryId?: string;
@@ -525,7 +529,7 @@ export const DEFAULT_CHURCH_PROFILE: ChurchProfile = {
   code: 'HUB-2026',
   subtitle: 'Gestão & Escalas',
   campus: 'Campus Sede',
-  logoUrl: ''
+  logoUrl: './logo-principal.png'
 };
 
 export type BackupTriggerType = 'automatic_periodic' | 'manual' | 'pre_reset' | 'pre_restore';

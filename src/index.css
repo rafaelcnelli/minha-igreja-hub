@@ -464,4 +464,32 @@ html.high-contrast *:focus-visible {
   outline-offset: 2px !important;
 }
 
+/* ========================================================================== */
+/* PÁGINA DE CARREGAMENTO & LOGO ANIMATION (ESQUERDA PARA A DIREITA)          */
+/* ========================================================================== */
+@keyframes loadingBarLeftToRight {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(40%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-loading-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  animation: loadingBarLeftToRight 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+
 

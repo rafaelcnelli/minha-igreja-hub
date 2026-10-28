@@ -374,13 +374,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
             </div>
           </div>
 
-          {/* Church Icon, Editorial Greeting, and Description */}
-          <div className="flex items-center gap-3.5 relative z-10">
-            <img
-              src="./icon-192.png"
-              alt="Minha Igreja Hub"
-              className="w-13 h-13 rounded-2xl object-cover shadow-lg border border-white/10 shrink-0"
-            />
+          {/* Church Official Logo, Editorial Greeting, and Description */}
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="relative shrink-0">
+              <div className="absolute -inset-1.5 bg-[#FF5520]/25 rounded-2xl blur-xs" />
+              <img
+                src="./logo-principal.png"
+                alt="Minha Igreja Hub"
+                className="relative w-14 sm:w-16 h-auto object-contain rounded-2xl bg-black p-1 shadow-xl border border-white/15 shrink-0"
+              />
+            </div>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
                 <span className="font-editorial italic font-normal text-[#FF5520]">Olá,</span> Bem-vindo(a) —

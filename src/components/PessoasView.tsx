@@ -44,6 +44,7 @@ interface PessoasViewProps {
   onOpenInviteMembers?: () => void;
   onOpenJoinRequests?: () => void;
   pendingJoinRequestsCount?: number;
+  onNavigateTab?: (tab: string) => void;
 }
 
 export const PessoasView: React.FC<PessoasViewProps> = ({
@@ -57,7 +58,8 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
   onSimulateActivation,
   onOpenInviteMembers,
   onOpenJoinRequests,
-  pendingJoinRequestsCount = 0
+  pendingJoinRequestsCount = 0,
+  onNavigateTab
 }) => {
   const isAdmin = currentUser.isAdmin;
 
@@ -321,6 +323,18 @@ export const PessoasView: React.FC<PessoasViewProps> = ({
             >
               <KeyRound className="w-3.5 h-3.5 text-[#FF5520]" />
               <span>Convidar com Código</span>
+            </button>
+          )}
+
+          {onNavigateTab && (
+            <button
+              type="button"
+              onClick={() => onNavigateTab('aniversariantes')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/40 font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
+              title="Ver lista de aniversariantes e felicitações"
+            >
+              <Cake className="w-3.5 h-3.5 text-pink-500" />
+              <span>Aniversariantes</span>
             </button>
           )}
 

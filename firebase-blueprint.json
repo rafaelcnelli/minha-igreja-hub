@@ -123,6 +123,26 @@
         "data": { "type": "object" }
       },
       "required": ["id", "churchId", "createdAt", "triggerType", "data"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Notificações do sistema, incluindo alertas de Vaga Aberta por recusa de voluntário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "targetRole": { "type": "string", "maxLength": 50 },
+        "ministryId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "date": { "type": "string" },
+        "read": { "type": "boolean" },
+        "type": { "type": "string", "maxLength": 50 },
+        "linkTab": { "type": "string", "maxLength": 50 },
+        "linkCultoId": { "type": "string", "maxLength": 128 },
+        "linkMinistryId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "title", "message", "date", "read", "type"]
     }
   },
   "firestore": {
@@ -149,6 +169,10 @@
     "/avisos/{avisoId}": {
       "schema": "Aviso",
       "description": "Avisos e comunicados da liderança e administração para todos ou por ministério"
+    },
+    "/notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "Notificações diretas e setoriais (Vaga Aberta, escalas, lembretes)"
     },
     "/backups/{backupId}": {
       "schema": "ChurchConfigBackup",

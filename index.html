@@ -9,15 +9,17 @@
     <meta property="og:description" content="Sistema de Gestão de Cultos, Cadastro de Pessoas, Escalas de Ministérios e Convites para Igrejas e Comunidades." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="manifest" href="./manifest.json?v=10">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=10">
-    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=10">
-    <link rel="apple-touch-icon" href="./icon-192.png?v=10">
-    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png?v=10">
-    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png?v=10">
+    <meta name="apple-mobile-web-app-title" content="Igreja Hub">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600;1,9..144,700&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -59,7 +61,7 @@
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('./sw.js', { scope: './' })
+          navigator.serviceWorker.register('./sw.js?v=13', { scope: './' })
             .then(function(reg) {
               console.log('[PWA] Service Worker registrado com sucesso no escopo:', reg.scope);
               reg.update();

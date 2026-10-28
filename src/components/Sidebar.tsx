@@ -21,9 +21,11 @@ import {
   Church,
   Trash2,
   Database,
-  UserCircle2
+  UserCircle2,
+  Settings
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface SidebarProps {
   currentUser: User;
@@ -59,6 +61,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItemClass = (tabKey: string) => {
     const isActive = tabKey === 'escalas'
       ? (activeTab === 'minhas_escalas' || activeTab === 'escalas_equipe')
+      : tabKey === 'liderados'
+      ? (activeTab === 'liderados' || activeTab === 'pessoas' || activeTab === 'admin_ministerios')
+      : tabKey === 'minha_igreja'
+      ? (activeTab === 'minha_igreja' || activeTab === 'admin_backups' || activeTab === 'admin_zerar')
       : activeTab === tabKey;
     return `w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl transition-all text-left ${
       isActive
@@ -69,6 +75,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 min-h-[calc(100vh-4rem)] p-4 transition-colors">
+      {/* Official Igreja Hub Branding */}
+      <div className="mb-4 pb-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+        <img
+          src={getAppLogo()}
+          alt="Igreja Hub"
+          onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
+          className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-2xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
+        />
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">
+              IGREJA <span className="text-[#FF5520]">HUB</span>
+            </span>
+          </div>
+          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block truncate">
+            Gestão & Escalas
+          </span>
+        </div>
+      </div>
+
       {/* Current User Quick Info with Photo */}
       <div className="mb-6 p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl flex items-center gap-3">
         {currentUser.avatarUrl ? (
@@ -118,20 +144,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span>Visão Geral</span>
               </div>
             </button>
-
-            {/* Meu Perfil (Edição rápida de perfil e foto) */}
-            {onEditProfile && (
-              <button
-                type="button"
-                onClick={onEditProfile}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl transition-all text-left text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <UserCircle2 className="w-4 h-4 shrink-0 text-amber-500" />
-                  <span>Meu Perfil</span>
-                </div>
-              </button>
-            )}
 
             {/* Mural de Avisos (Para todos os usuários) */}
             <button
@@ -238,32 +250,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </div>
             <nav className="space-y-1">
-              {/* Cadastro Geral de Pessoas */}
-              {(isLeader || isAdmin) && (
-                <button
-                  onClick={() => onNavigateTab('pessoas')}
-                  className={navItemClass('pessoas')}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Users className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-                    <span>Pessoas & Convites</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-1 rounded">
-                    Geral
-                  </span>
-                </button>
-              )}
-
-
               {(isLeader || isAdmin) && (
                 <button
                   onClick={() => onNavigateTab('liderados')}
                   className={navItemClass('liderados')}
                 >
                   <div className="flex items-center gap-2.5">
-                    <UserCheck className="w-4 h-4 shrink-0" />
-                    <span>Gestão de Voluntários</span>
+                    <Building2 className="w-4 h-4 shrink-0 text-amber-500" />
+                    <span>Ministérios & Voluntários</span>
                   </div>
+                  <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1 rounded">
+                    Equipes
+                  </span>
                 </button>
               )}
 
@@ -330,68 +328,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </div>
             <nav className="space-y-1">
-              {/* PÁGINA MINHA IGREJA: CONFIGURAÇÕES & FOTO DE PERFIL */}
+              {/* CONFIGURAÇÕES GERAIS DA IGREJA (Perfil, Ministérios, WhatsApp, Backups e Limpeza) */}
               <button
                 onClick={() => onNavigateTab('minha_igreja')}
                 className={navItemClass('minha_igreja')}
               >
                 <div className="flex items-center gap-2.5">
-                  <Church className="w-4 h-4 shrink-0 text-amber-500" />
-                  <span>Minha Igreja</span>
+                  <Settings className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span>Configurações & Painel</span>
                 </div>
                 <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">
-                  Ajustes & Foto
+                  Geral
                 </span>
               </button>
 
-              <button
-                onClick={() => onNavigateTab('admin_ministerios')}
-                className={navItemClass('admin_ministerios')}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Building2 className="w-4 h-4 shrink-0" />
-                  <span>Ministérios & Acessos</span>
-                </div>
-              </button>
-
               {/* HISTÓRICO DE AÇÕES / AUDITORIA */}
-              {/* "Criar um histórico de ações realizadas para saber quem salvou ou fez alterações. Quem de novo entrou , apenas para ter um registro de quem fez cada coisa, apenas os admins podem ver esse relatório. Armazene quem fez a ação, qual a ação realizada e o dia e horário." */}
               <button
                 onClick={() => onNavigateTab('historico_acoes')}
                 className={navItemClass('historico_acoes')}
               >
                 <div className="flex items-center gap-2.5">
-                  <History className="w-4 h-4 shrink-0 text-amber-500" />
+                  <History className="w-4 h-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
                   <span>Histórico de Ações</span>
                 </div>
-                <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded">
                   Auditoria
-                </span>
-              </button>
-
-              <button
-                onClick={() => onNavigateTab('admin_backups')}
-                className={navItemClass('admin_backups')}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Database className="w-4 h-4 shrink-0 text-cyan-500" />
-                  <span>Backups & Restauração</span>
-                </div>
-                <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 px-1.5 py-0.5 rounded">
-                  Firestore
-                </span>
-              </button>
-
-              <button
-                onClick={() => onNavigateTab('admin_zerar')}
-                className={navItemClass('admin_zerar')}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Trash2 className="w-4 h-4 shrink-0 text-rose-500" />
-                  <span>Zerar Sistema</span>
-                </div>
-                <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded">
-                  Limpeza
                 </span>
               </button>
             </nav>

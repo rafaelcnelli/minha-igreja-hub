@@ -16,7 +16,9 @@ import {
   Smartphone,
   Users2,
   Megaphone,
-  SlidersHorizontal
+  SlidersHorizontal,
+  UserX,
+  AlertTriangle
 } from 'lucide-react';
 import { formatDateFullBR } from '../utils/dateUtils';
 import { PushNotificationPreferences } from '../types';
@@ -79,12 +81,14 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   const filteredList = userNotifications.filter(notif => {
     if (filterType === 'unread') return !notif.read;
     if (filterType === 'cultos') return notif.type === 'culto_created';
-    if (filterType === 'escalas') return notif.type === 'escala_published' || notif.type === 'slot_assigned';
+    if (filterType === 'escalas') return notif.type === 'escala_published' || notif.type === 'slot_assigned' || notif.type === 'vaga_aberta';
     return true;
   });
 
   const getNotificationIcon = (type: AppNotification['type']) => {
     switch (type) {
+      case 'vaga_aberta':
+        return <UserX className="w-5 h-5 text-amber-500" />;
       case 'culto_created':
         return <Calendar className="w-5 h-5 text-indigo-500" />;
       case 'escala_published':
@@ -252,6 +256,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       {notif.title}
                     </h3>
+                    {notif.type === 'vaga_aberta' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+                        <AlertTriangle className="w-3 h-3 text-amber-500" />
+                        Vaga Aberta
+                      </span>
+                    )}
                     {!notif.read && (
                       <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
                     )}
@@ -275,9 +285,13 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         onMarkAsRead(notif.id);
                         onNavigateTab(notif.linkTab!, notif.linkCultoId, notif.linkMinistryId);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition shadow-xs"
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white transition shadow-xs ${
+                        notif.type === 'vaga_aberta'
+                          ? 'bg-[#FF5520] hover:bg-[#E64515]'
+                          : 'bg-indigo-600 hover:bg-indigo-700'
+                      }`}
                     >
-                      <span>Acessar agora</span>
+                      <span>{notif.type === 'vaga_aberta' ? 'Substituir Voluntário na Escala' : 'Acessar agora'}</span>
                       <span>&rarr;</span>
                     </button>
                   )}

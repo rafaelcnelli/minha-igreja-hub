@@ -603,6 +603,7 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
 
                 const assignedPeople = Array.from(assignedMap.values());
                 const openSlotsCount = ministrySlots.filter(s => !s.userId).length;
+                const declinedSlotsCount = ministrySlots.filter(s => s.status === 'declined').length;
 
                 const pub = scalePublications?.[`${culto.id}_${currentMinistry?.id}`];
                 const isScalePublished = !!pub?.isPublished;
@@ -660,6 +661,12 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
                           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {assignedPeople.length} pessoa(s) escalada(s)
                           </span>
+                          {declinedSlotsCount > 0 && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700/80 shadow-2xs animate-pulse">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                              <span>{declinedSlotsCount} Vaga{declinedSlotsCount > 1 ? 's' : ''} Aberta{declinedSlotsCount > 1 ? 's' : ''} (Recusa)</span>
+                            </span>
+                          )}
                           {openSlotsCount > 0 && (
                             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                               {openSlotsCount} vaga(s) em aberto
@@ -825,6 +832,7 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
 
               const assignedCount = ministrySlots.filter(s => !!s.userId).length;
               const totalCount = ministrySlots.length;
+              const declinedSlotsCount = ministrySlots.filter(s => s.status === 'declined').length;
 
               // Save status evaluation
               // "Escala só poderá ser vista pelo liderado depois que o líder clicar em um botão verde escrito salvar escala. Depois de salvo o botão fica cinza até que tenha uma nova alteração na escala que eixe o botão verde novamente para ser salva."
@@ -895,6 +903,12 @@ export const TeamSchedulesView: React.FC<TeamSchedulesViewProps> = ({
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                               <Music4 className="w-3 h-3" />
                               Ensaio {formatDayMonthBR(existingRehearsal.date)}
+                            </span>
+                          )}
+                          {declinedSlotsCount > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                              <AlertTriangle className="w-3 h-3 text-rose-500" />
+                              {declinedSlotsCount} Vaga{declinedSlotsCount > 1 ? 's' : ''} Aberta{declinedSlotsCount > 1 ? 's' : ''} (Recusa)
                             </span>
                           )}
                         </div>

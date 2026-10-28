@@ -31,7 +31,8 @@ import {
   Sparkles,
   ToggleLeft,
   ToggleRight,
-  Info
+  Info,
+  UserX
 } from 'lucide-react';
 
 interface PushNotificationSettingsModalProps {
@@ -97,7 +98,8 @@ export const PushNotificationSettingsModal: React.FC<PushNotificationSettingsMod
       notifyPendingApprovals: active,
       notifySwapRequests: active,
       notifyRehearsals: active,
-      notifyNewAvisos: active
+      notifyNewAvisos: active,
+      notifyOpenSlot: active
     });
   };
 
@@ -412,6 +414,37 @@ export const PushNotificationSettingsModal: React.FC<PushNotificationSettingsMod
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     Alerta imediato para você aprovar e deixar o novo voluntário entrar na equipe ou congregação.
+                  </p>
+                </div>
+              </label>
+            )}
+
+            {/* Option: Vaga Aberta por recusa de escala (Admins e Líderes) */}
+            {canReceiveApprovalAlerts && (
+              <label className={`flex items-start gap-3 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                prefs.notifyOpenSlot && prefs.enabled
+                  ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-75'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={prefs.notifyOpenSlot ?? true}
+                  onChange={() => handleToggleSpecific('notifyOpenSlot')}
+                  disabled={!prefs.enabled}
+                  className="mt-1 w-4 h-4 rounded text-[#FF5520] focus:ring-[#FF5520] border-slate-300 dark:border-slate-700 cursor-pointer shrink-0 accent-[#FF5520]"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <UserX className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      Vaga Aberta (Recusa de voluntário)
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 rounded font-bold">
+                      ADMIN & LÍDER
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Notificação instantânea quando um voluntário recusar a escala, permitindo substituição rápida da vaga.
                   </p>
                 </div>
               </label>

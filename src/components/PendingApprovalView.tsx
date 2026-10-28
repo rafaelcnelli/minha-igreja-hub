@@ -175,21 +175,28 @@ export const PendingApprovalView: React.FC<PendingApprovalViewProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 sm:p-6 font-sans selection:bg-amber-100 selection:text-amber-900">
       <div className="w-full max-w-lg space-y-5">
-        {/* Header Icon */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 mb-1 shadow-xs">
-            <Clock className="w-8 h-8 animate-pulse" />
+        {/* Header Logo */}
+        <div className="text-center space-y-3">
+          <div className="inline-block relative">
+            <div className="absolute -inset-3 bg-[#FF5520]/20 rounded-3xl blur-md" />
+            <img
+              src="./logo-principal.png"
+              alt="Minha Igreja Hub"
+              className="relative w-24 sm:w-28 h-auto object-contain mx-auto rounded-2xl bg-black p-1.5 shadow-xl border border-slate-800"
+            />
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800">
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-            Acesso em Análise de Segurança
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Aguardando Aprovação
-          </h1>
-          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            Seu cadastro com o código da congregação foi registrado com sucesso. Por segurança da igreja, um administrador ou líder precisa validar seu acesso.
-          </p>
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800">
+              <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+              Acesso em Análise de Segurança
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Aguardando Aprovação
+            </h1>
+            <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+              Seu cadastro com o código da congregação foi registrado com sucesso. Por segurança da igreja, um administrador ou líder precisa validar seu acesso.
+            </p>
+          </div>
         </div>
 
         {/* Info Card */}

@@ -1,6 +1,5 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v9';
-
+const CACHE_NAME = 'igreja-hub-v13';
 
 const STATIC_PRECACHE = [
   './',
@@ -16,6 +15,11 @@ const STATIC_PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Em desenvolvimento / preview (run.app/localhost), não armazena pré-cache para evitar arquivos defasados
+  if (self.location.hostname.includes('run.app') || self.location.hostname.includes('localhost') || self.location.hostname === '127.0.0.1') {
+    self.skipWaiting();
+    return;
+  }
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       await Promise.allSettled(
@@ -42,6 +46,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Ignora completamente interceptação em domínios de desenvolvimento / preview do AI Studio
+  if (self.location.hostname.includes('run.app') || self.location.hostname.includes('localhost') || self.location.hostname === '127.0.0.1') {
+    return;
+  }
+
   const req = event.request;
   const url = new URL(req.url);
 

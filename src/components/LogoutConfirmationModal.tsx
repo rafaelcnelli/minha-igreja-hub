@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { LogOut, X, ShieldAlert, ArrowRight } from 'lucide-react';
+import { getAppLogo, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface LogoutConfirmationModalProps {
   isOpen: boolean;
@@ -49,8 +50,16 @@ export const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = (
       >
         {/* Top Header Row with Icon and Close Button */}
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-2xl bg-[#FF5520]/10 dark:bg-[#FF5520]/15 text-[#FF5520] border border-[#FF5520]/25 flex items-center justify-center shadow-xs">
-            <LogOut className="w-5 h-5 stroke-[2.2]" />
+          <div className="flex items-center gap-3">
+            <img
+              src={getAppLogo()}
+              alt="Igreja Hub"
+              onError={(e) => handleImageFallback(e, DEFAULT_LOGO_URL)}
+              className="w-12 h-12 rounded-2xl object-contain bg-black p-1 shadow-xs border border-slate-200 dark:border-[#2C2E35]"
+            />
+            <div className="w-12 h-12 rounded-2xl bg-[#FF5520]/10 dark:bg-[#FF5520]/15 text-[#FF5520] border border-[#FF5520]/25 flex items-center justify-center shadow-xs">
+              <LogOut className="w-5 h-5 stroke-[2.2]" />
+            </div>
           </div>
 
           <button

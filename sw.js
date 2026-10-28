@@ -1,6 +1,5 @@
 // Service Worker para Minha Igreja Hub PWA
-const CACHE_NAME = 'igreja-hub-v8';
-
+const CACHE_NAME = 'igreja-hub-v13';
 
 const STATIC_PRECACHE = [
   './',
@@ -16,6 +15,11 @@ const STATIC_PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Em desenvolvimento / preview (run.app/localhost), não armazena pré-cache para evitar arquivos defasados
+  if (self.location.hostname.includes('run.app') || self.location.hostname.includes('localhost') || self.location.hostname === '127.0.0.1') {
+    self.skipWaiting();
+    return;
+  }
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       await Promise.allSettled(
@@ -42,6 +46,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Ignora completamente interceptação em domínios de desenvolvimento / preview do AI Studio
+  if (self.location.hostname.includes('run.app') || self.location.hostname.includes('localhost') || self.location.hostname === '127.0.0.1') {
+    return;
+  }
+
   const req = event.request;
   const url = new URL(req.url);
 
@@ -98,4 +107,67 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+// Manipulador de clique em notificações push no celular
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const clickData = event.notification.data || {};
+  const targetUrl = clickData.url || './';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Se houver uma janela já aberta, foca nela e envia a aba destino
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          if (clickData.tab) {
+            client.postMessage({ type: 'PUSH_NOTIFICATION_CLICK', tab: clickData.tab, data: clickData });
+          }
+          return client.focus();
+        }
+      }
+      // Se nenhuma janela estiver aberta, abre uma nova
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+// Suporte para eventos Push
+self.addEventListener('push', (event) => {
+  let payload = {
+    title: 'Minha Igreja Hub',
+    body: 'Você tem uma nova notificação no aplicativo.'
+  };
+
+  try {
+    if (event.data) {
+      payload = event.data.json();
+    }
+  } catch (err) {
+    if (event.data) {
+      payload.body = event.data.text();
+    }
+  }
+
+  let defaultIcon = './icon-192.png';
+  let defaultBadge = './icon-badge.png';
+  try {
+    defaultIcon = new URL('./icon-192.png?v=11', self.location.href).href;
+    defaultBadge = new URL('./icon-badge.png?v=11', self.location.href).href;
+  } catch (e) {}
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon || defaultIcon,
+    badge: payload.badge || defaultBadge,
+    vibrate: [200, 100, 200],
+    data: payload.data || { url: './' },
+    tag: payload.tag || 'general-push',
+    renotify: true
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
 });

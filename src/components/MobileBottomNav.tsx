@@ -31,7 +31,8 @@ import {
   ShieldAlert,
   Church,
   Smartphone,
-  Download
+  Download,
+  Settings
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { InstallAppTwoStepModal } from './InstallAppTwoStepModal';
@@ -545,21 +546,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     Gestão de Pessoas & Equipes
                   </span>
                   <div className="space-y-1.5">
-                    {(isLeader || isAdmin) && (
-                      <button
-                        onClick={() => handleTabClick('pessoas')}
-                        className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 text-left transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Users className="w-4 h-4 text-indigo-600 shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-900">Pessoas & Links de Convite</p>
-                            <p className="text-[11px] text-slate-500">Cadastrar voluntários e gerar links de ativação</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                      </button>
-                    )}
 
                     <button
                       onClick={() => handleTabClick('escalas_equipe')}
@@ -587,10 +573,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                         className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <UserCheck className="w-4 h-4 text-sky-600 shrink-0" />
+                          <Building2 className="w-4 h-4 text-sky-600 shrink-0" />
                           <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white">Gestão de Voluntários</p>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Atribuir funções e competências por ministério</p>
+                            <p className="text-xs font-bold text-slate-900 dark:text-white">Ministérios & Voluntários</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Equipes, funções, líderes e voluntários</p>
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
@@ -751,24 +737,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                       className="w-full flex items-center justify-between p-3 rounded-xl border border-amber-200/80 dark:border-amber-800/80 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/70 dark:hover:bg-amber-900/50 text-left transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <Church className="w-4 h-4 text-amber-600 shrink-0" />
+                        <Settings className="w-4 h-4 text-amber-600 shrink-0" />
                         <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white">Minha Igreja</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Configurações, dados da igreja e foto de perfil/logo</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
-
-                    <button
-                      onClick={() => handleTabClick('admin_ministerios')}
-                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Building2 className="w-4 h-4 text-purple-600 shrink-0" />
-                        <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white">Ministérios & Acessos</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Criar ministérios e delegar permissões de líderes</p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-white">Configurações & Painel</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Perfil, dados da igreja, WhatsApp e backups</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />

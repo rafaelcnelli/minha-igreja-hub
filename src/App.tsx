@@ -140,6 +140,7 @@ import {
   restoreChurchFromBackupDoc
 } from './services/firestoreService';
 import { buildChurchConfigSnapshot, isPeriodicBackupDue } from './utils/backupUtils';
+import logoFullImg from './assets/logo-full.png';
 
 export default function App() {
   const { currentUser: authUser, firebaseUser, currentChurch, isAuthenticated, isLoading: authLoading, logout, setCurrentUser: setAuthUser } = useAuth();
@@ -147,7 +148,7 @@ export default function App() {
 
   const currentUser = authUser || INITIAL_USERS[0];
   const activeChurchId = currentChurch?.id || currentUser?.churchId || 'church-default';
-  const isDemoChurch = activeChurchId === 'church-default';
+  const isDemoChurch = activeChurchId === 'church-default' || activeChurchId === 'church-demo';
 
   // Global State (synced in real-time with Cloud Firestore per church)
   const [allUsers, setAllUsers] = useState<User[]>(() => {
@@ -160,6 +161,20 @@ export default function App() {
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Progresso fluido da barra de carregamento da esquerda para a direita
+  const [loadingProgress, setLoadingProgress] = useState(15);
+  useEffect(() => {
+    if (!authLoading) return;
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 94) return prev;
+        const jump = prev < 45 ? 12 : prev < 75 ? 7 : 3;
+        return Math.min(prev + jump, 94);
+      });
+    }, 130);
+    return () => clearInterval(interval);
+  }, [authLoading]);
 
   const handleRequestLogout = () => {
     setIsLogoutModalOpen(true);
@@ -2518,19 +2533,40 @@ export default function App() {
           <div className="relative mb-6">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FF5520]/25 via-amber-500/15 to-[#FF5520]/25 rounded-3xl blur-xl animate-pulse" />
             <img
-              src="./logo-full.png"
-              alt="Igreja Hub"
+              src={logoFullImg}
+              alt="Minha Igreja Hub"
               className="relative w-44 sm:w-48 h-auto object-contain drop-shadow-2xl"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (!target.dataset.fallbackTried) {
+                  target.dataset.fallbackTried = '1';
+                  target.src = './logo-full.png';
+                } else if (target.dataset.fallbackTried === '1') {
+                  target.dataset.fallbackTried = '2';
+                  target.src = './icon-192.png';
+                }
+              }}
             />
           </div>
 
-          {/* Barra de carregamento e texto carregando */}
-          <div className="w-48 sm:w-56 flex flex-col items-center">
-            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative shadow-inner">
-              <div className="animate-loading-bar bg-gradient-to-r from-[#FF5520] via-amber-400 to-[#FF5520] rounded-full shadow-[0_0_12px_rgba(255,85,32,0.8)]" />
+          {/* Barra de carregamento e texto carregando (funciona da esquerda para a direita) */}
+          <div className="w-52 sm:w-64 flex flex-col items-center">
+            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden relative shadow-inner p-0.5">
+              <div
+                className="h-full bg-gradient-to-r from-[#FF5520] via-amber-400 to-[#FF5520] rounded-full transition-all duration-300 ease-out relative overflow-hidden shadow-[0_0_14px_rgba(255,85,32,0.8)]"
+                style={{ width: `${Math.max(12, loadingProgress)}%` }}
+              >
+                {/* Feixe animado deslizando estritamente da esquerda para a direita */}
+                <div className="animate-loading-bar bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full" />
+              </div>
             </div>
-            <p className="mt-4 text-xs font-bold tracking-[0.22em] text-slate-300 uppercase select-none">
-              carregando...
+            <p className="mt-4 text-xs font-bold tracking-[0.22em] text-slate-300 uppercase select-none flex items-center gap-1.5">
+              <span>carregando</span>
+              <span className="inline-flex gap-0.5 text-amber-500">
+                <span className="animate-pulse">.</span>
+                <span className="animate-pulse delay-150">.</span>
+                <span className="animate-pulse delay-300">.</span>
+              </span>
             </p>
           </div>
         </div>
@@ -2701,25 +2737,8 @@ export default function App() {
             />
           )}
 
-          {/* TAB 4: CADASTRO GERAL DE PESSOAS & CONVITES */}
-          {activeTab === 'pessoas' && (
-            <PessoasView
-              currentUser={currentUser}
-              allUsers={allUsers}
-              ministries={ministries}
-              onAddPerson={handleAddPerson}
-              onUpdatePerson={handleUpdatePerson}
-              onDeletePerson={handleDeletePerson}
-              onClearAllPeople={handleClearAllPeople}
-              onSimulateActivation={handleSimulateActivation}
-              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
-              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
-              pendingJoinRequestsCount={pendingJoinRequestsCount}
-            />
-          )}
-
-          {/* TAB 6: GESTÃO DE VOLUNTÁRIOS */}
-          {activeTab === 'liderados' && (
+          {/* TAB UNIFICADA: GESTÃO DE MINISTÉRIOS, ACESSOS, VOLUNTÁRIOS E FUNÇÕES */}
+          {(activeTab === 'liderados' || activeTab === 'pessoas' || activeTab === 'admin_ministerios') && (
             <LideradosView
               currentUser={currentUser}
               allUsers={allUsers}
@@ -2734,6 +2753,8 @@ export default function App() {
               onAddMinistryRole={handleAddMinistryRole}
               onEditMinistryRole={handleEditMinistryRole}
               onDeleteMinistryRole={handleDeleteMinistryRole}
+              onAddMinistry={handleAddMinistry}
+              onDeleteMinistry={handleDeleteMinistry}
               onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
               onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
               pendingJoinRequestsCount={pendingJoinRequestsCount}
@@ -2775,10 +2796,18 @@ export default function App() {
             />
           )}
 
-          {/* TAB 8.5: MINHA IGREJA (ADMIN) - EDITAR CONFIGURAÇÕES E FOTO DE PERFIL */}
-          {activeTab === 'minha_igreja' && (
+          {/* TAB ADMIN: CONFIGURAÇÕES & GOVERNANÇA (Minha Igreja, Backups, Zerar) */}
+          {(activeTab === 'minha_igreja' ||
+            activeTab === 'admin_backups' ||
+            activeTab === 'admin_zerar') && (
             <AdminSettingsView
-              initialTab="church"
+              initialTab={
+                activeTab === 'admin_backups'
+                  ? 'backups'
+                  : activeTab === 'admin_zerar'
+                  ? 'danger_zone'
+                  : 'church'
+              }
               currentUser={currentUser}
               ministries={ministries}
               allUsers={allUsers}
@@ -2811,123 +2840,7 @@ export default function App() {
               onCreateBackup={handleCreateManualBackup}
               onRestoreBackup={handleRestoreChurchBackup}
               onDeleteBackup={handleDeleteChurchBackup}
-            />
-          )}
-
-          {/* TAB 9: MINISTÉRIOS E ACESSOS (ADMIN) */}
-          {activeTab === 'admin_ministerios' && (
-            <AdminSettingsView
-              initialTab="ministries"
-              currentUser={currentUser}
-              ministries={ministries}
-              allUsers={allUsers}
-              cultos={cultos}
-              slots={slots}
-              churchProfile={churchProfile}
-              onSaveChurchProfile={handleSaveChurchProfile}
-              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
-              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
-              pendingJoinRequestsCount={pendingJoinRequestsCount}
-              autoScheduleEnabled={autoScheduleEnabled}
-              onToggleAutoSchedule={handleToggleAutoSchedule}
-              onToggleUserMinistryRole={handleToggleUserMinistryRole}
-              onToggleLeaderRepertoirePermission={handleToggleLeaderRepertoirePermission}
-              onAddMinistry={handleAddMinistry}
-              onDeleteMinistry={handleDeleteMinistry}
-              whatsAppSettings={whatsAppSettings}
-              onSaveWhatsAppSettings={handleSaveWhatsAppSettings}
-              reminderLogs={whatsappReminderLogs}
-              onSendReminderLog={handleSendWhatsAppReminderLog}
-              onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
-              onTriggerAutoReminders={handleTriggerAutoReminders}
-              onUpdateUser={handleUpdatePerson}
-              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
-              onClearAllCultos={handleClearAllCultos}
-              onClearAllPeople={handleClearAllPeople}
-              onClearAllMinistries={handleClearAllMinistries}
-              onResetEntireSystem={handleResetEntireSystem}
-              backups={churchBackups}
-              onCreateBackup={handleCreateManualBackup}
-              onRestoreBackup={handleRestoreChurchBackup}
-              onDeleteBackup={handleDeleteChurchBackup}
-            />
-          )}
-
-          {/* TAB 9.5: BACKUPS & RESTAURAÇÃO (ADMIN) */}
-          {activeTab === 'admin_backups' && (
-            <AdminSettingsView
-              initialTab="backups"
-              currentUser={currentUser}
-              ministries={ministries}
-              allUsers={allUsers}
-              cultos={cultos}
-              slots={slots}
-              churchProfile={churchProfile}
-              onSaveChurchProfile={handleSaveChurchProfile}
-              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
-              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
-              pendingJoinRequestsCount={pendingJoinRequestsCount}
-              autoScheduleEnabled={autoScheduleEnabled}
-              onToggleAutoSchedule={handleToggleAutoSchedule}
-              onToggleUserMinistryRole={handleToggleUserMinistryRole}
-              onToggleLeaderRepertoirePermission={handleToggleLeaderRepertoirePermission}
-              onAddMinistry={handleAddMinistry}
-              onDeleteMinistry={handleDeleteMinistry}
-              whatsAppSettings={whatsAppSettings}
-              onSaveWhatsAppSettings={handleSaveWhatsAppSettings}
-              reminderLogs={whatsappReminderLogs}
-              onSendReminderLog={handleSendWhatsAppReminderLog}
-              onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
-              onTriggerAutoReminders={handleTriggerAutoReminders}
-              onUpdateUser={handleUpdatePerson}
-              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
-              onClearAllCultos={handleClearAllCultos}
-              onClearAllPeople={handleClearAllPeople}
-              onClearAllMinistries={handleClearAllMinistries}
-              onResetEntireSystem={handleResetEntireSystem}
-              backups={churchBackups}
-              onCreateBackup={handleCreateManualBackup}
-              onRestoreBackup={handleRestoreChurchBackup}
-              onDeleteBackup={handleDeleteChurchBackup}
-            />
-          )}
-
-          {/* TAB: ZERAR SISTEMA / LIMPEZA (ADMIN) */}
-          {activeTab === 'admin_zerar' && (
-            <AdminSettingsView
-              initialTab="danger_zone"
-              currentUser={currentUser}
-              ministries={ministries}
-              allUsers={allUsers}
-              cultos={cultos}
-              slots={slots}
-              churchProfile={churchProfile}
-              onSaveChurchProfile={handleSaveChurchProfile}
-              onOpenInviteMembers={() => setIsInviteMembersModalOpen(true)}
-              onOpenJoinRequests={() => setIsJoinRequestsModalOpen(true)}
-              pendingJoinRequestsCount={pendingJoinRequestsCount}
-              autoScheduleEnabled={autoScheduleEnabled}
-              onToggleAutoSchedule={handleToggleAutoSchedule}
-              onToggleUserMinistryRole={handleToggleUserMinistryRole}
-              onToggleLeaderRepertoirePermission={handleToggleLeaderRepertoirePermission}
-              onAddMinistry={handleAddMinistry}
-              onDeleteMinistry={handleDeleteMinistry}
-              whatsAppSettings={whatsAppSettings}
-              onSaveWhatsAppSettings={handleSaveWhatsAppSettings}
-              reminderLogs={whatsappReminderLogs}
-              onSendReminderLog={handleSendWhatsAppReminderLog}
-              onDeleteReminderLog={handleDeleteWhatsAppReminderLog}
-              onTriggerAutoReminders={handleTriggerAutoReminders}
-              onUpdateUser={handleUpdatePerson}
-              onOpenEditProfile={() => setIsMyProfileModalOpen(true)}
-              onClearAllCultos={handleClearAllCultos}
-              onClearAllPeople={handleClearAllPeople}
-              onClearAllMinistries={handleClearAllMinistries}
-              onResetEntireSystem={handleResetEntireSystem}
-              backups={churchBackups}
-              onCreateBackup={handleCreateManualBackup}
-              onRestoreBackup={handleRestoreChurchBackup}
-              onDeleteBackup={handleDeleteChurchBackup}
+              onNavigateTab={handleNavigateTab}
             />
           )}
 
