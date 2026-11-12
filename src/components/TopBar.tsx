@@ -38,6 +38,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   const { theme, toggleTheme, setTheme } = useTheme();
   const isAdmin = currentUser.isAdmin;
   const isLeader = userLeadsAnyMinistry(currentUser);
+  const [logoError, setLogoError] = React.useState(false);
+
+  React.useEffect(() => {
+    setLogoError(false);
+  }, [churchProfile?.logoUrl]);
 
   // Filter notifications relevant to current user
   const userNotifications = notifications.filter(notif => {
@@ -94,42 +99,43 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between gap-3 h-16">
           {/* Brand Zone: Minha Igreja Hub with Church Logo */}
-          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0 shrink">
             <button
+              type="button"
               onClick={() => onNavigateTab('dashboard')}
-              className="flex items-center gap-2.5 text-left group focus:outline-none min-w-0 shrink"
+              className="flex items-center gap-2.5 text-left group focus:outline-none shrink-0"
             >
-              {churchProfile?.logoUrl ? (
-                <img
-                  src={churchProfile.logoUrl}
-                  alt={churchProfile.name || 'Logo da Igreja'}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                  }}
-                  className="w-9 h-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0"
-                />
+              {churchProfile?.logoUrl && !logoError ? (
+                <div className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl overflow-hidden bg-white dark:bg-slate-800 p-0.5 shadow-xs border border-slate-200 dark:border-[#2C2E35] shrink-0 flex items-center justify-center">
+                  <img
+                    src={churchProfile.logoUrl}
+                    alt={churchProfile.name || 'Logo da Igreja'}
+                    onError={() => setLogoError(true)}
+                    className="w-full h-full object-contain block"
+                  />
+                </div>
               ) : (
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-                  <Church className="w-5 h-5" />
+                <div className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <Church className="w-5 h-5 shrink-0" />
                 </div>
               )}
-              <div className="min-w-0">
-                <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[140px] sm:max-w-[220px] lg:max-w-[280px]">
+              <div className="min-w-0 max-w-[145px] sm:max-w-[200px] lg:max-w-[240px]">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white block leading-tight truncate">
                   {churchProfile?.name || 'Minha Igreja Hub'}
                 </span>
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate max-w-[130px] sm:max-w-[200px]">
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
                   {churchProfile?.subtitle || 'Gestão de Cultos e Escalas'}
                 </span>
               </div>
             </button>
 
             {/* Breadcrumb Context */}
-            <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pl-4 border-l border-slate-200 dark:border-slate-800 shrink-0">
-              <span className="truncate max-w-[120px]">{churchProfile?.campus || 'Campus Sede'}</span>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">/</span>
-              <span className="text-slate-800 dark:text-slate-200 font-semibold capitalize truncate max-w-[180px]">
+            <div className="hidden 2xl:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pl-4 border-l border-slate-200 dark:border-slate-800 min-w-0 shrink overflow-hidden">
+              <span className="truncate max-w-[110px]">{churchProfile?.campus || 'Campus Sede'}</span>
+              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 shrink-0">/</span>
+              <span className="text-slate-800 dark:text-slate-200 font-semibold capitalize truncate max-w-[160px]">
                 {activeTab === 'dashboard' && 'Visão Geral'}
                 {activeTab === 'cultos' && 'Cultos e Eventos'}
                 {activeTab === 'minhas_escalas' && 'Minhas Escalas'}
@@ -189,7 +195,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl transition-colors border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer shadow-2xs"
               >
                 <Share2 className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="hidden lg:inline text-[11px]">Convidar</span>
+                <span className="hidden xl:inline text-[11px]">Convidar</span>
               </button>
             )}
 
@@ -197,7 +203,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             {(isAdmin || isLeader) && (
               <button
                 onClick={() => onNavigateTab('liderados')}
-                className={`hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                className={`hidden 2xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
                   (activeTab === 'liderados' || activeTab === 'pessoas' || activeTab === 'admin_ministerios')
                     ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 shadow-2xs'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
@@ -292,7 +298,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
               >
                 <Compass className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span className="text-[11px] font-bold">Tour</span>
+                <span className="hidden xl:inline text-[11px] font-bold">Tour</span>
               </button>
             )}
 
@@ -341,16 +347,16 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               </button>
 
-              {/* Edit Profile Button (Icon/Text) */}
+              {/* Edit Profile Button (Only on extra wide screens since avatar chip already opens profile) */}
               {onEditProfile && (
                 <button
                   type="button"
                   onClick={onEditProfile}
                   title="Editar meu perfil e foto"
-                  className="hidden sm:flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition"
+                  className="hidden 2xl:flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
-                  <span className="hidden xl:inline text-[11px]">Perfil</span>
+                  <span className="text-[11px]">Perfil</span>
                 </button>
               )}
 

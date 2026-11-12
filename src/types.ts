@@ -534,6 +534,22 @@ export const DEFAULT_CHURCH_PROFILE: ChurchProfile = {
 
 export type BackupTriggerType = 'automatic_periodic' | 'manual' | 'pre_reset' | 'pre_restore';
 
+export interface BackupScheduleSettings {
+  enabled: boolean;
+  intervalHours: number; // Ex: 6 (6h), 12 (12h), 24 (Diário), 48 (48h), 168 (Semanal)
+  maxRetentionCount: number; // Ex: 10, 20, 30, 50 snapshots automáticos mantidos
+  lastAutoBackupAt?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export const DEFAULT_BACKUP_SCHEDULE_SETTINGS: BackupScheduleSettings = {
+  enabled: true,
+  intervalHours: 12,
+  maxRetentionCount: 20,
+  updatedAt: new Date().toISOString()
+};
+
 export interface ChurchConfigBackupData {
   churchProfile: ChurchProfile;
   ministries: Ministry[];
@@ -569,6 +585,7 @@ export interface ChurchConfigBackup {
   version: number;
   data: ChurchConfigBackupData;
 }
+
 
 
 

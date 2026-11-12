@@ -4,11 +4,25 @@ import appSymbolImg from '../assets/app-symbol.png';
 
 export const DEFAULT_LOGO_URL = './icon-192.png';
 
+/**
+ * Retorna o ícone favicon HD de alta qualidade via serviço Google S2 Favicons
+ */
+export function getGoogleS2FaviconUrl(domainOrUrl?: string, size: number = 128): string {
+  const domain = domainOrUrl
+    ? domainOrUrl.replace(/^https?:\/\//i, '').split('/')[0].trim()
+    : 'minhaigrejahub.com.br';
+  const validDomain = domain || 'minhaigrejahub.com.br';
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(validDomain)}&sz=${size}`;
+}
+
 export function getAppLogo(): string {
   return logoFullImg;
 }
 
-export function getAppSymbol(): string {
+export function getAppSymbol(domain?: string): string {
+  if (domain && domain.trim()) {
+    return getGoogleS2FaviconUrl(domain, 128);
+  }
   return appSymbolImg;
 }
 
@@ -50,7 +64,7 @@ export function handleImageFallback(
     target.src = logoFullImg;
   } else if (target.dataset.triedFallback === '1') {
     target.dataset.triedFallback = '2';
-    target.src = './logo-full.png';
+    target.src = getGoogleS2FaviconUrl('minhaigrejahub.com.br', 128);
   } else if (target.dataset.triedFallback === '2') {
     target.dataset.triedFallback = '3';
     target.src = fallbackUrl;

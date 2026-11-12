@@ -24,8 +24,7 @@ import {
 import { ChurchProfile } from '../types';
 import { getAppUrlParam } from '../utils/urlUtils';
 import { PWAInstallButton } from './PWAInstallButton';
-import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
-import appSymbolImg from '../assets/app-symbol.png';
+import { getAppLogo, getAppSymbol, getGoogleS2FaviconUrl, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface LoginViewProps {
   churchProfile?: ChurchProfile;
@@ -380,17 +379,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ churchProfile, initialInvi
           <div className="flex items-center gap-4 relative z-10">
             <div className="relative shrink-0">
               <img
-                src={appSymbolImg}
+                src={getAppSymbol()}
                 alt="Igreja Hub"
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-contain bg-black p-0.5 shadow-md border border-white/15 shrink-0"
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
                   if (!target.dataset.fallbackTried) {
                     target.dataset.fallbackTried = '1';
-                    target.src = './icon-192.png';
+                    target.src = getGoogleS2FaviconUrl('minhaigrejahub.com.br', 128);
                   } else if (target.dataset.fallbackTried === '1') {
                     target.dataset.fallbackTried = '2';
-                    target.src = './icon-512.png';
+                    target.src = './icon-192.png';
                   }
                 }}
               />

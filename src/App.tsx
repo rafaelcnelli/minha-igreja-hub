@@ -25,6 +25,8 @@ import {
   Aviso,
   canUserViewAviso,
   ChurchConfigBackup,
+  BackupScheduleSettings,
+  DEFAULT_BACKUP_SCHEDULE_SETTINGS,
   PushNotificationCategory,
   PushNotificationPreferences,
   DEFAULT_PUSH_PREFERENCES
@@ -137,7 +139,9 @@ import {
   saveChurchBackupDoc,
   deleteChurchBackupDoc,
   pruneOldAutomaticBackups,
-  restoreChurchFromBackupDoc
+  restoreChurchFromBackupDoc,
+  subscribeBackupScheduleSettings,
+  saveBackupScheduleSettingsDoc
 } from './services/firestoreService';
 import { buildChurchConfigSnapshot, isPeriodicBackupDue } from './utils/backupUtils';
 import logoFullImg from './assets/logo-full.png';
@@ -156,18 +160,44 @@ export default function App() {
     if (isDemoChurch) return INITIAL_USERS;
     return authUser ? [authUser] : [];
   });
-  const [churchProfile, setChurchProfile] = useState<ChurchProfile>(() => {
+  // Helper para recuperar o perfil e a logo da igreja armazenados no localStorage sem perder a logo no momento do login
+  const getCachedChurchProfile = (targetId?: string): Partial<ChurchProfile> | null => {
     try {
-      const cached = localStorage.getItem(`hub_church_profile_${activeChurchId}`) || localStorage.getItem('hub_church_profile');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        return {
-          ...DEFAULT_CHURCH_PROFILE,
-          ...parsed,
-          logoUrl: sanitizeChurchLogoUrl(parsed?.logoUrl)
-        };
-      }
-    } catch (e) {}
+      const id = targetId || activeChurchId;
+      const rawSpecific = id ? localStorage.getItem(`hub_church_profile_${id}`) : null;
+      const rawGlobal = localStorage.getItem('hub_church_profile');
+      const parsedSpecific = rawSpecific ? JSON.parse(rawSpecific) : null;
+      const parsedGlobal = rawGlobal ? JSON.parse(rawGlobal) : null;
+
+      const dedicatedLogo =
+        (id ? sanitizeChurchLogoUrl(localStorage.getItem(`hub_church_logo_url_${id}`)) : '') ||
+        sanitizeChurchLogoUrl(localStorage.getItem('hub_church_logo_url')) ||
+        sanitizeChurchLogoUrl(parsedSpecific?.logoUrl) ||
+        sanitizeChurchLogoUrl(parsedGlobal?.logoUrl) ||
+        '';
+
+      const base = parsedSpecific || parsedGlobal;
+      if (!base && !dedicatedLogo) return null;
+
+      return {
+        ...(parsedGlobal || {}),
+        ...(parsedSpecific || {}),
+        logoUrl: dedicatedLogo
+      };
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const [churchProfile, setChurchProfile] = useState<ChurchProfile>(() => {
+    const cached = getCachedChurchProfile(activeChurchId);
+    if (cached) {
+      return {
+        ...DEFAULT_CHURCH_PROFILE,
+        ...cached,
+        logoUrl: sanitizeChurchLogoUrl(cached.logoUrl)
+      };
+    }
     return DEFAULT_CHURCH_PROFILE;
   });
   const [joinRequests, setJoinRequests] = useState<ChurchJoinRequest[]>([]);
@@ -298,70 +328,173 @@ export default function App() {
   });
   const [whatsappReminderLogs, setWhatsappReminderLogs] = useState<WhatsAppReminderLog[]>([]);
   const [churchBackups, setChurchBackups] = useState<ChurchConfigBackup[]>([]);
+  const [backupScheduleSettings, setBackupScheduleSettings] = useState<BackupScheduleSettings>(() => {
+    const saved =
+      localStorage.getItem(`hub_backup_schedule_${activeChurchId}`) ||
+      localStorage.getItem('hub_backup_schedule_settings');
+    if (saved) {
+      try {
+        return { ...DEFAULT_BACKUP_SCHEDULE_SETTINGS, ...JSON.parse(saved) };
+      } catch {
+        // fallback
+      }
+    }
+    return DEFAULT_BACKUP_SCHEDULE_SETTINGS;
+  });
 
   // Sync currentChurch into churchProfile without overwriting an existing or cached church logo
   useEffect(() => {
     if (currentChurch) {
       setChurchProfile(prev => {
-        let cachedLogo = '';
-        try {
-          const cachedRaw =
-            localStorage.getItem(`hub_church_profile_${currentChurch.id}`) ||
-            localStorage.getItem('hub_church_profile');
-          if (cachedRaw) {
-            cachedLogo = sanitizeChurchLogoUrl(JSON.parse(cachedRaw)?.logoUrl);
-          }
-        } catch (e) {}
+        const cached = getCachedChurchProfile(currentChurch.id);
+        const cachedLogo = sanitizeChurchLogoUrl(cached?.logoUrl);
+        const prevLogo = sanitizeChurchLogoUrl(prev.logoUrl);
+        const incomingLogo = sanitizeChurchLogoUrl(currentChurch.logoUrl);
 
-        const effectiveLogo =
-          sanitizeChurchLogoUrl(currentChurch.logoUrl) ||
-          sanitizeChurchLogoUrl(prev.logoUrl) ||
-          cachedLogo ||
-          '';
+        // Verificação de estado no momento do login: garante que o churchProfile não seja resetado
+        // para valores padrão se o localStorage ou o estado anterior já contiverem a logo correta.
+        const effectiveLogo = incomingLogo || prevLogo || cachedLogo || '';
 
         const merged: ChurchProfile = {
+          ...DEFAULT_CHURCH_PROFILE,
+          ...(cached || {}),
           ...prev,
-          id: currentChurch.id || prev.id,
-          name: currentChurch.name || prev.name || 'Minha Igreja Hub',
-          code: currentChurch.code || prev.code,
-          campus: currentChurch.campus || prev.campus || 'Campus Sede',
-          subtitle: currentChurch.subtitle || prev.subtitle || 'Gestão & Escalas',
+          id: currentChurch.id || prev.id || cached?.id,
+          name:
+            currentChurch.name && currentChurch.name !== DEFAULT_CHURCH_PROFILE.name
+              ? currentChurch.name
+              : prev.name && prev.name !== DEFAULT_CHURCH_PROFILE.name
+              ? prev.name
+              : cached?.name || currentChurch.name || DEFAULT_CHURCH_PROFILE.name,
+          code: currentChurch.code || prev.code || cached?.code,
+          campus:
+            currentChurch.campus && currentChurch.campus !== DEFAULT_CHURCH_PROFILE.campus
+              ? currentChurch.campus
+              : prev.campus && prev.campus !== DEFAULT_CHURCH_PROFILE.campus
+              ? prev.campus
+              : cached?.campus || currentChurch.campus || DEFAULT_CHURCH_PROFILE.campus,
+          subtitle:
+            currentChurch.subtitle && currentChurch.subtitle !== DEFAULT_CHURCH_PROFILE.subtitle
+              ? currentChurch.subtitle
+              : prev.subtitle && prev.subtitle !== DEFAULT_CHURCH_PROFILE.subtitle
+              ? prev.subtitle
+              : cached?.subtitle || currentChurch.subtitle || DEFAULT_CHURCH_PROFILE.subtitle,
           logoUrl: effectiveLogo,
-          phone: currentChurch.phone || prev.phone || '',
-          email: currentChurch.email || prev.email || '',
-          address: currentChurch.address || prev.address || ''
+          phone: currentChurch.phone || prev.phone || cached?.phone || '',
+          email: currentChurch.email || prev.email || cached?.email || '',
+          address: currentChurch.address || prev.address || cached?.address || ''
         };
         try {
-          localStorage.setItem(`hub_church_profile_${merged.id || activeChurchId}`, JSON.stringify(merged));
-          localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+          if (merged.logoUrl || (!cachedLogo && !prevLogo)) {
+            localStorage.setItem(`hub_church_profile_${merged.id || activeChurchId}`, JSON.stringify(merged));
+            localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+            if (merged.logoUrl) {
+              localStorage.setItem(`hub_church_logo_url_${merged.id || activeChurchId}`, merged.logoUrl);
+              localStorage.setItem('hub_church_logo_url', merged.logoUrl);
+            }
+          }
         } catch (e) {}
         return merged;
       });
+    } else {
+      // Mesmo quando currentChurch é null (ex: transição de login), preserva a logo do localStorage se já existir
+      const cached = getCachedChurchProfile(activeChurchId);
+      const cachedLogo = sanitizeChurchLogoUrl(cached?.logoUrl);
+      if (cached && cachedLogo) {
+        setChurchProfile(prev => ({
+          ...DEFAULT_CHURCH_PROFILE,
+          ...cached,
+          ...prev,
+          logoUrl: sanitizeChurchLogoUrl(prev.logoUrl) || cachedLogo
+        }));
+      }
     }
-  }, [currentChurch, activeChurchId]);
+  }, [currentChurch, activeChurchId, isAuthenticated]);
 
-  // Listen to church profile in real-time
+  // Listen to church profile in real-time with state & localStorage verification on login
   useEffect(() => {
+    const initialCached = getCachedChurchProfile(activeChurchId);
+    const initialCachedLogo = sanitizeChurchLogoUrl(initialCached?.logoUrl);
+    if (initialCached && initialCachedLogo) {
+      setChurchProfile(prev => ({
+        ...DEFAULT_CHURCH_PROFILE,
+        ...initialCached,
+        ...prev,
+        logoUrl: sanitizeChurchLogoUrl(prev.logoUrl) || initialCachedLogo
+      }));
+    }
+
     const unsubChurch = subscribeChurchProfile(profile => {
-      if (profile) {
-        setChurchProfile(prev => {
-          const incomingLogo = sanitizeChurchLogoUrl(profile.logoUrl);
-          const prevLogo = sanitizeChurchLogoUrl(prev.logoUrl);
-          const merged: ChurchProfile = {
+      if (!profile) return;
+      setChurchProfile(prev => {
+        const cached = getCachedChurchProfile(activeChurchId);
+        const cachedLogo = sanitizeChurchLogoUrl(cached?.logoUrl);
+        const prevLogo = sanitizeChurchLogoUrl(prev.logoUrl);
+        const incomingLogo = sanitizeChurchLogoUrl(profile.logoUrl);
+
+        // Verificação de estado: se o callback emitir valores padrão sem logo,
+        // mas o localStorage (ou o estado atual) já contiver a logo correta da igreja,
+        // não reseta o churchProfile para os valores padrão.
+        const isDefaultFallbackWithoutLogo =
+          !incomingLogo &&
+          (!profile.name || profile.name === DEFAULT_CHURCH_PROFILE.name) &&
+          Boolean(cachedLogo || prevLogo);
+
+        const effectiveLogo = incomingLogo || prevLogo || cachedLogo || '';
+
+        if (isDefaultFallbackWithoutLogo) {
+          return {
+            ...DEFAULT_CHURCH_PROFILE,
+            ...(cached || {}),
             ...prev,
-            ...profile,
-            logoUrl: incomingLogo || prevLogo || ''
+            id: profile.id || prev.id || cached?.id || activeChurchId,
+            code: profile.code || prev.code || cached?.code,
+            logoUrl: effectiveLogo
           };
-          try {
+        }
+
+        const merged: ChurchProfile = {
+          ...DEFAULT_CHURCH_PROFILE,
+          ...(cached || {}),
+          ...prev,
+          ...profile,
+          name:
+            profile.name && profile.name !== DEFAULT_CHURCH_PROFILE.name
+              ? profile.name
+              : prev.name && prev.name !== DEFAULT_CHURCH_PROFILE.name
+              ? prev.name
+              : cached?.name || DEFAULT_CHURCH_PROFILE.name,
+          campus:
+            profile.campus && profile.campus !== DEFAULT_CHURCH_PROFILE.campus
+              ? profile.campus
+              : prev.campus && prev.campus !== DEFAULT_CHURCH_PROFILE.campus
+              ? prev.campus
+              : cached?.campus || DEFAULT_CHURCH_PROFILE.campus,
+          subtitle:
+            profile.subtitle && profile.subtitle !== DEFAULT_CHURCH_PROFILE.subtitle
+              ? profile.subtitle
+              : prev.subtitle && prev.subtitle !== DEFAULT_CHURCH_PROFILE.subtitle
+              ? prev.subtitle
+              : cached?.subtitle || DEFAULT_CHURCH_PROFILE.subtitle,
+          logoUrl: effectiveLogo
+        };
+
+        try {
+          if (merged.logoUrl || (!cachedLogo && !prevLogo)) {
             localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(merged));
             localStorage.setItem('hub_church_profile', JSON.stringify(merged));
-          } catch (e) {}
-          return merged;
-        });
-      }
+            if (merged.logoUrl) {
+              localStorage.setItem(`hub_church_logo_url_${activeChurchId}`, merged.logoUrl);
+              localStorage.setItem('hub_church_logo_url', merged.logoUrl);
+            }
+          }
+        } catch (e) {}
+
+        return merged;
+      });
     }, activeChurchId);
     return () => unsubChurch();
-  }, [activeChurchId]);
+  }, [activeChurchId, isAuthenticated]);
 
   // Listen to join requests in real-time (scoped to church)
   useEffect(() => {
@@ -460,6 +593,19 @@ export default function App() {
       setChurchBackups(firestoreBackups);
     });
 
+    const unsubBackupSchedule = subscribeBackupScheduleSettings(activeChurchId, firestoreSchedule => {
+      if (firestoreSchedule) {
+        setBackupScheduleSettings(prev => {
+          const merged = { ...DEFAULT_BACKUP_SCHEDULE_SETTINGS, ...prev, ...firestoreSchedule };
+          try {
+            localStorage.setItem(`hub_backup_schedule_${activeChurchId}`, JSON.stringify(merged));
+            localStorage.setItem('hub_backup_schedule_settings', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
+      }
+    });
+
     return () => {
       unsubPessoas();
       unsubCultos();
@@ -474,6 +620,7 @@ export default function App() {
       unsubWhatsAppLogs();
       unsubAvisos();
       unsubBackups();
+      unsubBackupSchedule();
     };
   }, [isAuthenticated, activeChurchId]);
 
@@ -489,6 +636,13 @@ export default function App() {
     try {
       localStorage.setItem(`hub_church_profile_${activeChurchId}`, JSON.stringify(cleanUpdated));
       localStorage.setItem('hub_church_profile', JSON.stringify(cleanUpdated));
+      if (cleanUpdated.logoUrl) {
+        localStorage.setItem(`hub_church_logo_url_${activeChurchId}`, cleanUpdated.logoUrl);
+        localStorage.setItem('hub_church_logo_url', cleanUpdated.logoUrl);
+      } else {
+        localStorage.removeItem(`hub_church_logo_url_${activeChurchId}`);
+        localStorage.removeItem('hub_church_logo_url');
+      }
     } catch (e) {}
     setChurchProfile(cleanUpdated);
     if (currentChurch) {
@@ -1790,18 +1944,22 @@ export default function App() {
   // BACKUP & RESTAURAÇÃO DE CONFIGURAÇÕES NO FIRESTORE (ADMIN)
   // =========================================================================
 
-  // Periodic automatic backup of church settings in Firestore (every 6 hours)
+  // Periodic automatic backup of church settings in Firestore (configurable interval, e.g., 6h, 12h, 24h)
   useEffect(() => {
     if (!isAuthenticated || !currentUser?.isAdmin) return;
     if (!churchProfile || !churchProfile.id) return;
+    if (!backupScheduleSettings.enabled) return;
+
+    const intervalHours = backupScheduleSettings.intervalHours || 12;
+    const maxRetention = backupScheduleSettings.maxRetentionCount || 20;
 
     const runPeriodicBackup = async () => {
       try {
         const storageKey = `hub_last_auto_backup_${churchProfile.id}`;
-        const lastBackupIso = localStorage.getItem(storageKey);
+        const lastBackupIso = localStorage.getItem(storageKey) || backupScheduleSettings.lastAutoBackupAt;
 
-        if (isPeriodicBackupDue(lastBackupIso, 6)) {
-          console.log('[Firestore BACKUP PERIÓDICO] Iniciando backup automático periódico de configurações...');
+        if (isPeriodicBackupDue(lastBackupIso, intervalHours)) {
+          console.log(`[Firestore BACKUP PERIÓDICO] Iniciando backup automático periódico (frequência: ${intervalHours}h)...`);
           const snapshot = buildChurchConfigSnapshot({
             churchProfile,
             ministries,
@@ -1818,10 +1976,18 @@ export default function App() {
           });
 
           await saveChurchBackupDoc(snapshot);
-          localStorage.setItem(storageKey, new Date().toISOString());
+          const nowIso = new Date().toISOString();
+          localStorage.setItem(storageKey, nowIso);
 
-          // Prune older backups keeping last 20
-          await pruneOldAutomaticBackups(churchProfile?.id || activeChurchId, 20);
+          const updatedSchedule: BackupScheduleSettings = {
+            ...backupScheduleSettings,
+            lastAutoBackupAt: nowIso
+          };
+          setBackupScheduleSettings(updatedSchedule);
+          saveBackupScheduleSettingsDoc(updatedSchedule, churchProfile.id || activeChurchId).catch(console.warn);
+
+          // Prune older backups keeping maxRetention
+          await pruneOldAutomaticBackups(churchProfile?.id || activeChurchId, maxRetention);
           console.log('[Firestore BACKUP PERIÓDICO SUCCESS] Backup automático persistido no Firestore:', snapshot.id);
         }
       } catch (err) {
@@ -1833,7 +1999,59 @@ export default function App() {
     // Check every 30 minutes
     const interval = setInterval(runPeriodicBackup, 30 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, currentUser?.isAdmin, churchProfile?.id, ministries.length]);
+  }, [
+    isAuthenticated,
+    currentUser?.isAdmin,
+    churchProfile?.id,
+    ministries.length,
+    backupScheduleSettings.enabled,
+    backupScheduleSettings.intervalHours,
+    backupScheduleSettings.maxRetentionCount
+  ]);
+
+  const handleSaveBackupScheduleSettings = async (newSchedule: BackupScheduleSettings) => {
+    if (!currentUser.isAdmin) {
+      toast.error('Apenas o Administrador Geral pode configurar os backups automáticos.', 'Permissão Negada');
+      return;
+    }
+    const payload: BackupScheduleSettings = {
+      ...backupScheduleSettings,
+      ...newSchedule,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser.name
+    };
+    setBackupScheduleSettings(payload);
+    try {
+      localStorage.setItem(`hub_backup_schedule_${activeChurchId}`, JSON.stringify(payload));
+      localStorage.setItem('hub_backup_schedule_settings', JSON.stringify(payload));
+    } catch (e) {}
+    await saveBackupScheduleSettingsDoc(payload, churchProfile?.id || activeChurchId);
+    const freqLabel =
+      payload.intervalHours === 6
+        ? 'a cada 6 horas'
+        : payload.intervalHours === 12
+        ? 'a cada 12 horas'
+        : payload.intervalHours === 24
+        ? 'diário (a cada 24h)'
+        : payload.intervalHours === 48
+        ? 'a cada 48 horas'
+        : payload.intervalHours === 168
+        ? 'semanal (a cada 7 dias)'
+        : `a cada ${payload.intervalHours}h`;
+    addAuditLog(
+      'Configurou frequência de backups automáticos',
+      'SISTEMA',
+      payload.enabled
+        ? `Backup automático ativo (${freqLabel}, retenção de ${payload.maxRetentionCount} versões)`
+        : 'Backup automático pausado pelo administrador'
+    );
+    toast.success(
+      payload.enabled
+        ? `Frequência dos backups automáticos do Firestore configurada para ${freqLabel}!`
+        : 'Backups automáticos periódicos foram pausados.',
+      'Configuração de Backup Salva'
+    );
+  };
 
   const handleCreateManualBackup = async (customLabel?: string, customDescription?: string) => {
     if (!currentUser.isAdmin) {
@@ -2914,6 +3132,8 @@ export default function App() {
               onCreateBackup={handleCreateManualBackup}
               onRestoreBackup={handleRestoreChurchBackup}
               onDeleteBackup={handleDeleteChurchBackup}
+              backupScheduleSettings={backupScheduleSettings}
+              onSaveBackupScheduleSettings={handleSaveBackupScheduleSettings}
               onNavigateTab={handleNavigateTab}
             />
           )}

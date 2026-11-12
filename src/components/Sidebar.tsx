@@ -25,7 +25,7 @@ import {
   Settings
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
-import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
+import { getAppLogo, getAppSymbol, getGoogleS2FaviconUrl, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface SidebarProps {
   currentUser: User;
@@ -59,6 +59,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isMinister = userIsMinister(currentUser);
   const hasManagementAccess = isLeader || isAdmin || isMinister;
   const isOnlyLiderado = !isAdmin && !isLeader && !isMinister;
+  const [logoError, setLogoError] = React.useState(false);
+
+  React.useEffect(() => {
+    setLogoError(false);
+  }, [churchProfile?.logoUrl]);
 
   const navItemClass = (tabKey: string) => {
     const isActive = tabKey === 'escalas'
@@ -79,18 +84,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 min-h-[calc(100vh-4rem)] p-4 transition-colors">
       {/* Identidade Oficial da Igreja (Logo da Igreja e Nome da Congregação) */}
       <div className="mb-4 pb-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-        {churchProfile?.logoUrl ? (
-          <img
-            src={churchProfile.logoUrl}
-            alt={churchProfile.name || 'Logo da Igreja'}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = 'none';
-            }}
-            className="w-10 h-10 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 shadow-2xs border border-slate-200 dark:border-slate-700 shrink-0"
-          />
+        {churchProfile?.logoUrl && !logoError ? (
+          <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl overflow-hidden bg-white dark:bg-slate-800 p-0.5 shadow-2xs border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center">
+            <img
+              src={churchProfile.logoUrl}
+              alt={churchProfile.name || 'Logo da Igreja'}
+              onError={() => setLogoError(true)}
+              className="w-full h-full object-contain block"
+            />
+          </div>
         ) : (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-2xs shrink-0">
-            <Church className="w-5 h-5" />
+          <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-gradient-to-br from-amber-500 to-[#FF5520] text-white flex items-center justify-center font-bold shadow-2xs shrink-0">
+            <Church className="w-5 h-5 shrink-0" />
           </div>
         )}
         <div className="min-w-0 flex-1">
@@ -389,6 +394,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               src={getAppSymbol()}
               alt="Igreja Hub"
               className="w-4 h-4 rounded-md object-contain bg-black p-0.5 shrink-0 shadow-2xs"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.src = getGoogleS2FaviconUrl('minhaigrejahub.com.br', 64);
+              }}
             />
             <span>IGREJA <span className="text-[#FF5520]">HUB</span></span>
           </div>

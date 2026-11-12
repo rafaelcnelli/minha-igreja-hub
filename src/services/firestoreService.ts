@@ -29,7 +29,8 @@ import {
   Aviso,
   Church,
   ChurchJoinRequest,
-  ChurchConfigBackup
+  ChurchConfigBackup,
+  BackupScheduleSettings
 } from '../types';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { generateFirestoreId, isValidFirestoreId } from '../utils/idUtils';
@@ -1129,7 +1130,21 @@ export function subscribeChurchProfile(
       if (!settingsData && !churchDocData) return;
       const settingsLogo = sanitizeChurchLogoUrl(settingsData?.logoUrl);
       const churchLogo = sanitizeChurchLogoUrl(churchDocData?.logoUrl);
-      const effectiveLogo = settingsLogo || churchLogo || '';
+
+      // Se settings/church ainda não retornou no snapshot inicial e churches/{id} não tem logo, aguarda settingsData
+      if (settingsData === null && !churchLogo) return;
+
+      let cachedLogo = '';
+      try {
+        if (typeof localStorage !== 'undefined') {
+          cachedLogo =
+            (churchId ? sanitizeChurchLogoUrl(localStorage.getItem(`hub_church_logo_url_${churchId}`)) : '') ||
+            sanitizeChurchLogoUrl(localStorage.getItem('hub_church_logo_url')) ||
+            '';
+        }
+      } catch (e) {}
+
+      const effectiveLogo = settingsLogo || churchLogo || cachedLogo || '';
 
       // Se a logo existe em settings/church mas ainda não estava em churches/{churchId}, sincroniza automaticamente
       if (settingsLogo && churchId && churchId !== 'church-default' && churchDocData && churchLogo !== settingsLogo) {
@@ -1716,4 +1731,58 @@ export async function restoreChurchFromBackupDoc(
     throw error;
   }
 }
+
+/**
+ * Real-time listener for Automatic Backup Schedule Settings in Firestore
+ */
+export function subscribeBackupScheduleSettings(
+  churchId: string | undefined,
+  callback: (settings: BackupScheduleSettings | null) => void
+): () => void {
+  const docId = churchId && churchId !== 'church-default' ? `backup_schedule_${churchId}` : 'backup_schedule';
+  console.log(`[Firestore SUBSCRIBE: ${COLLECTIONS.SETTINGS}/${docId}] Iniciando escuta em tempo real...`);
+  try {
+    const docRef = doc(db, COLLECTIONS.SETTINGS, docId);
+    return onSnapshot(
+      docRef,
+      snap => {
+        if (snap.exists()) {
+          callback(snap.data() as BackupScheduleSettings);
+        } else {
+          callback(null);
+        }
+      },
+      error => {
+        console.error(`[Firestore SUBSCRIBE ERROR: ${COLLECTIONS.SETTINGS}/${docId}]`, error.message);
+      }
+    );
+  } catch (err) {
+    console.error(`[Firestore SUBSCRIBE EXCEPTION: ${COLLECTIONS.SETTINGS}/${docId}]`, err);
+    return () => {};
+  }
+}
+
+export async function saveBackupScheduleSettingsDoc(
+  settings: BackupScheduleSettings,
+  churchId?: string
+): Promise<void> {
+  const docId = churchId && churchId !== 'church-default' ? `backup_schedule_${churchId}` : 'backup_schedule';
+  const path = `${COLLECTIONS.SETTINGS}/${docId}`;
+  console.log(`[Firestore SAVE: ${path}] Salvando frequência de backup automático (${settings.intervalHours}h)...`);
+  try {
+    const payload: BackupScheduleSettings = {
+      ...settings,
+      updatedAt: new Date().toISOString()
+    };
+    await setDoc(doc(db, COLLECTIONS.SETTINGS, docId), cleanDataForFirestore(payload), { merge: true });
+    if (docId !== 'backup_schedule') {
+      await setDoc(doc(db, COLLECTIONS.SETTINGS, 'backup_schedule'), cleanDataForFirestore(payload), { merge: true });
+    }
+    console.log(`[Firestore SAVE SUCCESS: ${path}] Frequência de backup salva.`);
+  } catch (error) {
+    console.error(`[Firestore SAVE ERROR: ${path}]`, error);
+    throw error;
+  }
+}
+
 

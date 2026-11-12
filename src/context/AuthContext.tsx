@@ -135,31 +135,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cData = cSnap && cSnap.exists() ? ({ id: cSnap.id, ...(cSnap.data() as Omit<Church, 'id'>) } as Church) : null;
       const sData = sSnap && sSnap.exists() ? (sSnap.data() as Record<string, any>) : null;
 
-      if (!cData && !sData) return null;
+      let cachedLogo = '';
+      let cachedProfile: Record<string, any> | null = null;
+      try {
+        const rawSpecific = localStorage.getItem(`hub_church_profile_${targetId}`);
+        const rawGlobal = localStorage.getItem('hub_church_profile');
+        const parsedSpecific = rawSpecific ? JSON.parse(rawSpecific) : null;
+        const parsedGlobal = rawGlobal ? JSON.parse(rawGlobal) : null;
+        cachedProfile = parsedSpecific || parsedGlobal;
+        cachedLogo =
+          sanitizeChurchLogoUrl(localStorage.getItem(`hub_church_logo_url_${targetId}`)) ||
+          sanitizeChurchLogoUrl(localStorage.getItem('hub_church_logo_url')) ||
+          sanitizeChurchLogoUrl(parsedSpecific?.logoUrl) ||
+          sanitizeChurchLogoUrl(parsedGlobal?.logoUrl) ||
+          '';
+      } catch (e) {}
+
+      if (!cData && !sData && !cachedProfile) return null;
 
       const sLogo = sanitizeChurchLogoUrl(sData?.logoUrl);
       const cLogo = sanitizeChurchLogoUrl(cData?.logoUrl);
-      const effectiveLogo = sLogo || cLogo || '';
+      const effectiveLogo = sLogo || cLogo || cachedLogo || '';
 
       const merged: Church = {
         id: cData?.id || targetId,
-        name: sData?.name || cData?.name || 'Minha Igreja Hub',
-        code: cData?.code || sData?.code || 'HUB-2026',
-        campus: sData?.campus || cData?.campus || 'Campus Sede',
-        subtitle: sData?.subtitle || cData?.subtitle || 'Gestão & Escalas',
+        name: sData?.name || cData?.name || cachedProfile?.name || 'Minha Igreja Hub',
+        code: cData?.code || sData?.code || cachedProfile?.code || 'HUB-2026',
+        campus: sData?.campus || cData?.campus || cachedProfile?.campus || 'Campus Sede',
+        subtitle: sData?.subtitle || cData?.subtitle || cachedProfile?.subtitle || 'Gestão & Escalas',
         logoUrl: effectiveLogo,
         adminId: cData?.adminId || 'user-admin',
         adminName: cData?.adminName || 'Administrador',
         adminEmail: cData?.adminEmail || '',
-        phone: sData?.phone || cData?.phone,
-        email: sData?.email || cData?.email,
-        address: sData?.address || cData?.address,
+        phone: sData?.phone || cData?.phone || cachedProfile?.phone,
+        email: sData?.email || cData?.email || cachedProfile?.email,
+        address: sData?.address || cData?.address || cachedProfile?.address,
         createdAt: cData?.createdAt || new Date().toISOString()
       };
 
       try {
-        localStorage.setItem(`hub_church_profile_${merged.id}`, JSON.stringify(merged));
-        localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+        if (effectiveLogo || !cachedLogo) {
+          localStorage.setItem(`hub_church_profile_${merged.id}`, JSON.stringify(merged));
+          localStorage.setItem('hub_church_profile', JSON.stringify(merged));
+          if (effectiveLogo) {
+            localStorage.setItem(`hub_church_logo_url_${merged.id}`, effectiveLogo);
+            localStorage.setItem('hub_church_logo_url', effectiveLogo);
+          }
+        }
       } catch (e) {}
 
       return merged;

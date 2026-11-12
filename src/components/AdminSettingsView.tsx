@@ -59,11 +59,11 @@ import {
   Eye,
   FileSpreadsheet
 } from 'lucide-react';
-import { ChurchConfigBackup } from '../types';
+import { ChurchConfigBackup, BackupScheduleSettings, DEFAULT_BACKUP_SCHEDULE_SETTINGS } from '../types';
 import { downloadBackupFile, parseUploadedBackupJson } from '../utils/backupUtils';
 import { getCultos, getPessoas, getEscalas, saveChurchProfileDoc } from '../services/firestoreService';
 import { getBaseAppUrl } from '../utils/urlUtils';
-import { getAppLogo, getAppSymbol, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
+import { getAppLogo, getAppSymbol, getGoogleS2FaviconUrl, handleImageFallback, DEFAULT_LOGO_URL } from '../utils/logoAsset';
 
 interface AdminSettingsViewProps {
   currentUser: User;
@@ -100,6 +100,8 @@ interface AdminSettingsViewProps {
   onCreateBackup?: (label?: string, description?: string) => Promise<any>;
   onRestoreBackup?: (backup: ChurchConfigBackup) => Promise<void>;
   onDeleteBackup?: (backupId: string) => Promise<void>;
+  backupScheduleSettings?: BackupScheduleSettings;
+  onSaveBackupScheduleSettings?: (settings: BackupScheduleSettings) => Promise<void>;
   onNavigateTab?: (tab: string) => void;
 }
 
@@ -137,6 +139,8 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   onCreateBackup,
   onRestoreBackup,
   onDeleteBackup,
+  backupScheduleSettings: propBackupSchedule,
+  onSaveBackupScheduleSettings,
   onNavigateTab
 }) => {
   // Navigation tabs within Admin Settings
@@ -160,6 +164,69 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
   const [uploadedPreviewData, setUploadedPreviewData] = useState<ChurchConfigBackup['data'] | null>(null);
   const [isUploadBackupModalOpen, setIsUploadBackupModalOpen] = useState(false);
   const backupFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Automatic Firestore Backup Schedule state
+  const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(
+    propBackupSchedule?.enabled ?? DEFAULT_BACKUP_SCHEDULE_SETTINGS.enabled
+  );
+  const [scheduleIntervalHours, setScheduleIntervalHours] = useState<number>(
+    propBackupSchedule?.intervalHours ?? DEFAULT_BACKUP_SCHEDULE_SETTINGS.intervalHours
+  );
+  const [scheduleMaxRetention, setScheduleMaxRetention] = useState<number>(
+    propBackupSchedule?.maxRetentionCount ?? DEFAULT_BACKUP_SCHEDULE_SETTINGS.maxRetentionCount
+  );
+  const [isSavingBackupSchedule, setIsSavingBackupSchedule] = useState(false);
+  const [backupScheduleFeedback, setBackupScheduleFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (propBackupSchedule) {
+      setScheduleEnabled(propBackupSchedule.enabled ?? true);
+      setScheduleIntervalHours(propBackupSchedule.intervalHours || 12);
+      setScheduleMaxRetention(propBackupSchedule.maxRetentionCount || 20);
+    }
+  }, [propBackupSchedule]);
+
+  const formatBackupFrequencyShort = (hours: number, enabled = true) => {
+    if (!enabled) return 'Pausado';
+    if (hours === 6) return '6h';
+    if (hours === 12) return '12h';
+    if (hours === 24) return 'Diário';
+    if (hours === 48) return '48h';
+    if (hours === 168) return 'Semanal';
+    return `${hours}h`;
+  };
+
+  const formatBackupFrequencyLong = (hours: number) => {
+    if (hours === 6) return 'a cada 6 horas (4x ao dia)';
+    if (hours === 12) return 'a cada 12 horas (2x ao dia)';
+    if (hours === 24) return 'diariamente (a cada 24 horas)';
+    if (hours === 48) return 'a cada 48 horas (2 dias)';
+    if (hours === 168) return 'semanalmente (a cada 7 dias)';
+    return `a cada ${hours} horas`;
+  };
+
+  const handleSaveBackupSchedule = async (override?: Partial<BackupScheduleSettings>) => {
+    if (!onSaveBackupScheduleSettings) return;
+    setIsSavingBackupSchedule(true);
+    setBackupScheduleFeedback(null);
+    try {
+      const nextSettings: BackupScheduleSettings = {
+        ...propBackupSchedule,
+        enabled: override?.enabled !== undefined ? override.enabled : scheduleEnabled,
+        intervalHours: override?.intervalHours !== undefined ? override.intervalHours : scheduleIntervalHours,
+        maxRetentionCount: override?.maxRetentionCount !== undefined ? override.maxRetentionCount : scheduleMaxRetention
+      };
+      await onSaveBackupScheduleSettings(nextSettings);
+      setBackupScheduleFeedback(
+        nextSettings.enabled
+          ? `Frequência configurada com sucesso: backup automático ${formatBackupFrequencyLong(nextSettings.intervalHours)} (mantendo até ${nextSettings.maxRetentionCount} versões no Firestore).`
+          : 'Backups automáticos periódicos foram pausados.'
+      );
+      setTimeout(() => setBackupScheduleFeedback(null), 5000);
+    } finally {
+      setIsSavingBackupSchedule(false);
+    }
+  };
 
   useEffect(() => {
     if (initialTab && initialTab !== 'ministries') {
@@ -688,12 +755,10 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
             }`}
           >
             <Database className="w-3.5 h-3.5 text-cyan-500" />
-            <span>Backups & Restauração</span>
-            {backups.length > 0 && (
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
-                {backups.length}
-              </span>
-            )}
+            <span>Backups & Frequência</span>
+            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
+              {formatBackupFrequencyShort(scheduleIntervalHours, scheduleEnabled)}
+            </span>
           </button>
 
           <button
@@ -956,6 +1021,10 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                     src={getAppSymbol()}
                     alt="Símbolo Igreja Hub"
                     className="w-14 h-14 rounded-2xl object-contain bg-black p-1 shadow-md border border-white/10 shrink-0"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.src = getGoogleS2FaviconUrl('minhaigrejahub.com.br', 128);
+                    }}
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -1985,14 +2054,24 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                   <Database className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                     <span>Backups Periódicos & Restauração</span>
-                    <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100 dark:bg-cyan-900/80 px-2.5 py-0.5 rounded-full uppercase">
-                      Firestore Ativo
+                    <span
+                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                        scheduleEnabled
+                          ? 'text-cyan-700 bg-cyan-100 dark:bg-cyan-900/80 dark:text-cyan-200'
+                          : 'text-amber-700 bg-amber-100 dark:bg-amber-900/80 dark:text-amber-200'
+                      }`}
+                    >
+                      {scheduleEnabled
+                        ? `Automático: ${formatBackupFrequencyShort(scheduleIntervalHours, true)}`
+                        : 'Automático Pausado'}
                     </span>
                   </h2>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                    O sistema executa rotinas periódicas automáticas de backup das configurações no Firestore a cada 6 horas. Você também pode salvar snapshots manuais imediatos e restaurar estados anteriores a qualquer momento.
+                    {scheduleEnabled
+                      ? `O sistema executa rotinas periódicas automáticas de backup das configurações no Firestore ${formatBackupFrequencyLong(scheduleIntervalHours)}. Você também pode salvar snapshots manuais imediatos e restaurar estados anteriores.`
+                      : 'A rotina automática de backup está pausada no momento. Você pode reativá-la abaixo ou criar snapshots manuais a qualquer momento.'}
                   </p>
                 </div>
               </div>
@@ -2049,16 +2128,23 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
             {/* Quick Guarantees & Health Strip */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-cyan-200/60 dark:border-cyan-900/40 text-xs">
               <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-cyan-100 dark:border-cyan-950">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <div
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                    scheduleEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  }`}
+                />
                 <span className="text-slate-600 dark:text-slate-300 text-[11px]">
-                  <strong>Rotina Periódica:</strong> Executa a cada 6 horas no Firestore
+                  <strong>Rotina Periódica:</strong>{' '}
+                  {scheduleEnabled
+                    ? `Executa ${formatBackupFrequencyLong(scheduleIntervalHours)} no Firestore`
+                    : 'Pausada pelo Administrador'}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-cyan-100 dark:border-cyan-950">
                 <ShieldCheck className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                 <span className="text-slate-600 dark:text-slate-300 text-[11px]">
-                  <strong>Retenção Saudável:</strong> Mantém até 20 versões automáticas
+                  <strong>Retenção Saudável:</strong> Mantém até {scheduleMaxRetention} versões automáticas
                 </span>
               </div>
 
@@ -2067,6 +2153,218 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                 <span className="text-slate-600 dark:text-slate-300 text-[11px]">
                   <strong>Reversão Segura:</strong> Ponto pré-restauração salvo antes de aplicar
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================= */}
+          {/* CONFIGURAÇÃO DE FREQUÊNCIA DOS BACKUPS AUTOMÁTICOS DO FIRESTORE   */}
+          {/* ================================================================= */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                    <span>Frequência dos Backups Automáticos do Firestore</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                      Cloud Firestore
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Defina o intervalo em que o sistema salva automaticamente um snapshot completo das configurações, ministérios, vínculos e identidade da igreja no banco de dados.
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Ativo / Pausado */}
+              <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+                <span
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                    scheduleEnabled
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                  }`}
+                >
+                  {scheduleEnabled ? 'Backup Automático Ativo' : 'Backup Automático Pausado'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = !scheduleEnabled;
+                    setScheduleEnabled(nextVal);
+                    handleSaveBackupSchedule({ enabled: nextVal });
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title={scheduleEnabled ? 'Clique para pausar backups automáticos' : 'Clique para ativar backups automáticos'}
+                >
+                  {scheduleEnabled ? (
+                    <ToggleRight className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <ToggleLeft className="w-8 h-8 text-slate-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {backupScheduleFeedback && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{backupScheduleFeedback}</span>
+              </div>
+            )}
+
+            {/* Opções de Frequência (Ex: 6h, 12h, Diário, 48h, Semanal) */}
+            <div className="space-y-2.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Selecione a Frequência de Execução Automática
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                {[
+                  {
+                    hours: 6,
+                    title: 'A cada 6 horas',
+                    subtitle: '4 snapshots por dia',
+                    badge: 'Intensivo'
+                  },
+                  {
+                    hours: 12,
+                    title: 'A cada 12 horas',
+                    subtitle: 'Manhã e noite (2x/dia)',
+                    badge: 'Recomendado'
+                  },
+                  {
+                    hours: 24,
+                    title: 'Diário (24h)',
+                    subtitle: '1 snapshot por dia',
+                    badge: 'Padrão'
+                  },
+                  {
+                    hours: 48,
+                    title: 'A cada 48 horas',
+                    subtitle: 'A cada 2 dias',
+                    badge: 'Moderado'
+                  },
+                  {
+                    hours: 168,
+                    title: 'Semanal (7 dias)',
+                    subtitle: '1 snapshot por semana',
+                    badge: 'Econômico'
+                  }
+                ].map(option => {
+                  const isSelected = scheduleIntervalHours === option.hours;
+                  return (
+                    <button
+                      key={option.hours}
+                      type="button"
+                      disabled={!scheduleEnabled}
+                      onClick={() => setScheduleIntervalHours(option.hours)}
+                      className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                        !scheduleEnabled ? 'opacity-50 cursor-not-allowed ' : ''
+                      }${
+                        isSelected
+                          ? 'bg-sky-50/90 dark:bg-sky-950/60 border-2 border-sky-600 dark:border-sky-400 shadow-xs'
+                          : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            isSelected
+                              ? 'bg-sky-600 text-white'
+                              : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                          }`}
+                        >
+                          {option.badge}
+                        </span>
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">{option.title}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{option.subtitle}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Limite de Retenção + Status da Próxima Execução + Botão Salvar */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Retenção Máxima no Histórico
+                  </label>
+                  <div className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    {[10, 20, 30, 50].map(count => (
+                      <button
+                        key={count}
+                        type="button"
+                        disabled={!scheduleEnabled}
+                        onClick={() => setScheduleMaxRetention(count)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          scheduleMaxRetention === count
+                            ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {count} versões
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Informações do último e próximo backup */}
+                {(() => {
+                  const latestAutoBackup = backups.find(b => b.triggerType === 'automatic_periodic');
+                  const lastIso = propBackupSchedule?.lastAutoBackupAt || latestAutoBackup?.createdAt;
+                  const lastDate = lastIso ? new Date(lastIso) : null;
+                  const nextDate =
+                    lastDate && scheduleEnabled
+                      ? new Date(lastDate.getTime() + scheduleIntervalHours * 60 * 60 * 1000)
+                      : null;
+
+                  return (
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 pl-0 sm:pl-3 sm:border-l border-slate-200 dark:border-slate-800">
+                      <p>
+                        <strong>Último backup automático:</strong>{' '}
+                        {lastDate && !isNaN(lastDate.getTime())
+                          ? `${lastDate.toLocaleDateString('pt-BR')} às ${lastDate.toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}`
+                          : 'Ainda não executado'}
+                      </p>
+                      <p>
+                        <strong>Próximo agendado:</strong>{' '}
+                        {!scheduleEnabled
+                          ? 'Rotina pausada'
+                          : nextDate && !isNaN(nextDate.getTime())
+                          ? `${nextDate.toLocaleDateString('pt-BR')} às ${nextDate.toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}`
+                          : 'Na próxima verificação automática'}
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex items-center gap-2 self-start lg:self-auto">
+                <button
+                  type="button"
+                  disabled={isSavingBackupSchedule}
+                  onClick={() => handleSaveBackupSchedule()}
+                  className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isSavingBackupSchedule ? 'Salvando...' : 'Salvar Frequência de Backup'}</span>
+                </button>
               </div>
             </div>
           </div>
